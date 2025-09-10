@@ -1,0 +1,148 @@
+:root{
+  --bg:#0b0b0b;
+  --panel:#121214;
+  --muted:#9aa0a6;
+  --accent:#9ad0ff;
+  --card-border: rgba(255,255,255,0.05);
+  --glass: rgba(255,255,255,0.02);
+  --radius: .25rem;
+}
+
+/* Base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:#eaeaea;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* Topbar */
+.topbar{
+  background:#0a0a0a;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* Navbar */
+.mainnav{
+  backdrop-filter: blur(4px);
+  background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+  border-bottom:1px solid rgba(255,255,255,0.03);
+}
+.navbar-brand{font-weight:800; letter-spacing:.6px}
+.mainnav .nav-link{
+  color:rgba(255,255,255,0.9) !important;
+  padding:.35rem .6rem;
+  font-size:14px;
+}
+.mainnav .nav-link:hover,
+.mainnav .nav-link:focus,
+.mainnav .nav-link.active{
+  color:var(--accent) !important;
+  text-decoration:none;
+}
+
+/* Search input */
+.mainnav .form-control{
+  background:transparent;
+  border-radius: .25rem;
+  border:1px solid rgba(255,255,255,0.03);
+}
+
+/* Hero */
+.hero .carousel-inner{overflow:hidden; border-radius:.35rem}
+.hero .carousel-item img{display:block; width:100%; height:100%; object-fit:cover; filter:brightness(.6)}
+.hero .carousel-caption{
+  left:2rem;
+  bottom:2rem;
+  text-align:left;
+  max-width:60%;
+  padding:0;
+}
+.hero .carousel-caption h3{font-weight:800; margin:0 0 .25rem 0}
+.hero .carousel-caption p{color:rgba(255,255,255,0.9)}
+
+/* Content layout */
+main.container{max-width:1150px}
+.content-left{min-height:400px}
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006));
+  border:1px solid var(--card-border);
+  border-radius:var(--radius);
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.card:hover{ transform:translateY(-3px); box-shadow:0 6px 18px rgba(0,0,0,0.45) }
+.card .meta{font-size:12px; color:var(--muted)}
+
+/* Post thumbnail */
+.post-thumb{
+  height:120px;
+  object-fit:cover;
+  width:100%;
+  border-radius:.25rem;
+  display:block;
+}
+
+/* Small list / widgets */
+.sidebar .widget{
+  background:transparent;
+  border:1px solid var(--card-border);
+  padding:14px;
+  margin-bottom:16px;
+  border-radius:var(--radius);
+}
+.sidebar h6{font-size:14px; margin-bottom:10px}
+.small-list .item{display:flex; gap:10px; align-items:flex-start; margin-bottom:10px}
+.small-list img{width:72px; height:56px; object-fit:cover; border-radius:6px}
+
+/* Badges, categories */
+.badge.bg-secondary{background:#1a1a1a; border:1px solid rgba(255,255,255,0.03)}
+
+/* Buttons */
+.btn-outline-light{
+  border-color:rgba(255,255,255,0.06);
+  color:rgba(255,255,255,0.9);
+}
+
+/* Offcanvas links */
+.offcanvas-body ul li a{
+  display:block;
+  padding:.5rem .25rem;
+  color:rgba(255,255,255,0.9);
+  text-decoration:none;
+}
+.offcanvas-body ul li a:hover{color:var(--accent)}
+
+/* Truncate helpers */
+.text-truncate-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.text-truncate{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+
+/* Footer */
+footer{color:var(--muted); background:transparent}
+
+/* Responsive tweaks */
+@media (max-width:991px){
+  .mainnav{top:0}
+  body{padding-top:56px}
+  .topbar{display:none}
+  .hero .carousel-item{height:220px}
+  .hero .carousel-caption{max-width:85%}
+  .post-thumb{height:92px}
+}
+
+/* Utility: light mode */
+body.light-mode{
+  --bg:#f8fafc;
+  --panel:#ffffff;
+  --muted:#6b7280;
+  color:#111827;
+}
+body.light-mode .card{ background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01)); border-color: rgba(0,0,0,0.06) }
+
+/* Minor accessibility */
+a:focus{outline:3px solid rgba(154,208,255,0.18); outline-

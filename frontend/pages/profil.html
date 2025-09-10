@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profil — Nara Müzik</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    :root{ --bg:#0b0b0b; --text:#eaeaea; --panel:#121214; --muted:#9aa3ae; --accent:#77c2ff; --accent-contrast:#0a1118; --border: rgba(255,255,255,0.06); --elev-1: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); --input-bg:#0f1113; }
+    :root[data-theme="light"]{ --bg:#f8fafc; --text:#0f172a; --panel:#ffffff; --muted:#5b6778; --accent:#2563eb; --accent-contrast:#ffffff; --border: rgba(15,23,42,0.08); --elev-1: linear-gradient(180deg, rgba(2,6,23,0.02), rgba(2,6,23,0.01)); --input-bg:#f1f5f9; }
+    html,body{height:100%}
+    body{ background:var(--bg); color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; padding-top:72px; }
+    .mainnav{ position:fixed; top:0; left:0; right:0; z-index:1039; border-bottom:1px solid var(--border); background:transparent; }
+    .card{ background:var(--elev-1); border:1px solid var(--border) }
+    :root[data-theme="light"] .text-light{ color: var(--text) !important }
+    :root[data-theme="light"] .bg-dark{ background-color: var(--input-bg) !important }
+    :root[data-theme="light"] .form-control.bg-dark,
+    :root[data-theme="light"] .form-select.bg-dark{ background-color: var(--input-bg) !important; color: var(--text) !important; border-color: var(--border) !important }
+    :root[data-theme="light"] .btn-outline-light{ color: var(--text) !important; border-color: var(--border) !important }
+    :root[data-theme="light"] .btn-outline-light:hover{ background: var(--text) !important; color: var(--accent-contrast) !important }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
+      <div class="ms-auto d-flex align-items-center gap-2" id="authButtons"></div>
+    </div>
+  </nav>
+
+  <main class="container mt-4">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="card p-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-secondary" style="width:64px;height:64px"></div>
+            <div>
+              <h5 id="profUsername" class="mb-1">Kullanıcı</h5>
+              <div id="profEmail" class="text-muted small"></div>
+            </div>
+          </div>
+          <div class="mt-3 d-flex gap-2">
+            <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
+            <button id="logoutBtn" class="btn btn-outline-light btn-sm">Çıkış</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <h5 class="mb-2">Gönderilerim</h5>
+        <div class="row g-3" id="myPosts"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="text-center py-4 mt-5">
+    <div class="container">
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    const root = document.documentElement; const savedTheme = localStorage.getItem('theme') || 'dark';
+    function applyTheme(theme){ const nav = document.getElementById('mainNavbar'); if(theme==='light'){ root.setAttribute('data-theme','light'); nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light'); document.getElementById('themeToggle').textContent='🌙'; } else { root.removeAttribute('data-theme'); nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark'); document.getElementById('themeToggle').textContent='☀️'; } }
+    applyTheme(savedTheme);
+    document.getElementById('themeToggle').addEventListener('click',()=>{ const next = root.getAttribute('data-theme')==='light' ? 'dark':'light'; localStorage.setItem('theme', next); applyTheme(next); });
+
+    // Auth check
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (!user){ location.href = '../index.html'; }
+    document.getElementById('profUsername').textContent = user.username;
+    document.getElementById('profEmail').textContent = user.email || '';
+    document.getElementById('logoutBtn').addEventListener('click', ()=>{ localStorage.removeItem('user'); location.href = '../index.html'; });
+
+    // Load my posts
+    (async ()=>{
+      try{
+        const base = (typeof window !== 'undefined' && window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:4000';
+        const res = await fetch(`${base}/api/users/${encodeURIComponent(user.id)}/posts`);
+        const posts = await res.json();
+        const el = document.getElementById('myPosts');
+        if(!posts.length){ el.innerHTML = '<p>Henüz gönderiniz yok.</p>'; return; }
+        el.innerHTML = posts.map(p=>`
+          <div class="col-12">
+            <article class="card p-3">
+              <h6 class="mb-1">${p.title}</h6>
+              <div class="meta mb-2 text-muted small">${new Date(p.createdAt).toLocaleString()} • ${p.category}</div>
+              <p class="mb-0 text-truncate">${p.content}</p>
+            </article>
+          </div>
+        `).join('');
+      }catch(e){ console.error(e); }
+    })();
+  </script>
+</body>
+</html>
+
+
