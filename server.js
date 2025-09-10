@@ -5,6 +5,10 @@ const cors = require("cors");
 const admin = require("firebase-admin");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const multer = require("multer");
+const rateLimit = require("express-rate-limit");
+const sanitizeHtml = require("sanitize-html");
+const { marked } = require("marked");
 
 //
 // 1) Firebase Service Account setup
@@ -44,6 +48,42 @@ const db = admin.firestore();
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
+// Rate limiters
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
+const writeLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 60 });
+
+// Roles helper
+function requireRole(...roles) {
+  return (req, res, next) => {
+    const role = req.user?.role || "user";
+    if (!roles.includes(role)) return res.status(403).json({ error: "Forbidden" });
+    next();
+  };
+}
+
+// Content helpers
+function makeSlug(str) {
+  return String(str || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .slice(0, 80);
+}
+function cleanInputHtml(str) {
+  return sanitizeHtml(String(str || ""), {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2", "h3", "h4", "h5", "h6"]),
+    allowedAttributes: { a: ["href", "name", "target", "rel"], img: ["src", "alt"] },
+    allowedSchemes: ["http", "https", "mailto"],
+  });
+}
+function renderMarkdown(md) {
+  const html = marked.parse(String(md || ""));
+  return cleanInputHtml(html);
+}
 
 //
 // 3) JWT helpers
@@ -220,7 +260,7 @@ app.get("/api/spotify/playlist", async (req, res) => {
 //
 // 6) Auth endpoints
 //
-app.post("/api/auth/register", async (req, res) => {
+app.post("/api/auth/register", authLimiter, async (req, res) => {
   try {
     const { username, email, password } = req.body || {};
     if (!username || !email || !password)
@@ -244,9 +284,11 @@ app.post("/api/auth/register", async (req, res) => {
       email: normEmail,
       passwordHash: hash,
       createdAt: new Date().toISOString(),
+      avatarUrl: null,
+      role: "user",
     });
 
-    const user = { id: userDoc.id, username, email };
+    const user = { id: userDoc.id, username, email: normEmail, avatarUrl: null, role: "user" };
     const token = signToken(user);
 
     res.json({ user, token });
@@ -255,7 +297,7 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
-app.post("/api/auth/login", async (req, res) => {
+app.post("/api/auth/login", authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body || {};
     if (!email || !password)
@@ -277,7 +319,7 @@ app.post("/api/auth/login", async (req, res) => {
     const ok = await bcrypt.compare(password, data.passwordHash || "");
     if (!ok) return res.status(400).json({ error: "Invalid credentials" });
 
-    const user = { id: doc.id, username: data.username, email: data.email };
+    const user = { id: doc.id, username: data.username, email: data.email, avatarUrl: data.avatarUrl || null, role: data.role || "user" };
     const token = signToken(user);
 
     res.json({ user, token });
@@ -353,20 +395,35 @@ app.get("/api/messages/inbox", authMiddleware, async (req, res) => {
 //
 // 8) Posts
 //
-app.post("/api/posts", authMiddleware, async (req, res) => {
+app.post("/api/posts", authMiddleware, writeLimiter, async (req, res) => {
   try {
-    const { title, content, category } = req.body;
-    const { id: authorId, username: authorName } = req.user;
+    const { title, content, category, mediaUrl, linkUrl, tags } = req.body;
+    const { id: authorId, username: authorName, avatarUrl: authorAvatar } = req.user;
+
+    const safeContent = String(content || "");
+    const slug = makeSlug(title) + "-" + Math.random().toString(36).slice(2, 7);
 
     const newPost = {
       title,
-      content,
+      slug,
+      content: safeContent,
+      contentHtml: renderMarkdown(safeContent),
       category,
       authorId,
       authorName,
+      authorAvatar: authorAvatar || null,
       createdAt: new Date().toISOString(),
+      updatedAt: null,
       likes: 0,
-      comments: [],
+      likedBy: [],
+      views: 0,
+      comments: 0,
+      mediaUrl: mediaUrl || null,
+      linkUrl: linkUrl || null,
+      tags: Array.isArray(tags) ? tags.slice(0, 10).map((t) => String(t).toLowerCase()) : [],
+      pinned: false,
+      locked: false,
+      reports: 0,
     };
 
     const docRef = await db.collection("posts").add(newPost);
@@ -380,7 +437,7 @@ app.get("/api/posts/popular", async (req, res) => {
   try {
     const snapshot = await db
       .collection("posts")
-      .orderBy("likes", "desc")
+      .orderBy("views", "desc")
       .limit(5)
       .get();
     const posts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -402,6 +459,316 @@ app.get("/api/posts/latest", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// Get single post by id
+app.get("/api/posts/:id", async (req, res) => {
+  try {
+    const doc = await db.collection("posts").doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: "Post not found" });
+    res.json({ id: doc.id, ...doc.data() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Increment view count
+app.post("/api/posts/:id/view", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const ref = db.collection("posts").doc(id);
+    await db.runTransaction(async (tx) => {
+      const doc = await tx.get(ref);
+      if (!doc.exists) throw new Error("Post not found");
+      const views = Number(doc.data().views || 0) + 1;
+      tx.update(ref, { views });
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Edit post (owner or moderator/admin)
+app.put("/api/posts/:id", authMiddleware, writeLimiter, async (req, res) => {
+  try {
+    const ref = db.collection("posts").doc(req.params.id);
+    const snap = await ref.get();
+    if (!snap.exists) return res.status(404).json({ error: "Post not found" });
+    const p = snap.data();
+    const role = req.user.role || "user";
+    const isOwner = p.authorId === req.user.id;
+    if (!(isOwner || role === "admin" || role === "moderator")) return res.status(403).json({ error: "Forbidden" });
+
+    const { title, content, category, mediaUrl, linkUrl, tags } = req.body || {};
+    const update = {};
+    if (typeof title === "string" && title.trim()) {
+      update.title = title.trim();
+      if (p.slug) update.slug = makeSlug(title) + "-" + p.slug.split("-").pop();
+    }
+    if (typeof content === "string") {
+      update.content = content;
+      update.contentHtml = renderMarkdown(content);
+    }
+    if (typeof category === "string") update.category = category;
+    if (typeof mediaUrl !== "undefined") update.mediaUrl = mediaUrl || null;
+    if (typeof linkUrl !== "undefined") update.linkUrl = linkUrl || null;
+    if (Array.isArray(tags)) update.tags = tags.slice(0, 10).map((t) => String(t).toLowerCase());
+    update.updatedAt = new Date().toISOString();
+
+    await ref.update(update);
+    const nd = (await ref.get()).data();
+    res.json({ id: ref.id, ...nd });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete post (owner or moderator/admin)
+app.delete("/api/posts/:id", authMiddleware, async (req, res) => {
+  try {
+    const ref = db.collection("posts").doc(req.params.id);
+    const snap = await ref.get();
+    if (!snap.exists) return res.status(404).json({ error: "Post not found" });
+    const p = snap.data();
+    const role = req.user.role || "user";
+    const isOwner = p.authorId === req.user.id;
+    if (!(isOwner || role === "admin" || role === "moderator")) return res.status(403).json({ error: "Forbidden" });
+
+    const comms = await ref.collection("comments").get();
+    const batch = db.batch();
+    comms.docs.forEach((d) => batch.delete(d.ref));
+    batch.delete(ref);
+    await batch.commit();
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Post like toggle
+app.post("/api/posts/:id/like", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const ref = db.collection("posts").doc(req.params.id);
+    await db.runTransaction(async (tx) => {
+      const d = await tx.get(ref);
+      if (!d.exists) throw new Error("Post not found");
+      const likedBy = new Set(d.data().likedBy || []);
+      if (likedBy.has(userId)) likedBy.delete(userId);
+      else likedBy.add(userId);
+      tx.update(ref, { likedBy: Array.from(likedBy), likes: Array.from(likedBy).length });
+    });
+    const out = await ref.get();
+    res.json({ likes: out.data().likes, liked: (out.data().likedBy || []).includes(userId) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Pin/lock (admin/moderator)
+app.post("/api/posts/:id/pin", authMiddleware, requireRole("admin", "moderator"), async (req, res) => {
+  await db.collection("posts").doc(req.params.id).update({ pinned: !!req.body.pinned });
+  res.json({ ok: true });
+});
+app.post("/api/posts/:id/lock", authMiddleware, requireRole("admin", "moderator"), async (req, res) => {
+  await db.collection("posts").doc(req.params.id).update({ locked: !!req.body.locked });
+  res.json({ ok: true });
+});
+
+// Get by slug
+app.get("/api/posts/by-slug/:slug", async (req, res) => {
+  const q = await db.collection("posts").where("slug", "==", req.params.slug).limit(1).get();
+  if (q.empty) return res.status(404).json({ error: "Not found" });
+  const d = q.docs[0];
+  res.json({ id: d.id, ...d.data() });
+});
+
+// Search
+app.get("/api/search", async (req, res) => {
+  const q = String(req.query.q || "").toLowerCase().trim();
+  if (!q) return res.json([]);
+  const snap = await db.collection("posts").orderBy("createdAt", "desc").limit(400).get();
+  const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const results = items
+    .filter((p) => {
+      return (
+        (p.title || "").toLowerCase().includes(q) ||
+        (p.content || "").toLowerCase().includes(q) ||
+        (Array.isArray(p.tags) && p.tags.some((t) => String(t).includes(q)))
+      );
+    })
+    .slice(0, 50);
+  res.json(results);
+});
+
+// Pagination
+app.get("/api/posts", async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit || "10", 10), 30);
+  const after = req.query.after; // ISO date
+  let query = db.collection("posts").orderBy("createdAt", "desc").limit(limit);
+  if (after) query = query.startAfter(after);
+  const snap = await query.get();
+  const posts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  res.json({ items: posts, nextAfter: posts.length ? posts[posts.length - 1].createdAt : null });
+});
+
+// Comments
+app.get("/api/posts/:id/comments", async (req, res) => {
+  try {
+    const snapshot = await db
+      .collection("posts")
+      .doc(req.params.id)
+      .collection("comments")
+      .orderBy("createdAt", "asc")
+      .limit(200)
+      .get();
+    const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/posts/:id/comments", authMiddleware, async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text || String(text).trim().length === 0) {
+      return res.status(400).json({ error: "Missing text" });
+    }
+    const postRef = db.collection("posts").doc(req.params.id);
+    const postSnap = await postRef.get();
+    if (!postSnap.exists) return res.status(404).json({ error: "Post not found" });
+    if (postSnap.data().locked) return res.status(403).json({ error: "Post locked" });
+    const { id: userId, username } = req.user;
+    const payload = {
+      userId,
+      username,
+      text: String(text).trim(),
+      createdAt: new Date().toISOString(),
+      likes: 0,
+      likedBy: [],
+    };
+    const ref = await postRef.collection("comments").add(payload);
+    await postRef.update({ comments: admin.firestore.FieldValue.increment(1) });
+
+    // Mentions notifications
+    const mentions = Array.from(new Set(String(text).match(/@([a-zA-Z0-9_]+)/g) || [])).map((m) => m.slice(1));
+    for (const m of mentions) {
+      const uq = await db.collection("users").where("username", "==", m).limit(1).get();
+      if (!uq.empty) {
+        await db.collection("notifications").add({
+          toUserId: uq.docs[0].id,
+          type: "mention",
+          postId: postRef.id,
+          commentId: ref.id,
+          fromUser: username,
+          createdAt: new Date().toISOString(),
+          read: false,
+        });
+      }
+    }
+    res.json({ id: ref.id, ...payload });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Edit comment
+app.put("/api/posts/:postId/comments/:cid", authMiddleware, async (req, res) => {
+  try {
+    const ref = db.collection("posts").doc(req.params.postId).collection("comments").doc(req.params.cid);
+    const snap = await ref.get();
+    if (!snap.exists) return res.status(404).json({ error: "Not found" });
+    const c = snap.data();
+    const role = req.user.role || "user";
+    const isOwner = c.userId === req.user.id;
+    if (!(isOwner || role === "admin" || role === "moderator")) return res.status(403).json({ error: "Forbidden" });
+    const text = String(req.body.text || "").trim();
+    if (!text) return res.status(400).json({ error: "Missing text" });
+    await ref.update({ text, updatedAt: new Date().toISOString() });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete comment
+app.delete("/api/posts/:postId/comments/:cid", authMiddleware, async (req, res) => {
+  try {
+    const postRef = db.collection("posts").doc(req.params.postId);
+    const ref = postRef.collection("comments").doc(req.params.cid);
+    const snap = await ref.get();
+    if (!snap.exists) return res.status(404).json({ error: "Not found" });
+    const c = snap.data();
+    const role = req.user.role || "user";
+    const isOwner = c.userId === req.user.id;
+    if (!(isOwner || role === "admin" || role === "moderator")) return res.status(403).json({ error: "Forbidden" });
+    await ref.delete();
+    await postRef.update({ comments: admin.firestore.FieldValue.increment(-1) });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Like comment
+app.post("/api/posts/:postId/comments/:cid/like", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const ref = db.collection("posts").doc(req.params.postId).collection("comments").doc(req.params.cid);
+    await db.runTransaction(async (tx) => {
+      const d = await tx.get(ref);
+      if (!d.exists) throw new Error("Not found");
+      const likedBy = new Set(d.data().likedBy || []);
+      if (likedBy.has(userId)) likedBy.delete(userId);
+      else likedBy.add(userId);
+      tx.update(ref, { likedBy: Array.from(likedBy), likes: Array.from(likedBy).length });
+    });
+    const out = await ref.get();
+    res.json({ likes: out.data().likes, liked: (out.data().likedBy || []).includes(userId) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Report content
+app.post("/api/report", authMiddleware, async (req, res) => {
+  const { type, postId, commentId, reason } = req.body || {};
+  if (!["post", "comment"].includes(type)) return res.status(400).json({ error: "Invalid type" });
+  await db.collection("reports").add({
+    type,
+    postId: postId || null,
+    commentId: commentId || null,
+    reason: String(reason || "").slice(0, 200),
+    createdAt: new Date().toISOString(),
+    reporterId: req.user.id,
+  });
+  if (type === "post" && postId) {
+    await db.collection("posts").doc(postId).update({ reports: admin.firestore.FieldValue.increment(1) });
+  }
+  res.json({ ok: true });
+});
+
+// Moderation: list reports
+app.get("/api/mod/reports", authMiddleware, requireRole("admin", "moderator"), async (req, res) => {
+  const snap = await db.collection("reports").orderBy("createdAt", "desc").limit(200).get();
+  res.json(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+});
+
+// Notifications
+app.get("/api/notifications", authMiddleware, async (req, res) => {
+  const q = await db
+    .collection("notifications")
+    .where("toUserId", "==", req.user.id)
+    .orderBy("createdAt", "desc")
+    .limit(50)
+    .get();
+  res.json(q.docs.map((d) => ({ id: d.id, ...d.data() })));
+});
+app.post("/api/notifications/:id/read", authMiddleware, async (req, res) => {
+  await db.collection("notifications").doc(req.params.id).update({ read: true });
+  res.json({ ok: true });
 });
 
 app.get("/api/posts/category/:cat", async (req, res) => {
@@ -427,6 +794,51 @@ app.get("/api/users/:authorId/posts", async (req, res) => {
       .get();
     const posts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     res.json(posts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Basic user fetch
+app.get("/api/users/:id", async (req, res) => {
+  try {
+    const doc = await db.collection("users").doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: "User not found" });
+    const d = doc.data();
+    res.json({ id: doc.id, username: d.username, email: d.email, avatarUrl: d.avatarUrl || null, createdAt: d.createdAt });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update own profile (avatarUrl, username optional)
+app.put("/api/users/me", authMiddleware, async (req, res) => {
+  try {
+    const { avatarUrl, username } = req.body || {};
+    const update = {};
+    if (typeof avatarUrl !== "undefined") update.avatarUrl = avatarUrl || null;
+    if (typeof username === "string" && username.trim()) update.username = username.trim();
+    if (!Object.keys(update).length) return res.status(400).json({ error: "Nothing to update" });
+    await db.collection("users").doc(req.user.id).update(update);
+    const doc = await db.collection("users").doc(req.user.id).get();
+    const d = doc.data();
+    const user = { id: doc.id, username: d.username, email: d.email, avatarUrl: d.avatarUrl || null };
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Simple avatar upload (base64 to Firebase Storage emulation via Firestore hosting is out of scope)
+// We store as data URL in user doc for simplicity; consider real object storage in production
+app.post("/api/users/me/avatar", authMiddleware, upload.single("avatar"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: "Missing file" });
+    const mime = req.file.mimetype || "image/jpeg";
+    const base64 = req.file.buffer.toString("base64");
+    const dataUrl = `data:${mime};base64,${base64}`;
+    await db.collection("users").doc(req.user.id).update({ avatarUrl: dataUrl });
+    res.json({ avatarUrl: dataUrl });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
