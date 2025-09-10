@@ -169,8 +169,12 @@ async function getSpotifyAccessToken() {
 
 app.get("/api/spotify/playlist", async (req, res) => {
   try {
-    const playlistId = req.query.playlistId;
-    if (!playlistId) return res.status(400).json({ error: "Missing playlistId" });
+    const input = req.query.playlistId || req.query.playlist; // support both id and full url
+    if (!input) return res.status(400).json({ error: "Missing playlistId or playlist" });
+    // Extract ID from full URL if needed
+    let playlistId = String(input).trim();
+    const m = playlistId.match(/playlist\/(.*?)($|\?|#)/);
+    if (m && m[1]) playlistId = m[1];
     const token = await getSpotifyAccessToken();
     const fetch = (await import("node-fetch")).default;
     const r = await fetch(`https://api.spotify.com/v1/playlists/${encodeURIComponent(playlistId)}?market=TR`, {
@@ -178,7 +182,7 @@ app.get("/api/spotify/playlist", async (req, res) => {
     });
     const data = await r.json();
     if (!r.ok) {
-      return res.status(r.status).json({ error: data.error?.message || "spotify error" });
+      return res.status(r.status).json({ error: data.error?.message || data.message || "spotify error", status: r.status, details: data });
     }
     // minimize payload: map essential fields
     const simplified = {
