@@ -142,14 +142,21 @@ app.post("/api/auth/register", async (req, res) => {
       return res.status(400).json({ error: "Missing fields" });
 
     const usersCol = db.collection("users");
-    const existing = await usersCol.where("email", "==", email).limit(1).get();
+    const rawEmail = String(email).trim();
+    const normEmail = rawEmail.toLowerCase();
+
+    // check duplicates by both original and normalized email (backward compatibility)
+    let existing = await usersCol.where("email", "==", rawEmail).limit(1).get();
+    if (existing.empty) {
+      existing = await usersCol.where("email", "==", normEmail).limit(1).get();
+    }
     if (!existing.empty)
       return res.status(400).json({ error: "Email already registered" });
 
     const hash = await bcrypt.hash(password, 10);
     const userDoc = await usersCol.add({
       username,
-      email,
+      email: normEmail,
       passwordHash: hash,
       createdAt: new Date().toISOString(),
     });
@@ -168,9 +175,15 @@ app.post("/api/auth/login", async (req, res) => {
     const { email, password } = req.body || {};
     if (!email || !password)
       return res.status(400).json({ error: "Missing fields" });
-
     const usersCol = db.collection("users");
-    const snapshot = await usersCol.where("email", "==", email).limit(1).get();
+    const rawEmail = String(email).trim();
+    const normEmail = rawEmail.toLowerCase();
+
+    // Try with exact email first (for legacy mixed-case entries), then normalized
+    let snapshot = await usersCol.where("email", "==", rawEmail).limit(1).get();
+    if (snapshot.empty) {
+      snapshot = await usersCol.where("email", "==", normEmail).limit(1).get();
+    }
     if (snapshot.empty)
       return res.status(400).json({ error: "Invalid credentials" });
 
