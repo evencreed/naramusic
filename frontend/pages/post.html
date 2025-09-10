@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gönderi</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body{ background:#0b0b0b; color:#eaeaea; padding-top:64px; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial }
+    .card{ background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.06) }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-dark bg-dark fixed-top"><div class="container-fluid"><a class="navbar-brand" href="../index.html">Nara Müzik</a></div></nav>
+  <main class="container mt-4">
+    <article class="card p-3 mb-4">
+      <div class="d-flex gap-2 mb-2" id="postActions">
+        <button class="btn btn-sm btn-outline-light" id="likePostBtn">👍 <span id="likeCount">0</span></button>
+        <button class="btn btn-sm btn-outline-warning d-none" id="editPostBtn">Düzenle</button>
+        <button class="btn btn-sm btn-outline-danger d-none" id="deletePostBtn">Sil</button>
+        <button class="btn btn-sm btn-outline-secondary" id="reportPostBtn">Raporla</button>
+      </div>
+      <h4 id="pTitle">Gönderi</h4>
+      <div class="text-muted small mb-2" id="pMeta"></div>
+      <div id="pMedia" class="mb-3"></div>
+      <div id="pContent" class="mb-3"></div>
+      <div id="pLink"></div>
+    </article>
+
+    <section class="card p-3">
+      <h6 class="mb-3">Yorumlar</h6>
+      <div id="comments"></div>
+      <form id="commentForm" class="mt-3">
+        <div class="input-group">
+          <input id="commentText" class="form-control" placeholder="Yorum yaz..." required>
+          <button class="btn btn-primary" type="submit">Gönder</button>
+        </div>
+        <div class="form-text">Yorum yapabilmek için giriş yapmış olmanız gerekir.</div>
+      </form>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const BACKEND_BASE = location.hostname.includes('localhost')? 'http://localhost:4000':'https://naramusic.onrender.com';
+    const params = new URLSearchParams(location.search);
+    const postId = params.get('id');
+    const user = JSON.parse(localStorage.getItem('user')||'null');
+    const token = localStorage.getItem('token')||null;
+
+    let POST_DATA = null;
+    async function loadPost(){
+      const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}`);
+      const p = await r.json();
+      POST_DATA = p;
+      document.getElementById('pTitle').textContent = p.title;
+      document.getElementById('pMeta').textContent = `${p.authorName||'Anonim'} • ${new Date(p.createdAt).toLocaleString()} • ${p.category||''}`;
+      document.getElementById('pContent').innerHTML = p.contentHtml || (p.content||'').replace(/\n/g,'<br>');
+      if (p.mediaUrl){ document.getElementById('pMedia').innerHTML = `<img src="${p.mediaUrl}" class="img-fluid rounded">`; }
+      if (p.linkUrl){ document.getElementById('pLink').innerHTML = `<a class="btn btn-sm btn-outline-secondary" target="_blank" href="${p.linkUrl}">Bağlantıyı Aç</a>`; }
+      document.getElementById('likeCount').textContent = p.likes || 0;
+      const canEdit = user && (user.id===p.authorId || (user.role==='admin' || user.role==='moderator'));
+      if (canEdit){ document.getElementById('editPostBtn').classList.remove('d-none'); document.getElementById('deletePostBtn').classList.remove('d-none'); }
+    }
+
+    async function loadComments(){
+      const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments`);
+      const items = await r.json();
+      const el = document.getElementById('comments');
+      if(!items.length){ el.innerHTML = '<div class="text-muted">Henüz yorum yok.</div>'; return; }
+      el.innerHTML = items.map(c=>{
+        const canEdit = user && (user.id===c.userId || (user.role==='admin'||user.role==='moderator'));
+        return `<div class="mb-3" data-cid="${c.id}">
+          <div class="small text-muted">${c.username||'Kullanıcı'} • ${new Date(c.createdAt).toLocaleString()}</div>
+          <div class="mb-1">${c.text}</div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-light c-like">👍 ${c.likes||0}</button>
+            <button class="btn btn-sm btn-outline-secondary c-report">Raporla</button>
+            ${canEdit?'<button class="btn btn-sm btn-outline-warning c-edit">Düzenle</button><button class="btn btn-sm btn-outline-danger c-del">Sil</button>':''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    document.getElementById('commentForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      if(!user){ alert('Yorum yapmak için giriş yapın.'); return; }
+      const text = document.getElementById('commentText').value.trim();
+      if(!text) return;
+      try{
+        const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments`, { method:'POST', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body: JSON.stringify({ text }) });
+        const data = await r.json();
+        if(data.error){ alert(data.error); return; }
+        document.getElementById('commentText').value='';
+        loadComments();
+      }catch(err){ console.error(err); alert('Yorum gönderilemedi'); }
+    });
+
+    // Actions
+    document.getElementById('likePostBtn').addEventListener('click', async ()=>{
+      if(!user){ alert('Beğenmek için giriş yapın'); return; }
+      const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/like`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` } });
+      const data = await r.json(); if(!data.error){ document.getElementById('likeCount').textContent = data.likes; }
+    });
+    document.getElementById('deletePostBtn').addEventListener('click', async ()=>{
+      if (!confirm('Silinsin mi?')) return;
+      const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}`, { method:'DELETE', headers:{ 'Authorization': `Bearer ${token}` } });
+      const d = await r.json(); if (d.error){ alert(d.error); return; } location.href = '../index.html';
+    });
+    document.getElementById('reportPostBtn').addEventListener('click', async ()=>{
+      if(!user){ alert('Raporlamak için giriş yapın'); return; }
+      const reason = prompt('Rapor nedeni (opsiyonel):') || '';
+      await fetch(`${BACKEND_BASE}/api/report`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ type:'post', postId, reason }) });
+      alert('Raporlandı');
+    });
+
+    // Comment controls (like/edit/delete/report)
+    document.getElementById('comments').addEventListener('click', async (e)=>{
+      const wrap = e.target.closest('[data-cid]'); if (!wrap) return;
+      const cid = wrap.getAttribute('data-cid');
+      if (e.target.closest('.c-like')){
+        if(!user){ alert('Giriş yapın'); return; }
+        const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments/${cid}/like`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` }});
+        const d = await r.json(); if(!d.error){ e.target.textContent = `👍 ${d.likes}`; }
+      } else if (e.target.closest('.c-del')){
+        if (!confirm('Yorum silinsin mi?')) return;
+        const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments/${cid}`, { method:'DELETE', headers:{ 'Authorization': `Bearer ${token}` }});
+        const d = await r.json(); if(d.error){ alert(d.error); return; } loadComments();
+      } else if (e.target.closest('.c-edit')){
+        const current = wrap.querySelector('.mb-1').textContent;
+        const next = prompt('Yorumu düzenle:', current);
+        if (next==null) return;
+        const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments/${cid}`, { method:'PUT', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ text: next }) });
+        const d = await r.json(); if(d.error){ alert(d.error); return; } loadComments();
+      } else if (e.target.closest('.c-report')){
+        if(!user){ alert('Giriş yapın'); return; }
+        const reason = prompt('Rapor nedeni (opsiyonel):') || '';
+        await fetch(`${BACKEND_BASE}/api/report`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ type:'comment', postId, commentId: cid, reason }) });
+        alert('Raporlandı');
+      }
+    });
+
+    // bootstrap: load
+    (async ()=>{ await loadPost(); await loadComments(); fetch(`${BACKEND_BASE}/api/posts/${postId}/view`,{method:'POST'}).catch(()=>{}); })();
+  </script>
+</body>
+</html>
+
+

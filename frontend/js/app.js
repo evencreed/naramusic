@@ -56,7 +56,9 @@ document.addEventListener("DOMContentLoaded", () => {
     loadPopularPosts();
   }
   if (document.getElementById("latestPosts")) {
-    loadLatestPosts();
+    loadLatestPostsPaginated(true);
+    const moreBtn = document.getElementById('loadMoreLatest');
+    if (moreBtn){ moreBtn.addEventListener('click', ()=> loadLatestPostsPaginated(false)); }
   }
   if (document.getElementById("categoryPosts")) {
     const category = document.body.getAttribute("data-category"); 
@@ -157,17 +159,23 @@ function loadPopularPosts() {
         container.innerHTML = "<p>Henüz popüler post yok.</p>";
         return;
       }
-      container.innerHTML = posts.map(p => `
+      container.innerHTML = posts.map(p => {
+        const thumb = p.mediaUrl ? `<img src="${p.mediaUrl}" alt="" class="post-thumb mb-2">` : '';
+        const linkBtn = p.linkUrl ? `<a href="${p.linkUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">Bağlantı</a>` : '';
+        return `
         <div class="col-md-4 mb-3">
-          <div class="card h-100 shadow-sm">
+          <div class="card h-100 shadow-sm" data-post-id="${p.id}">
             <div class="card-body">
+              ${thumb}
               <h5 class="card-title">${p.title}</h5>
               <p class="card-text">${p.content.substring(0,100)}...</p>
               <span class="badge bg-primary">${p.category}</span>
+              ${linkBtn ? `<div class=\"mt-2\">${linkBtn}</div>` : ''}
             </div>
           </div>
         </div>
-      `).join("");
+      `;}).join("");
+      attachPostCardHandlers(container);
     })
     .catch(err => console.error("Popüler postları yüklerken hata:", err));
 }
@@ -194,17 +202,23 @@ function loadLatestPosts() {
         container.innerHTML = "<p>Henüz post eklenmedi.</p>";
         return;
       }
-      container.innerHTML = posts.map(p => `
+      container.innerHTML = posts.map(p => {
+        const thumb = p.mediaUrl ? `<img src="${p.mediaUrl}" alt="" class="post-thumb mb-2">` : '';
+        const linkBtn = p.linkUrl ? `<a href="${p.linkUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">Bağlantı</a>` : '';
+        return `
         <div class="col-md-6 mb-3">
-          <div class="card h-100 shadow-sm">
+          <div class="card h-100 shadow-sm" data-post-id="${p.id}">
             <div class="card-body">
+              ${thumb}
               <h5 class="card-title">${p.title}</h5>
               <p class="card-text">${p.content.substring(0,150)}...</p>
               <span class="badge bg-secondary">${p.category}</span>
+              ${linkBtn ? `<div class=\"mt-2\">${linkBtn}</div>` : ''}
             </div>
           </div>
         </div>
-      `).join("");
+      `;}).join("");
+      attachPostCardHandlers(container);
     })
     .catch(err => console.error("Son postları yüklerken hata:", err));
 }
@@ -231,19 +245,57 @@ function loadCategoryPosts(category) {
         container.innerHTML = "<p>Bu kategoride henüz post yok.</p>";
         return;
       }
-      container.innerHTML = posts.map(p => `
+      container.innerHTML = posts.map(p => {
+        const thumb = p.mediaUrl ? `<img src="${p.mediaUrl}" alt="" class="post-thumb mb-2">` : '';
+        const linkBtn = p.linkUrl ? `<a href="${p.linkUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">Bağlantı</a>` : '';
+        const author = p.authorName ? `<a class="link-light text-decoration-none" href="${location.pathname.includes('/pages/')?'':'pages/'}user.html?uid=${p.authorId}&name=${encodeURIComponent(p.authorName)}">${p.authorName}</a>` : 'Anonim';
+        return `
         <div class="col-md-6 mb-3">
-          <div class="card h-100 shadow-sm">
+          <div class="card h-100 shadow-sm" data-post-id="${p.id}">
             <div class="card-body">
+              ${thumb}
               <h5 class="card-title">${p.title}</h5>
               <p class="card-text">${p.content.substring(0,150)}...</p>
-              <small class="text-muted">Paylaşan: ${p.authorName || "Anonim"}</small>
+              <small class="text-muted">Paylaşan: ${author}</small>
+              ${linkBtn ? `<div class=\"mt-2\">${linkBtn}</div>` : ''}
             </div>
           </div>
         </div>
-      `).join("");
+      `;}).join("");
+      attachPostCardHandlers(container);
     })
     .catch(err => console.error("Kategori postlarını yüklerken hata:", err));
+}
+
+// Kartlar: detay modalı ve görüntülenme arttırma
+function attachPostCardHandlers(scope){
+  const root = scope || document;
+  const cards = root.querySelectorAll('.card[data-post-id]');
+  cards.forEach(card => {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', async ()=>{
+      const id = card.getAttribute('data-post-id');
+      // Detay sayfasına yönlendir (yorumlarla birlikte)
+      const base = location.pathname.includes('/pages/') ? '' : 'pages/';
+      location.href = `${base}post.html?id=${encodeURIComponent(id)}`;
+    });
+  });
+}
+
+function showPostDetailModal(p){
+  const mEl = document.getElementById('postDetailModal');
+  if(!mEl){ return; }
+  const titleEl = mEl.querySelector('#postDetailTitle');
+  const metaEl = mEl.querySelector('#postDetailMeta');
+  const contentEl = mEl.querySelector('#postDetailContent');
+  if (titleEl) titleEl.textContent = p.title || 'Gönderi';
+  if (metaEl) metaEl.textContent = `${p.authorName || 'Anonim'} • ${new Date(p.createdAt).toLocaleString()} • ${p.category || ''}`;
+  let html = '';
+  if (p.mediaUrl){ html += `<img src="${p.mediaUrl}" alt="" class="img-fluid rounded mb-3">`; }
+  html += `<div>${(p.content||'').replace(/\n/g,'<br>')}</div>`;
+  if (p.linkUrl){ html += `<div class="mt-3"><a class="btn btn-sm btn-outline-secondary" href="${p.linkUrl}" target="_blank">Bağlantıyı Aç</a></div>`; }
+  if (contentEl) contentEl.innerHTML = html;
+  bootstrap.Modal.getOrCreateInstance(mEl).show();
 }
 
 // Yeni Post Ekleme Sayfası (newpost.html)
@@ -259,6 +311,10 @@ function setupNewPostForm() {
     const title = document.getElementById("postTitle").value;
     const content = document.getElementById("postContent").value;
     const category = document.getElementById("postCategory").value;
+    const mediaUrl = (document.getElementById("postMediaUrl")?.value || '').trim();
+    const linkUrl = (document.getElementById("postLinkUrl")?.value || '').trim();
+    const tags = (document.getElementById("postTags")?.value || '')
+      .split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
 
     const authorId = CURRENT_USER.id;
     const authorName = CURRENT_USER.username;
@@ -267,7 +323,7 @@ function setupNewPostForm() {
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${AUTH_TOKEN}` },
-        body: JSON.stringify({ title, content, category })
+        body: JSON.stringify({ title, content, category, mediaUrl, linkUrl, tags })
       });
       const data = await res.json();
 
@@ -276,6 +332,24 @@ function setupNewPostForm() {
       } else {
         alert("Post başarıyla eklendi!");
         form.reset();
+        // Kategori sayfasına yönlendir
+        const categoryTo = (category || '').toLowerCase();
+        const base = location.pathname.includes('/pages/') ? '' : 'pages/';
+        if (categoryTo === 'yenimuzik') {
+          location.href = `${base}yenimuzik.html`;
+        } else if (categoryTo === 'endustri') {
+          location.href = `${base}endustri.html`;
+        } else if (categoryTo === 'degerlendirme') {
+          location.href = `${base}degerlendirme.html`;
+        } else if (categoryTo === 'album') {
+          location.href = `${base}album.html`;
+        } else if (categoryTo === 'roportaj') {
+          location.href = `${base}roportaj.html`;
+        } else if (categoryTo === 'etkinlik') {
+          location.href = `${base}etkinlik.html`;
+        } else if (categoryTo === 'dizifilm') {
+          location.href = `${base}dizifilm.html`;
+        }
       }
     } catch (err) {
       console.error("Post ekleme hatası:", err);
@@ -367,4 +441,82 @@ window.addEventListener('load', ()=>{
       }catch(err){ console.error(err); alert('Giriş hatası'); }
     });
   }
+});
+
+// Arama, sayfalandırma, like, tag desteği:
+
+// Search
+const searchInput = document.getElementById('globalSearch') || document.querySelector('input[placeholder="Ara..."]');
+if (searchInput){
+  searchInput.id = 'globalSearch';
+  let t;
+  searchInput.addEventListener('input', ()=>{
+    clearTimeout(t);
+    const q = searchInput.value.trim();
+    t = setTimeout(async ()=>{
+      if (!q) return;
+      const r = await fetch(`${BACKEND_BASE}/api/search?q=${encodeURIComponent(q)}`);
+      const items = await r.json();
+      // basit render: latestPosts alanına yaz
+      const container = document.getElementById("latestPosts");
+      if (container){
+        container.innerHTML = items.map(p=>`
+          <div class="col-md-6 mb-3">
+            <div class="card h-100 shadow-sm" data-post-id="${p.id}">
+              <div class="card-body">
+                ${p.mediaUrl?`<img src="${p.mediaUrl}" class="post-thumb mb-2">`:''}
+                <h5 class="card-title">${p.title}</h5>
+                <div class="mb-2"><span class="badge bg-secondary">${p.category||''}</span> ${Array.isArray(p.tags)?p.tags.map(t=>`<span class="badge bg-dark ms-1">#${t}</span>`).join(''):''}</div>
+                <p class="card-text">${(p.content||'').substring(0,150)}...</p>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        attachPostCardHandlers(container);
+      }
+    }, 300);
+  });
+}
+
+// "En son" için sayfalandırma (Load More)
+let latestCursor = null;
+async function loadLatestPostsPaginated(reset=false){
+  const container = document.getElementById("latestPosts");
+  if (!container) return;
+  if (reset){ latestCursor = null; container.innerHTML = ''; }
+  const url = new URL(`${BACKEND_BASE}/api/posts`);
+  if (latestCursor) url.searchParams.set('after', latestCursor);
+  const r = await fetch(url.toString());
+  const data = await r.json();
+  const items = data.items || [];
+  container.insertAdjacentHTML('beforeend', items.map(p=>`
+    <div class="col-md-6 mb-3">
+      <div class="card h-100 shadow-sm" data-post-id="${p.id}">
+        <div class="card-body">
+          ${p.mediaUrl?`<img src="${p.mediaUrl}" class="post-thumb mb-2">`:''}
+          <h5 class="card-title">${p.title}</h5>
+          <div class="mb-2"><span class="badge bg-secondary">${p.category||''}</span> ${Array.isArray(p.tags)?p.tags.map(t=>`<span class="badge bg-dark ms-1">#${t}</span>`).join(''):''}</div>
+          <p class="card-text">${(p.content||'').substring(0,150)}...</p>
+        </div>
+      </div>
+    </div>
+  `).join(''));
+  attachPostCardHandlers(container);
+  latestCursor = data.nextAfter;
+  const moreBtn = document.getElementById('loadMoreLatest');
+  if (moreBtn){ moreBtn.disabled = !latestCursor; moreBtn.classList.toggle('d-none', !latestCursor); }
+}
+
+// Post like butonları (kart üstünde gösterim basit):
+function renderLikeButton(p){
+  return `<button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>`;
+}
+document.addEventListener('click', async (e)=>{
+  const btn = e.target.closest('.like-btn');
+  if (!btn) return;
+  if (!CURRENT_USER){ alert('Beğenmek için giriş yapın'); return; }
+  const id = btn.getAttribute('data-id');
+  const r = await fetch(`${BACKEND_BASE}/api/posts/${id}/like`, { method:'POST', headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` }});
+  const data = await r.json();
+  if (!data.error){ btn.innerHTML = `👍 ${data.likes}`; }
 });

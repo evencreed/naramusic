@@ -272,7 +272,15 @@
             <option value="etkinlik">Etkinlikler</option>
             <option value="dizifilm">Dizi & Filmler</option>
           </select>
-          <textarea name="content" rows="8" class="form-control" placeholder="İçerik" required></textarea>
+          <textarea name="content" rows="12" class="form-control mb-2" placeholder="İçerik" required></textarea>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <input name="mediaUrl" type="url" class="form-control" placeholder="Fotoğraf/GIF URL (opsiyonel)">
+            </div>
+            <div class="col-md-6">
+              <input name="linkUrl" type="url" class="form-control" placeholder="Harici Link (opsiyonel)">
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary w-100">Paylaş</button>

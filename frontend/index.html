@@ -7,6 +7,12 @@
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta name="description" content="Nara Müzik — müzik haberleri, incelemeler ve topluluk tartışmaları.">
+  <meta property="og:title" content="Nara Müzik">
+  <meta property="og:description" content="Müzik topluluğu: Yeni parçalar, röportajlar, etkinlikler.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://example.com/og-image.jpg">
+  <meta name="robots" content="index, follow">
 
     <!-- site CSS (ekleyin) -->
   <link rel="stylesheet" href="css/style.css?v=1">
@@ -146,7 +152,7 @@
 
       <div class="d-flex ms-auto align-items-center gap-2">
         <div class="d-none d-md-block">
-          <input class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
+          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
         </div>
 
         <select id="languageSwitcher" class="form-select form-select-sm bg-dark text-light border-light d-none d-md-block" style="width:110px">
@@ -230,6 +236,9 @@
         <section>
           <h5 class="mb-3">🆕 En Son Eklenenler</h5>
           <div class="row g-3" id="latestPosts"></div>
+          <div class="text-center mt-3">
+            <button id="loadMoreLatest" class="btn btn-outline-light btn-sm">Daha Fazla</button>
+          </div>
         </section>
       </div>
 
@@ -363,12 +372,36 @@
             <option value="endustri">Endüstri Haberleri</option>
             <option value="degerlendirme">Değerlendirme</option>
           </select>
-          <textarea id="postContent" name="content" rows="8" class="form-control" placeholder="İçerik" required></textarea>
+          <textarea id="postContent" name="content" rows="12" class="form-control mb-2" placeholder="İçerik" required></textarea>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <input id="postMediaUrl" name="mediaUrl" type="url" class="form-control" placeholder="Fotoğraf/GIF URL (opsiyonel)">
+            </div>
+            <div class="col-md-6">
+              <input id="postLinkUrl" name="linkUrl" type="url" class="form-control" placeholder="Harici Link (opsiyonel)">
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary w-100">Paylaş</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Post Detail Modal -->
+  <div class="modal fade" id="postDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="postDetailTitle">Gönderi</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="small text-muted mb-2" id="postDetailMeta"></div>
+          <div id="postDetailContent"></div>
+        </div>
+      </div>
     </div>
   </div>
 

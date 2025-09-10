@@ -34,7 +34,7 @@
       <div class="col-lg-4">
         <div class="card p-3">
           <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle bg-secondary" style="width:64px;height:64px"></div>
+            <img id="profAvatar" class="rounded-circle" style="width:64px;height:64px; object-fit:cover" src="" alt="avatar">
             <div>
               <h5 id="profUsername" class="mb-1">Kullanıcı</h5>
               <div id="profEmail" class="text-muted small"></div>
@@ -43,6 +43,21 @@
           <div class="mt-3 d-flex gap-2">
             <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
             <button id="logoutBtn" class="btn btn-outline-light btn-sm">Çıkış</button>
+          </div>
+          <div class="mt-3">
+            <label class="form-label small">Avatar URL</label>
+            <div class="input-group">
+              <input id="avatarUrlInput" class="form-control form-control-sm" placeholder="https://... (fotoğraf/gif)">
+              <button id="saveAvatarBtn" class="btn btn-sm btn-primary">Kaydet</button>
+            </div>
+            <div class="form-text">URL boş kaydedilirse avatar kaldırılır.</div>
+          </div>
+          <div class="mt-2">
+            <label class="form-label small">Veya dosya yükle</label>
+            <form id="avatarUploadForm" class="d-flex gap-2">
+              <input id="avatarFile" type="file" accept="image/*" class="form-control form-control-sm">
+              <button class="btn btn-sm btn-outline-light" type="submit">Yükle</button>
+            </form>
           </div>
         </div>
       </div>
@@ -73,6 +88,7 @@
     if (!user){ location.href = '../index.html'; }
     document.getElementById('profUsername').textContent = user.username;
     document.getElementById('profEmail').textContent = user.email || '';
+    if (user.avatarUrl){ document.getElementById('profAvatar').src = user.avatarUrl; } else { document.getElementById('profAvatar').src = 'https://ui-avatars.com/api/?name='+encodeURIComponent(user.username||'U')+'&background=0D8ABC&color=fff'; }
     document.getElementById('logoutBtn').addEventListener('click', ()=>{ localStorage.removeItem('user'); location.href = '../index.html'; });
 
     // Load my posts
@@ -94,6 +110,37 @@
         `).join('');
       }catch(e){ console.error(e); }
     })();
+
+    // Avatar güncelle
+    document.getElementById('saveAvatarBtn').addEventListener('click', async ()=>{
+      const url = document.getElementById('avatarUrlInput').value.trim();
+      try{
+        const token = localStorage.getItem('token');
+        const r = await fetch((location.hostname.includes('localhost')? 'http://localhost:4000':'https://naramusic.onrender.com') + '/api/users/me', { method:'PUT', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body: JSON.stringify({ avatarUrl: url || null }) });
+        const data = await r.json();
+        if(data.error){ alert(data.error); return; }
+        localStorage.setItem('user', JSON.stringify(data.user));
+        document.getElementById('profAvatar').src = data.user.avatarUrl || ('https://ui-avatars.com/api/?name='+encodeURIComponent(data.user.username||'U')+'&background=0D8ABC&color=fff');
+        alert('Avatar güncellendi');
+      }catch(err){ console.error(err); alert('Avatar güncellenemedi'); }
+    });
+
+    // Dosya yükle
+    document.getElementById('avatarUploadForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const file = document.getElementById('avatarFile').files[0];
+      if(!file){ alert('Dosya seçin'); return; }
+      const token = localStorage.getItem('token');
+      const fd = new FormData(); fd.append('avatar', file);
+      try{
+        const r = await fetch((location.hostname.includes('localhost')? 'http://localhost:4000':'https://naramusic.onrender.com') + '/api/users/me/avatar', { method:'POST', headers:{ 'Authorization': `Bearer ${token}` }, body: fd });
+        const data = await r.json();
+        if(data.error){ alert(data.error); return; }
+        document.getElementById('profAvatar').src = data.avatarUrl;
+        const u = JSON.parse(localStorage.getItem('user')||'{}'); u.avatarUrl = data.avatarUrl; localStorage.setItem('user', JSON.stringify(u));
+        alert('Avatar yüklendi');
+      }catch(err){ console.error(err); alert('Yükleme başarısız'); }
+    });
   </script>
 </body>
 </html>
