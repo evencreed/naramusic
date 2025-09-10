@@ -1,0 +1,25 @@
+# Dependencies
+/backend/node_modules/
+/frontend/node_modules/
+
+# Env & secrets
+*.env
+.env
+backend/serviceAccountKey.json
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# Build artifacts
+/dist/
+/build/
+coverage/
+
+# Misc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

@@ -254,6 +254,56 @@ function setupNewPostForm() {
 window.addEventListener('load', ()=>{
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
+  // Login modalına "Şifremi unuttum?" akışını ekle
+  const loginModal = document.getElementById('loginModal');
+  if (loginModal){
+    const body = loginModal.querySelector('.modal-body');
+    if (body && !body.querySelector('#forgotPasswordLink')){
+      const forgotWrapper = document.createElement('div');
+      forgotWrapper.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mt-2">
+          <small class="text-muted">Parolanızı mı unuttunuz?</small>
+          <a href="#" id="forgotPasswordLink" class="small">Şifremi unuttum</a>
+        </div>
+        <form id="resetPasswordForm" class="mt-2 d-none">
+          <input name="email" type="email" class="form-control mb-2" placeholder="Kayıtlı email" required>
+          <input name="newPassword" type="password" class="form-control mb-2" placeholder="Yeni parola" required>
+          <button type="submit" class="btn btn-outline-secondary w-100">Parolayı Sıfırla</button>
+        </form>
+      `;
+      body.appendChild(forgotWrapper);
+      const forgotLink = body.querySelector('#forgotPasswordLink');
+      const resetForm = body.querySelector('#resetPasswordForm');
+      const loginEmailInput = body.querySelector('input[name="email"]');
+      if (forgotLink && resetForm){
+        forgotLink.addEventListener('click', (e)=>{
+          e.preventDefault();
+          // email alanını reset formuna taşı
+          const resetEmail = resetForm.querySelector('input[name="email"]');
+          if (loginEmailInput && resetEmail && !resetEmail.value){
+            resetEmail.value = loginEmailInput.value;
+          }
+          resetForm.classList.toggle('d-none');
+        });
+        resetForm.addEventListener('submit', async (e)=>{
+          e.preventDefault();
+          const fd = new FormData(resetForm);
+          const payload = { email: fd.get('email'), newPassword: fd.get('newPassword') };
+          try{
+            const r = await fetch(`${BACKEND_BASE}/api/auth/reset-password`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+            const data = await r.json();
+            if(data.error){ alert(data.error); return; }
+            alert('Parola sıfırlandı. Yeni parolanızla giriş yapabilirsiniz.');
+            resetForm.classList.add('d-none');
+            // yeni parola ile girişe odaklan
+            if (loginEmailInput){ loginEmailInput.value = payload.email; }
+            const loginPwd = body.querySelector('input[name="password"]');
+            if (loginPwd){ loginPwd.value = fd.get('newPassword'); }
+          }catch(err){ console.error(err); alert('Parola sıfırlama hatası'); }
+        });
+      }
+    }
+  }
   if (registerForm){
     registerForm.addEventListener('submit', async (e)=>{
       e.preventDefault();

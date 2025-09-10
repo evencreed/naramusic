@@ -201,6 +201,30 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+// Password reset: set a new password by email (no email send; simple flow)
+app.post("/api/auth/reset-password", async (req, res) => {
+  try {
+    const { email, newPassword } = req.body || {};
+    if (!email || !newPassword) return res.status(400).json({ error: "Missing fields" });
+
+    const usersCol = db.collection("users");
+    const rawEmail = String(email).trim();
+    const normEmail = rawEmail.toLowerCase();
+    let snapshot = await usersCol.where("email", "==", rawEmail).limit(1).get();
+    if (snapshot.empty) {
+      snapshot = await usersCol.where("email", "==", normEmail).limit(1).get();
+    }
+    if (snapshot.empty) return res.status(404).json({ error: "User not found" });
+
+    const doc = snapshot.docs[0];
+    const hash = await bcrypt.hash(newPassword, 10);
+    await usersCol.doc(doc.id).update({ passwordHash: hash });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 //
 // 7) Contact form -> routes to "evencreed"
 //
