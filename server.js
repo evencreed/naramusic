@@ -177,7 +177,7 @@ app.get("/api/spotify/playlist", async (req, res) => {
     if (m && m[1]) playlistId = m[1];
     const token = await getSpotifyAccessToken();
     const fetch = (await import("node-fetch")).default;
-    const r = await fetch(`https://api.spotify.com/v1/playlists/${encodeURIComponent(playlistId)}?market=TR`, {
+    const r = await fetch(`https://api.spotify.com/v1/playlists/${encodeURIComponent(playlistId)}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await r.json();
