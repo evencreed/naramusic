@@ -1,7 +1,8 @@
 // Backend base URL (lokal veya prod)
-const BACKEND_BASE = window.location.hostname.includes("vercel.app")
-  ? "https://naramusic.onrender.com"
-  : "http://localhost:4000";
+const isLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
+const BACKEND_BASE = isLocalHost
+  ? "http://localhost:4000"
+  : "https://naramusic.onrender.com";
 
 const API_URL = `${BACKEND_BASE}/api/posts`;
 
