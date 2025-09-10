@@ -414,3 +414,416 @@
   </script>
 </body>
 </html>
+
+          <div class="small-list">
+
+            <div class="item">
+
+              <img src="https://images.unsplash.com/photo-1517519014922-8fc1b4f9b42b?q=80&w=400&auto=format&fit=crop" alt="">
+
+              <div>
+
+                <div class="fw-semibold">Popüler Gönderi Başlığı</div>
+
+                <div class="meta">1.2K okuma</div>
+
+              </div>
+
+            </div>
+
+
+
+            <div class="item">
+
+              <img src="https://images.unsplash.com/photo-1504457046656-3df3d3c03d91?q=80&w=400&auto=format&fit=crop" alt="">
+
+              <div>
+
+                <div class="fw-semibold">Başka Popüler</div>
+
+                <div class="meta">980 okuma</div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+
+        <div class="widget">
+
+          <h6>🧾 Son Yorumlar</h6>
+
+          <div class="small-list">
+
+            <div class="item">
+
+              <div>
+
+                <div class="fw-semibold">KullanıcıA</div>
+
+                <div class="meta">“Harika parça...” • 2 saat önce</div>
+
+              </div>
+
+            </div>
+
+
+
+            <div class="item">
+
+              <div>
+
+                <div class="fw-semibold">KullanıcıB</div>
+
+                <div class="meta">“İncelemeniz çok faydalı.” • 1 gün önce</div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+
+        <div class="widget">
+
+          <h6>🗂 Kategoriler</h6>
+
+          <div class="d-flex flex-wrap gap-2">
+
+            <a href="pages/yenimuzik.html" class="badge bg-secondary text-light">Yeni Müzik</a>
+
+            <a href="pages/degerlendirme.html" class="badge bg-secondary text-light">Değerlendirme</a>
+
+            <a href="pages/roportaj.html" class="badge bg-secondary text-light">Röportaj</a>
+
+            <a href="pages/etkinlik.html" class="badge bg-secondary text-light">Etkinlik</a>
+
+          </div>
+
+        </div>
+
+
+
+        <div class="widget text-center">
+
+          <h6>Topluluk</h6>
+
+          <p class="small text-muted mb-0">Üyeler katılıp gönderi paylaşabilir. Giriş/Kayıt ile başlayın.</p>
+
+          <div class="mt-2">
+
+            <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#registerModal">Üye Ol</button>
+
+          </div>
+
+        </div>
+
+      </aside>
+
+    </div>
+
+  </main>
+
+
+
+  <!-- Footer -->
+
+  <footer class="text-center py-4 mt-5">
+
+    <div class="container">
+
+      <small class="text-muted">© <span id="year"></span> MyForum — Tüm hakları saklıdır.</small>
+
+    </div>
+
+  </footer>
+
+
+
+  <!-- Modals (Login / Register / Create Post) -->
+
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog">
+
+      <form id="loginForm" class="modal-content">
+
+        <div class="modal-header">
+
+          <h5 class="modal-title">Giriş Yap</h5>
+
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+        </div>
+
+        <div class="modal-body">
+
+          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
+
+          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+
+        </div>
+
+        <div class="modal-footer">
+
+          <button type="submit" class="btn btn-primary w-100">Giriş</button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog">
+
+      <form id="registerForm" class="modal-content">
+
+        <div class="modal-header">
+
+          <h5 class="modal-title">Kayıt Ol</h5>
+
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+        </div>
+
+        <div class="modal-body">
+
+          <input name="username" class="form-control mb-2" placeholder="Kullanıcı Adı" required>
+
+          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
+
+          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+
+        </div>
+
+        <div class="modal-footer">
+
+          <button type="submit" class="btn btn-success w-100">Kayıt Ol</button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog modal-lg">
+
+      <form id="createPostForm" class="modal-content">
+
+        <div class="modal-header">
+
+          <h5 class="modal-title">Yeni Gönderi Oluştur</h5>
+
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+        </div>
+
+        <div class="modal-body">
+
+          <input name="title" class="form-control mb-2" placeholder="Başlık" required>
+
+          <select name="category" class="form-select mb-2">
+
+            <option value="yenimuzik">Yeni Müzik</option>
+
+            <option value="endustri">Endüstri Haberleri</option>
+
+            <option value="degerlendirme">Değerlendirme</option>
+
+          </select>
+
+          <textarea name="content" rows="8" class="form-control" placeholder="İçerik" required></textarea>
+
+        </div>
+
+        <div class="modal-footer">
+
+          <button type="submit" class="btn btn-primary w-100">Paylaş</button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- Scripts -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+  <script>
+
+    // small helpers
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+
+
+    // theme toggle (data-theme + localStorage)
+    const themeToggle = document.getElementById('themeToggle');
+
+    const root = document.documentElement;
+
+    function applyTheme(theme){
+      if(theme === 'light'){
+        root.setAttribute('data-theme','light');
+        themeToggle.textContent = '🌙';
+
+        document.getElementById('mainNavbar').classList.remove('navbar-dark');
+        document.getElementById('mainNavbar').classList.add('navbar-light');
+      } else {
+
+        root.removeAttribute('data-theme');
+        themeToggle.textContent = '☀️';
+
+        document.getElementById('mainNavbar').classList.remove('navbar-light');
+        document.getElementById('mainNavbar').classList.add('navbar-dark');
+      }
+    }
+
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+      const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      localStorage.setItem('theme', next);
+      applyTheme(next);
+    });
+
+
+
+    // placeholder: populate latestPosts with demo items (replace with fetch to backend)
+
+    const latestEl = document.getElementById('latestPosts');
+
+    const sampleLatest = Array.from({length:6}).map((_,i)=>({
+
+      id: i+1,
+
+      title: ['Yeni single dikkat çekiyor','Canlı konser değerlendirmesi','Albüm incelemesi'][i%3] + ' #' + (i+1),
+
+      excerpt: 'Kısa özet metni... Backend ile /api/posts?sort=latest şeklinde getirerek dinamik yapabilirsiniz.',
+
+      createdAt: Date.now() - (i*3600*1000),
+
+      author: { username: 'Kullanıcı' + (i+5) },
+
+      thumb: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop'
+
+    }));
+
+
+
+    function renderLatest(){
+
+      latestEl.innerHTML = sampleLatest.map(p => `
+
+        <div class="col-12">
+
+          <article class="card p-3">
+
+            <div class="row g-3 align-items-center">
+
+              <div class="col-md-4">
+
+                <img class="post-thumb" src="${p.thumb}" alt="">
+
+              </div>
+
+              <div class="col-md-8">
+
+                <h6 class="mb-1">${p.title}</h6>
+
+                <div class="meta mb-2">${new Date(p.createdAt).toLocaleString()} • ${p.author.username}</div>
+
+                <p class="mb-0 text-truncate">${p.excerpt}</p>
+
+              </div>
+
+            </div>
+
+          </article>
+
+        </div>
+
+      `).join('');
+
+    }
+
+
+
+    renderLatest();
+
+
+
+    // Basic form stubs: replace with real API calls
+
+    document.getElementById('loginForm').addEventListener('submit', e=>{
+
+      e.preventDefault();
+
+      // TODO: call /api/auth/login
+
+      bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+
+      alert('Giriş simülasyonu (backend entegrasyonu gerekli).');
+
+    });
+
+
+
+    document.getElementById('registerForm').addEventListener('submit', e=>{
+
+      e.preventDefault();
+
+      // TODO: call /api/auth/register
+
+      bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
+
+      alert('Kayıt simülasyonu (backend entegrasyonu gerekli).');
+
+    });
+
+
+
+    document.getElementById('createPostForm').addEventListener('submit', e=>{
+
+      e.preventDefault();
+
+      // TODO: POST /api/posts (auth token)
+
+      bootstrap.Modal.getInstance(document.getElementById('createPostModal')).hide();
+
+      alert('Gönderi oluşturma simülasyonu (backend entegrasyonu gerekli).');
+
+    });
+
+  </script>
+
+</body>
+
+</html>
