@@ -19,7 +19,7 @@ function updateAuthUI(){
       <a class="btn btn-outline-light btn-sm" href="${location.pathname.includes('/pages/') ? '../pages/profil.html' : 'pages/profil.html'}">Profil</a>
       <button id="logoutBtn" class="btn btn-outline-light btn-sm">Çıkış</button>
     `;
-    if(newPostBtn){ newPostBtn.classList.remove('disabled'); newPostBtn.title=''; }
+    if(newPostBtn){ newPostBtn.classList.remove('disabled'); newPostBtn.removeAttribute('disabled'); newPostBtn.title=''; }
     const lb = document.getElementById('logoutBtn');
     if(lb){ lb.addEventListener('click', ()=>{ localStorage.removeItem('user'); CURRENT_USER=null; location.reload(); }); }
   } else {
@@ -27,7 +27,7 @@ function updateAuthUI(){
       <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
       <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
     `;
-    if(newPostBtn){ newPostBtn.classList.add('disabled'); newPostBtn.title='Gönderi oluşturmak için giriş yapın'; }
+    if(newPostBtn){ newPostBtn.classList.add('disabled'); newPostBtn.setAttribute('disabled','disabled'); newPostBtn.title='Gönderi oluşturmak için giriş yapın'; }
   }
 }
 
@@ -50,6 +50,7 @@ async function translateMany(textArray, target){
 // Ana sayfa (index.html) için: Popüler + En Son Postlar
 document.addEventListener("DOMContentLoaded", () => {
   updateAuthUI();
+  enforceAuthForCreatePost();
   if (document.getElementById("popularPosts")) {
     loadPopularPosts();
   }
@@ -64,6 +65,42 @@ document.addEventListener("DOMContentLoaded", () => {
     setupNewPostForm();
   }
 });
+
+// "Yeni Gönderi" butonu için giriş zorunluluğu
+function enforceAuthForCreatePost(){
+  const buttons = document.querySelectorAll('[data-bs-target="#createPostModal"]');
+  if(!buttons || !buttons.length) return;
+  buttons.forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      if (CURRENT_USER) return; // girişliyse izin ver
+      e.preventDefault();
+      e.stopPropagation();
+      const loginModalEl = document.getElementById('loginModal');
+      if(loginModalEl){
+        const body = loginModalEl.querySelector('.modal-body');
+        if(body && !body.querySelector('.auth-required-msg')){
+          const div = document.createElement('div');
+          div.className = 'alert alert-warning auth-required-msg';
+          div.innerHTML = 'Yeni gönderi oluşturmak için önce giriş yapmanız gerekmektedir. Kayıt olmadıysanız <a href="#" id="goToRegister">buradan kayıt olabilirsiniz</a>.';
+          body.prepend(div);
+          const link = div.querySelector('#goToRegister');
+          if(link){
+            link.addEventListener('click', (ev)=>{
+              ev.preventDefault();
+              const lm = bootstrap.Modal.getOrCreateInstance(loginModalEl);
+              lm.hide();
+              const rmEl = document.getElementById('registerModal');
+              if(rmEl){ bootstrap.Modal.getOrCreateInstance(rmEl).show(); }
+            });
+          }
+        }
+        bootstrap.Modal.getOrCreateInstance(loginModalEl).show();
+      } else {
+        alert('Yeni gönderi oluşturmak için önce giriş yapmanız gerekmektedir.');
+      }
+    }, true);
+  });
+}
 
 // Popüler Postlar
 function loadPopularPosts() {
