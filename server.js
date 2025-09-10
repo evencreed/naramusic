@@ -133,6 +133,87 @@ app.post("/api/translate", async (req, res) => {
 });
 
 //
+// 5.1) Spotify Client Credentials + Playlist fetch
+//
+let cachedSpotifyToken = null;
+let cachedSpotifyTokenExpiresAt = 0;
+
+async function getSpotifyAccessToken() {
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    throw new Error("Missing SPOTIFY_CLIENT_ID/SECRET envs");
+  }
+  const now = Date.now();
+  if (cachedSpotifyToken && now < cachedSpotifyTokenExpiresAt - 5000) {
+    return cachedSpotifyToken;
+  }
+  const fetch = (await import("node-fetch")).default;
+  const r = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization:
+        "Basic " + Buffer.from(`${clientId}:${clientSecret}`).toString("base64"),
+    },
+    body: new URLSearchParams({ grant_type: "client_credentials" }).toString(),
+  });
+  const data = await r.json();
+  if (!r.ok) {
+    throw new Error(data.error_description || "spotify token failed");
+  }
+  cachedSpotifyToken = data.access_token;
+  cachedSpotifyTokenExpiresAt = Date.now() + (data.expires_in || 3600) * 1000;
+  return cachedSpotifyToken;
+}
+
+app.get("/api/spotify/playlist", async (req, res) => {
+  try {
+    const playlistId = req.query.playlistId;
+    if (!playlistId) return res.status(400).json({ error: "Missing playlistId" });
+    const token = await getSpotifyAccessToken();
+    const fetch = (await import("node-fetch")).default;
+    const r = await fetch(`https://api.spotify.com/v1/playlists/${encodeURIComponent(playlistId)}?market=TR`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      return res.status(r.status).json({ error: data.error?.message || "spotify error" });
+    }
+    // minimize payload: map essential fields
+    const simplified = {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      images: data.images,
+      external_urls: data.external_urls,
+      tracks: (data.tracks?.items || []).map((it) => {
+        const t = it.track || {};
+        return {
+          id: t.id,
+          name: t.name,
+          preview_url: t.preview_url,
+          external_urls: t.external_urls,
+          duration_ms: t.duration_ms,
+          artists: (t.artists || []).map((a) => ({ id: a.id, name: a.name, external_urls: a.external_urls })),
+          album: t.album
+            ? {
+                id: t.album.id,
+                name: t.album.name,
+                images: t.album.images,
+                release_date: t.album.release_date,
+              }
+            : null,
+        };
+      }),
+    };
+    res.json(simplified);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+//
 // 6) Auth endpoints
 //
 app.post("/api/auth/register", async (req, res) => {
