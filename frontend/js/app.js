@@ -62,6 +62,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const category = document.body.getAttribute("data-category"); 
     loadCategoryPosts(category);
   }
+  if (document.getElementById('spotifyPlaylist')){
+    loadSpotifyPlaylist();
+  }
   if (document.getElementById("newPostForm")) {
     setupNewPostForm();
   }
@@ -101,6 +104,55 @@ function enforceAuthForCreatePost(){
       }
     }, true);
   });
+}
+
+// Spotify Playlist yükleme (yenimuzik)
+async function loadSpotifyPlaylist(){
+  const container = document.getElementById('spotifyPlaylist');
+  if (!container) return;
+  const playlistId = container.getAttribute('data-playlist-id') || '37i9dQZF1DX2TRYkJECvfC'; // örnek: Yeni Müzik Radarı TR
+  container.innerHTML = '<div class="text-muted">Spotify çalma listesi yükleniyor...</div>';
+  try{
+    const res = await fetch(`${BACKEND_BASE}/api/spotify/playlist?playlistId=${encodeURIComponent(playlistId)}`);
+    const data = await res.json();
+    if (data.error){ container.innerHTML = `<div class="text-danger">Spotify hatası: ${data.error}</div>`; return; }
+    const headerImg = (data.images && data.images[0]?.url) ? `<img src="${data.images[0].url}" alt="${data.name}" style="width:72px; height:72px; object-fit:cover; border-radius:6px;">` : '';
+    const header = `
+      <div class="d-flex align-items-center gap-3 mb-3">
+        ${headerImg}
+        <div>
+          <div class="fw-semibold">${data.name || 'Spotify Playlist'}</div>
+          <div class="small text-muted">${(data.description || '').replace(/<[^>]+>/g,'')}</div>
+        </div>
+        <div class="ms-auto">
+          ${data.external_urls?.spotify ? `<a class="btn btn-sm btn-outline-light" href="${data.external_urls.spotify}" target="_blank">Spotify'da Aç</a>` : ''}
+        </div>
+      </div>
+    `;
+    const items = (data.tracks || []).slice(0, 12).map((t)=>{
+      const cover = t.album?.images?.[1]?.url || t.album?.images?.[0]?.url || '';
+      const artist = (t.artists||[]).map(a=>a.name).join(', ');
+      const previewBtn = t.preview_url ? `<audio controls src="${t.preview_url}" style="width:100%"></audio>` : `<a href="${t.external_urls?.spotify||'#'}" target="_blank" class="btn btn-sm btn-outline-secondary">Spotify'da Dinle</a>`;
+      return `
+        <div class="col-md-6">
+          <div class="card p-3 mb-3">
+            <div class="d-flex gap-3">
+              ${cover ? `<img src="${cover}" style="width:72px; height:72px; object-fit:cover; border-radius:6px;">` : ''}
+              <div class="flex-grow-1">
+                <div class="fw-semibold">${t.name}</div>
+                <div class="small text-muted">${artist}</div>
+                <div class="mt-2">${previewBtn}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    container.innerHTML = header + `<div class="row">${items}</div>`;
+  }catch(err){
+    console.error(err);
+    container.innerHTML = '<div class="text-danger">Spotify listesi yüklenemedi.</div>';
+  }
 }
 
 // Popüler Postlar
