@@ -1,4 +1,33 @@
 # Dependencies
+backend/node_modules/
+frontend/node_modules/
+
+# Env / secrets
+backend/.env
+backend/ENV_EXAMPLE.txt
+backend/README_ENV.txt
+backend/serviceAccountKey.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Build artifacts
+dist/
+build/
+.parcel-cache/
+.next/
+out/
+**/.cache/
+# Dependencies
 /backend/node_modules/
 /frontend/node_modules/
 

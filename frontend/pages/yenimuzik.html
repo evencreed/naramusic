@@ -295,7 +295,7 @@
 
   <div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-      <form id="createPostForm" class="modal-content">
+      <form id="newPostForm" class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Yeni Gönderi Oluştur</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -356,23 +356,7 @@
       localStorage.setItem('theme', next);
       applyTheme(next);
     });
-
-    // login/register/create stubları (backend bağlayınca değiştir)
-    document.getElementById('loginForm').addEventListener('submit', e=>{
-      e.preventDefault();
-      bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
-      alert('Giriş simülasyonu.');
-    });
-    document.getElementById('registerForm').addEventListener('submit', e=>{
-      e.preventDefault();
-      bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
-      alert('Kayıt simülasyonu.');
-    });
-    document.getElementById('createPostForm').addEventListener('submit', e=>{
-      e.preventDefault();
-      bootstrap.Modal.getInstance(document.getElementById('createPostModal')).hide();
-      alert('Gönderi oluşturma simülasyonu.');
-    });
+    // Login/Register/New Post işlemleri ve kategori/Spotify yüklemeleri ortak app.js tarafından yönetiliyor.
   </script>
 </body>
 </html>

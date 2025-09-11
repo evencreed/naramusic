@@ -14,6 +14,8 @@ let AUTH_TOKEN = localStorage.getItem('token') || null;
 function updateAuthUI(){
   const authButtons = document.getElementById('authButtons');
   const newPostBtn = document.querySelector('[data-bs-target="#createPostModal"]');
+  const savedLink = document.getElementById('savedLink');
+  const modLink = document.getElementById('modLink');
   if (!authButtons) return;
   if (CURRENT_USER){
     authButtons.innerHTML = `
@@ -23,12 +25,16 @@ function updateAuthUI(){
     if(newPostBtn){ newPostBtn.classList.remove('disabled'); newPostBtn.removeAttribute('disabled'); newPostBtn.title=''; }
     const lb = document.getElementById('logoutBtn');
     if(lb){ lb.addEventListener('click', ()=>{ localStorage.removeItem('user'); CURRENT_USER=null; location.reload(); }); }
+    if (savedLink){ savedLink.classList.remove('d-none'); }
+    if (modLink){ modLink.classList.toggle('d-none', !(CURRENT_USER.role==='admin' || CURRENT_USER.role==='moderator')); }
   } else {
     authButtons.innerHTML = `
       <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
       <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
     `;
     if(newPostBtn){ newPostBtn.classList.add('disabled'); newPostBtn.setAttribute('disabled','disabled'); newPostBtn.title='Gönderi oluşturmak için giriş yapın'; }
+    if (savedLink){ savedLink.classList.add('d-none'); }
+    if (modLink){ modLink.classList.add('d-none'); }
   }
 }
 
@@ -52,6 +58,13 @@ async function translateMany(textArray, target){
 document.addEventListener("DOMContentLoaded", () => {
   updateAuthUI();
   enforceAuthForCreatePost();
+  setupLiveMarkdownPreview();
+  setupMarkdownToolbar();
+  setupUrlPopoverForEditor();
+  setupDraftAutosave();
+  setupMentionAutocomplete();
+  setupEmojiPicker();
+  setupNotificationsDropdown();
   if (document.getElementById("popularPosts")) {
     loadPopularPosts();
   }
@@ -59,6 +72,28 @@ document.addEventListener("DOMContentLoaded", () => {
     loadLatestPostsPaginated(true);
     const moreBtn = document.getElementById('loadMoreLatest');
     if (moreBtn){ moreBtn.addEventListener('click', ()=> loadLatestPostsPaginated(false)); }
+  }
+  // Hero pinned highlight
+  const heroSlide = document.getElementById('heroPinnedSlide');
+  if (heroSlide){
+    (async ()=>{
+      try{
+        // Try to find a pinned post among latest 50
+        const r = await fetch(`${BACKEND_BASE}/api/posts?limit=30`);
+        const data = await r.json();
+        const items = Array.isArray(data.items)? data.items : [];
+        const pinned = items.find(p=>p.pinned) || items[0];
+        if (!pinned) return;
+        const tEl = document.getElementById('heroPinnedTitle');
+        const xEl = document.getElementById('heroPinnedExcerpt');
+        const lEl = document.getElementById('heroPinnedLink');
+        const iEl = document.getElementById('heroPinnedImg');
+        if (tEl) tEl.textContent = pinned.title || 'Öne Çıkan';
+        if (xEl) xEl.textContent = (pinned.content||'').substring(0,140);
+        if (lEl){ const base = location.pathname.includes('/pages/') ? '' : 'pages/'; lEl.href = `${base}post.html?id=${encodeURIComponent(pinned.id)}`; }
+        if (iEl && pinned.mediaUrl){ iEl.src = pinned.mediaUrl; }
+      }catch(_){ }
+    })();
   }
   if (document.getElementById("categoryPosts")) {
     const category = document.body.getAttribute("data-category"); 
@@ -142,6 +177,10 @@ function loadPopularPosts() {
   fetch(`${API_URL}/popular`)
     .then(res => res.json())
     .then(async posts => {
+      // pinned-first then views desc (already popular by views, we just ensure pinned bubble up)
+      posts.sort((a,b)=>{
+        const ap = a.pinned?1:0, bp = b.pinned?1:0; if (ap!==bp) return bp-ap; return (b.views||0)-(a.views||0);
+      });
       if (CURRENT_LANG === 'en' && posts.length){
         const toTranslate = [];
         posts.forEach(p => {
@@ -166,11 +205,16 @@ function loadPopularPosts() {
         <div class="col-md-4 mb-3">
           <div class="card h-100 shadow-sm" data-post-id="${p.id}">
             <div class="card-body">
+              ${(p.pinned?'<span class="badge bg-warning text-dark me-1">📌 Sabit</span>':'')+(p.locked?'<span class="badge bg-secondary me-1">🔒 Kilitli</span>':'')}
               ${thumb}
               <h5 class="card-title">${p.title}</h5>
               <p class="card-text">${p.content.substring(0,100)}...</p>
               <span class="badge bg-primary">${p.category}</span>
               ${linkBtn ? `<div class=\"mt-2\">${linkBtn}</div>` : ''}
+              <div class="mt-2 d-flex gap-2">
+                <button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>
+                <button class="btn btn-sm btn-outline-light bookmark-btn" data-id="${p.id}">🔖 Kaydet</button>
+              </div>
             </div>
           </div>
         </div>
@@ -185,6 +229,9 @@ function loadLatestPosts() {
   fetch(`${API_URL}/latest`)
     .then(res => res.json())
     .then(async posts => {
+      posts.sort((a,b)=>{
+        const ap = a.pinned?1:0, bp = b.pinned?1:0; if (ap!==bp) return bp-ap; return new Date(b.createdAt||0)-new Date(a.createdAt||0);
+      });
       if (CURRENT_LANG === 'en' && posts.length){
         const toTranslate = [];
         posts.forEach(p => {
@@ -209,11 +256,16 @@ function loadLatestPosts() {
         <div class="col-md-6 mb-3">
           <div class="card h-100 shadow-sm" data-post-id="${p.id}">
             <div class="card-body">
+              ${(p.pinned?'<span class="badge bg-warning text-dark me-1">📌 Sabit</span>':'')+(p.locked?'<span class="badge bg-secondary me-1">🔒 Kilitli</span>':'')}
               ${thumb}
               <h5 class="card-title">${p.title}</h5>
               <p class="card-text">${p.content.substring(0,150)}...</p>
               <span class="badge bg-secondary">${p.category}</span>
               ${linkBtn ? `<div class=\"mt-2\">${linkBtn}</div>` : ''}
+              <div class="mt-2 d-flex gap-2">
+                <button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>
+                <button class="btn btn-sm btn-outline-light bookmark-btn" data-id="${p.id}">🔖 Kaydet</button>
+              </div>
             </div>
           </div>
         </div>
@@ -253,11 +305,16 @@ function loadCategoryPosts(category) {
         <div class="col-md-6 mb-3">
           <div class="card h-100 shadow-sm" data-post-id="${p.id}">
             <div class="card-body">
+              ${(p.pinned?'<span class="badge bg-warning text-dark me-1">📌 Sabit</span>':'')+(p.locked?'<span class="badge bg-secondary me-1">🔒 Kilitli</span>':'')}
               ${thumb}
               <h5 class="card-title">${p.title}</h5>
               <p class="card-text">${p.content.substring(0,150)}...</p>
               <small class="text-muted">Paylaşan: ${author}</small>
               ${linkBtn ? `<div class=\"mt-2\">${linkBtn}</div>` : ''}
+              <div class="mt-2 d-flex gap-2">
+                <button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>
+                <button class="btn btn-sm btn-outline-light bookmark-btn" data-id="${p.id}">🔖 Kaydet</button>
+              </div>
             </div>
           </div>
         </div>
@@ -281,6 +338,24 @@ function attachPostCardHandlers(scope){
     });
   });
 }
+
+// Elevate admin/mod controls on post detail if present
+document.addEventListener('DOMContentLoaded', ()=>{
+  const postActions = document.getElementById('postActions');
+  if (!postActions) return;
+  // Add pin/lock buttons for admin/mod
+  const user = JSON.parse(localStorage.getItem('user')||'null');
+  if (!user || !(['admin','moderator','superadmin'].includes(user.role))) return;
+  // create buttons
+  const pinBtn = document.createElement('button'); pinBtn.className='btn btn-sm btn-outline-info'; pinBtn.id='pinPostBtn'; pinBtn.textContent='📌 Sabitle';
+  const lockBtn = document.createElement('button'); lockBtn.className='btn btn-sm btn-outline-secondary'; lockBtn.id='lockPostBtn'; lockBtn.textContent='🔒 Kilitle';
+  postActions.appendChild(pinBtn); postActions.appendChild(lockBtn);
+  const token = localStorage.getItem('token');
+  const idMatch = location.search.match(/id=([^&]+)/); const postId = idMatch? decodeURIComponent(idMatch[1]) : null;
+  const base = location.hostname.includes('localhost')? 'http://localhost:4000':'https://naramusic.onrender.com';
+  if (pinBtn && postId){ pinBtn.addEventListener('click', async ()=>{ try{ await fetch(`${base}/api/posts/${postId}/pin`, { method:'POST', headers:{ 'Content-Type':'application/json','Authorization':`Bearer ${token}` }, body: JSON.stringify({ pinned: true }) }); alert('Sabitleme gönderildi'); }catch(_){ alert('Sabitleme hata'); } }); }
+  if (lockBtn && postId){ lockBtn.addEventListener('click', async ()=>{ try{ await fetch(`${base}/api/posts/${postId}/lock`, { method:'POST', headers:{ 'Content-Type':'application/json','Authorization':`Bearer ${token}` }, body: JSON.stringify({ locked: true }) }); alert('Kilitleme gönderildi'); }catch(_){ alert('Kilitleme hata'); } }); }
+});
 
 function showPostDetailModal(p){
   const mEl = document.getElementById('postDetailModal');
@@ -355,6 +430,331 @@ function setupNewPostForm() {
       console.error("Post ekleme hatası:", err);
     }
   });
+}
+
+// Create Post modal: live markdown preview
+function setupLiveMarkdownPreview(){
+  const textarea = document.getElementById('postContent');
+  const preview = document.getElementById('postPreview');
+  if (!textarea || !preview) return;
+  const render = (value)=>{
+    const raw = String(value||'');
+    try{
+      if (window.marked && typeof window.marked.parse === 'function'){
+        preview.innerHTML = window.marked.parse(raw);
+      } else {
+        preview.innerHTML = raw
+          .replace(/\n\n/g,'</p><p>')
+          .replace(/\n/g,'<br>');
+      }
+    }catch(_){ preview.textContent = raw; }
+  };
+  render(textarea.value);
+  ['input','change','keyup'].forEach(evt=> textarea.addEventListener(evt, ()=> render(textarea.value)));
+}
+
+// Notifications dropdown
+function setupNotificationsDropdown(){
+  const btn = document.getElementById('notifDropdownBtn');
+  const menu = document.getElementById('notifMenu');
+  if (!btn || !menu) return;
+  btn.addEventListener('click', async ()=>{
+    if (!CURRENT_USER){
+      menu.innerHTML = '<li class="px-3 py-2 text-muted small">Bildirime erişmek için giriş yapın.</li>';
+      return;
+    }
+    try{
+      const r = await fetch(`${BACKEND_BASE}/api/notifications`, { headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` }});
+      const items = await r.json();
+      if (!Array.isArray(items) || !items.length){
+        menu.innerHTML = '<li class="px-3 py-2 text-muted small">Bildiriminiz yok.</li>';
+        return;
+      }
+      menu.innerHTML = items.map(n=>`
+        <li>
+          <a href="#" class="dropdown-item d-flex justify-content-between align-items-center notif-item" data-id="${n.id}">
+            <span>${n.type==='mention' ? 'Bahsetme' : 'Bildirim'} • ${n.fromUser ? ('@'+n.fromUser) : ''}</span>
+            ${n.read? '' : '<span class="badge bg-primary">Yeni</span>'}
+          </a>
+        </li>
+      `).join('') + '<li><hr class="dropdown-divider"></li><li><button id="markAllRead" class="dropdown-item text-center">Tümünü okundu işaretle</button></li>';
+    }catch(err){
+      console.error(err);
+      menu.innerHTML = '<li class="px-3 py-2 text-danger small">Bildiriler yüklenemedi</li>';
+    }
+  });
+  menu.addEventListener('click', async (e)=>{
+    const item = e.target.closest('.notif-item');
+    if (item){
+      e.preventDefault();
+      const id = item.getAttribute('data-id');
+      try{ await fetch(`${BACKEND_BASE}/api/notifications/${id}/read`, { method:'POST', headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` }}); item.querySelector('.badge')?.remove(); }
+      catch(err){ console.error(err); }
+    }
+    if (e.target && e.target.id === 'markAllRead'){
+      e.preventDefault();
+      // naive: iterate current items
+      menu.querySelectorAll('.notif-item').forEach(async a=>{
+        const id = a.getAttribute('data-id');
+        try{ await fetch(`${BACKEND_BASE}/api/notifications/${id}/read`, { method:'POST', headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` }}); a.querySelector('.badge')?.remove(); }catch(_){ }
+      });
+    }
+  });
+}
+
+// Markdown toolbar logic
+function setupMarkdownToolbar(){
+  const textarea = document.getElementById('postContent');
+  if (!textarea) return;
+  const toolbar = document.querySelector('[aria-label="Editor toolbar"]');
+  if (!toolbar) return;
+
+  function surroundSelection(prefix, suffix){
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+    const value = textarea.value;
+    const selected = value.slice(start, end);
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    textarea.value = before + prefix + selected + (suffix ?? '') + after;
+    const cursorPos = before.length + prefix.length + selected.length + (suffix ? suffix.length : 0);
+    textarea.focus();
+    textarea.setSelectionRange(cursorPos, cursorPos);
+    textarea.dispatchEvent(new Event('input'));
+  }
+
+  function insertLinePrefix(prefix){
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+    const value = textarea.value;
+    const pre = value.slice(0, start);
+    const sel = value.slice(start, end);
+    const post = value.slice(end);
+    // expand to full lines
+    const lineStart = pre.lastIndexOf('\n') + 1;
+    const lineEnd = end + (post.indexOf('\n')===-1 ? 0 : post.indexOf('\n'));
+    const block = value.slice(lineStart, lineEnd || end);
+    const lines = block.split('\n').map(l=> prefix + (l.trim().length? l : ''));
+    const newBlock = lines.join('\n');
+    textarea.value = value.slice(0, lineStart) + newBlock + value.slice(lineStart + block.length);
+    const newCursor = lineStart + newBlock.length;
+    textarea.focus();
+    textarea.setSelectionRange(newCursor, newCursor);
+    textarea.dispatchEvent(new Event('input'));
+  }
+
+  toolbar.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-md-btn]');
+    if (!btn) return;
+    e.preventDefault();
+    const type = btn.getAttribute('data-md-btn');
+    if (type === 'bold') return surroundSelection('**','**');
+    if (type === 'italic') return surroundSelection('*','*');
+    if (type === 'strike') return surroundSelection('~~','~~');
+    if (type === 'h2') return insertLinePrefix('## ');
+    if (type === 'h3') return insertLinePrefix('### ');
+    if (type === 'quote') return insertLinePrefix('> ');
+    if (type === 'ul') return insertLinePrefix('- ');
+    if (type === 'ol') return insertLinePrefix('1. ');
+    if (type === 'task') return insertLinePrefix('- [ ] ');
+    if (type === 'link') return openUrlPopover('link');
+    if (type === 'image') return openUrlPopover('image');
+    if (type === 'code') return surroundSelection('`','`');
+    if (type === 'codeblock') return surroundSelection('\n```\n','\n```\n');
+    if (type === 'table'){
+      const tpl = '\n| Başlık 1 | Başlık 2 | Başlık 3 |\n| --- | --- | --- |\n| Hücre | Hücre | Hücre |\n| Hücre | Hücre | Hücre |\n';
+      return surroundSelection('\n'+tpl,'');
+    }
+    if (type === 'hr'){
+      return surroundSelection('\n\n---\n\n','');
+    }
+    if (type === 'emoji'){
+      if (typeof window.openEmojiPicker === 'function') window.openEmojiPicker();
+      return;
+    }
+  });
+
+  // Keyboard shortcuts
+  textarea.addEventListener('keydown', (e)=>{
+    if (e.ctrlKey || e.metaKey){
+      if (e.key.toLowerCase()==='b'){ e.preventDefault(); surroundSelection('**','**'); }
+      if (e.key.toLowerCase()==='i'){ e.preventDefault(); surroundSelection('*','*'); }
+      if (e.key.toLowerCase()==='k'){ e.preventDefault(); const url = prompt('Bağlantı URL'); if (url) surroundSelection('[',`](${url})`); }
+    }
+  });
+}
+
+// Popover for link/image URL
+function setupUrlPopoverForEditor(){
+  const pop = document.getElementById('urlPopover');
+  const popInput = document.getElementById('urlPopoverInput');
+  const popOk = document.getElementById('urlPopoverOk');
+  const popCancel = document.getElementById('urlPopoverCancel');
+  const popTitle = document.getElementById('urlPopoverTitle');
+  const textarea = document.getElementById('postContent');
+  if (!pop || !textarea) return;
+  let mode = 'link';
+  function placeNearToolbar(){
+    const toolbar = document.querySelector('[aria-label="Editor toolbar"]');
+    if (!toolbar) return;
+    const rect = toolbar.getBoundingClientRect();
+    pop.style.left = Math.max(16, rect.left + window.scrollX) + 'px';
+    pop.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+  }
+  function open(type){ mode = type; pop.style.display='block'; placeNearToolbar(); popInput.value=''; popInput.focus(); popTitle.textContent = type==='link' ? 'Bağlantı ekle' : 'Resim ekle'; }
+  function close(){ pop.style.display='none'; }
+  window.openUrlPopover = open;
+  popOk.addEventListener('click', ()=>{
+    const url = popInput.value.trim();
+    if (!url) { close(); return; }
+    if (mode==='link'){
+      // surround with [text](url)
+      const start = textarea.selectionStart || 0; const end = textarea.selectionEnd || 0;
+      const sel = textarea.value.slice(start,end) || 'bağlantı';
+      const before = textarea.value.slice(0,start), after = textarea.value.slice(end);
+      textarea.value = before + '[' + sel + '](' + url + ')' + after;
+    } else {
+      const start = textarea.selectionStart || 0; const end = textarea.selectionEnd || 0;
+      const sel = textarea.value.slice(start,end) || 'alt';
+      const before = textarea.value.slice(0,start), after = textarea.value.slice(end);
+      textarea.value = before + '![' + sel + '](' + url + ')' + after;
+    }
+    textarea.focus();
+    textarea.dispatchEvent(new Event('input'));
+    close();
+  });
+  popCancel.addEventListener('click', close);
+  document.addEventListener('click', (e)=>{ if (!pop.contains(e.target) && !e.target.closest('[data-md-btn="link"], [data-md-btn="image"]')) close(); });
+  window.addEventListener('resize', placeNearToolbar);
+}
+
+// Draft autosave
+function setupDraftAutosave(){
+  const form = document.getElementById('newPostForm');
+  if (!form) return;
+  const title = document.getElementById('postTitle');
+  const content = document.getElementById('postContent');
+  const category = document.getElementById('postCategory');
+  const mediaUrl = document.getElementById('postMediaUrl');
+  const linkUrl = document.getElementById('postLinkUrl');
+  const KEY = 'draft_newpost_v1';
+  // Restore
+  try{
+    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved){
+      if (saved.title && title) title.value = saved.title;
+      if (saved.content && content) content.value = saved.content;
+      if (saved.category && category) category.value = saved.category;
+      if (saved.mediaUrl && mediaUrl) mediaUrl.value = saved.mediaUrl;
+      if (saved.linkUrl && linkUrl) linkUrl.value = saved.linkUrl;
+      content?.dispatchEvent(new Event('input'));
+    }
+  }catch(_){ }
+  function persist(){
+    const data = { title: title?.value||'', content: content?.value||'', category: category?.value||'', mediaUrl: mediaUrl?.value||'', linkUrl: linkUrl?.value||'' };
+    localStorage.setItem(KEY, JSON.stringify(data));
+  }
+  ['input','change','keyup'].forEach(evt=>{
+    [title,content,category,mediaUrl,linkUrl].forEach(el=>{ if (el) el.addEventListener(evt, persist); });
+  });
+  form.addEventListener('submit', ()=>{ try{ localStorage.removeItem(KEY); }catch(_){ } });
+}
+
+// Mention autocomplete (very simple)
+function setupMentionAutocomplete(){
+  const textarea = document.getElementById('postContent');
+  if (!textarea) return;
+  const listEl = document.createElement('div');
+  listEl.className = 'card shadow-sm';
+  listEl.style.cssText = 'position:absolute; z-index:2000; display:none; width:220px;';
+  document.body.appendChild(listEl);
+  let candidates = [];
+  async function ensureCandidates(){
+    if (candidates.length) return;
+    try{
+      // Basit: son 400 post yazarlarını topla (backend search endpoint'ini kullanalım)
+      const r = await fetch(`${BACKEND_BASE}/api/posts/latest`);
+      const items = await r.json();
+      const names = new Set(); items.forEach(p=>{ if (p.authorName) names.add(p.authorName); });
+      candidates = Array.from(names);
+    }catch(_){ candidates = []; }
+  }
+  function placeList(){
+    const rect = textarea.getBoundingClientRect();
+    listEl.style.left = (rect.left + window.scrollX + 8) + 'px';
+    listEl.style.top = (rect.top + window.scrollY + rect.height - 8) + 'px';
+  }
+  function showList(items){
+    if (!items.length){ hideList(); return; }
+    listEl.innerHTML = '<div class="list-group list-group-flush">' + items.slice(0,8).map(n=>`<button type="button" class="list-group-item list-group-item-action py-1 px-2">@${n}</button>`).join('') + '</div>';
+    placeList();
+    listEl.style.display='block';
+  }
+  function hideList(){ listEl.style.display='none'; }
+  textarea.addEventListener('input', async ()=>{
+    const val = textarea.value;
+    const m = val.slice(0, textarea.selectionStart||0).match(/@([a-zA-Z0-9_]{2,20})$/);
+    if (!m){ hideList(); return; }
+    await ensureCandidates();
+    const q = m[1].toLowerCase();
+    const matches = candidates.filter(n=> n.toLowerCase().startsWith(q));
+    showList(matches);
+  });
+  listEl.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button.list-group-item');
+    if (!btn) return;
+    const handle = btn.textContent.replace('@','');
+    const pos = textarea.selectionStart||0;
+    const before = textarea.value.slice(0,pos).replace(/@([a-zA-Z0-9_]{2,20})$/, '@'+handle);
+    const after = textarea.value.slice(pos);
+    textarea.value = before + after;
+    textarea.focus();
+    textarea.dispatchEvent(new Event('input'));
+    hideList();
+  });
+  document.addEventListener('click', (e)=>{ if (!listEl.contains(e.target)) hideList(); });
+  window.addEventListener('resize', placeList);
+}
+
+// Emoji picker
+function setupEmojiPicker(){
+  const picker = document.getElementById('emojiPicker');
+  const grid = document.getElementById('emojiGrid');
+  const search = document.getElementById('emojiSearch');
+  const textarea = document.getElementById('postContent');
+  if (!picker || !grid || !search || !textarea) return;
+  // Simple emoji set (can be expanded)
+  const EMOJIS = '😀 😃 😄 😁 😆 😅 😂 🙂 😉 😊 😇 🤩 😍 😘 😗 😙 😚 😋 😛 😜 🤪 🤓 😎 🥳 🤠 😏 🤗 🤔 🤨 😐 😑 😶 🙄 😯 😪 😴 🤤 😮‍💨 😌 😍 🙌 👍 👎 👏 🙏 🔥 🎉 💯 ✨ 🎶 🎵 🎧 🥁 🎸 🎹 🎺 🎻 🎤 🎼'.split(' ');
+  function render(list){
+    grid.innerHTML = list.map(e=>`<button type="button" class="btn btn-sm btn-outline-secondary" data-emoji="${e}">${e}</button>`).join('');
+  }
+  function place(){
+    const toolbar = document.querySelector('[aria-label="Editor toolbar"]');
+    if (!toolbar) return;
+    const rect = toolbar.getBoundingClientRect();
+    picker.style.left = Math.max(16, rect.left + window.scrollX) + 'px';
+    picker.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+  }
+  function open(){ picker.style.display='block'; place(); search.value=''; render(EMOJIS); search.focus(); }
+  function close(){ picker.style.display='none'; }
+  window.openEmojiPicker = open;
+  grid.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-emoji]'); if (!btn) return;
+    const emoji = btn.getAttribute('data-emoji');
+    const start = textarea.selectionStart||0; const end = textarea.selectionEnd||0;
+    const before = textarea.value.slice(0,start); const after = textarea.value.slice(end);
+    textarea.value = before + emoji + after;
+    const pos = before.length + emoji.length; textarea.focus(); textarea.setSelectionRange(pos,pos); textarea.dispatchEvent(new Event('input'));
+    close();
+  });
+  search.addEventListener('input', ()=>{
+    const q = search.value.trim();
+    if (!q){ render(EMOJIS); return; }
+    const res = EMOJIS.filter(e=> e.includes(q));
+    render(res);
+  });
+  document.addEventListener('click', (e)=>{ if (!picker.contains(e.target) && !e.target.closest('[data-md-btn="emoji"]')) close(); });
+  window.addEventListener('resize', place);
 }
 
 // Basit sahte kimlik doğrulama kancaları (yerine Firebase gelecek)

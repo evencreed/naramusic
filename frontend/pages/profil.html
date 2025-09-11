@@ -45,7 +45,7 @@
           <div class="d-flex align-items-center gap-3">
             <img id="profAvatar" class="rounded-circle" style="width:64px;height:64px; object-fit:cover" src="" alt="avatar">
             <div>
-              <h5 id="profUsername" class="mb-1">Kullanıcı</h5>
+              <h5 id="profUsername" class="mb-1">Kullanıcı <span id="profRole" class="badge bg-dark ms-2 d-none"></span></h5>
               <div id="profEmail" class="text-muted small"></div>
             </div>
           </div>
@@ -95,8 +95,17 @@
     // Auth check
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     if (!user){ location.href = '../index.html'; }
-    document.getElementById('profUsername').textContent = user.username;
+    document.getElementById('profUsername').firstChild.nodeValue = user.username + ' ';
     document.getElementById('profEmail').textContent = user.email || '';
+    const roleBadge = document.getElementById('profRole');
+    if (roleBadge){
+      const role = user.role || 'user';
+      roleBadge.textContent = role;
+      roleBadge.classList.remove('d-none');
+      if (role==='superadmin'){ roleBadge.classList.add('bg-danger'); }
+      else if (role==='admin'){ roleBadge.classList.add('bg-warning'); }
+      else if (role==='moderator'){ roleBadge.classList.add('bg-primary'); }
+    }
     if (user.avatarUrl){ document.getElementById('profAvatar').src = user.avatarUrl; } else { document.getElementById('profAvatar').src = 'https://ui-avatars.com/api/?name='+encodeURIComponent(user.username||'U')+'&background=0D8ABC&color=fff'; }
     document.getElementById('logoutBtn').addEventListener('click', ()=>{ localStorage.removeItem('user'); location.href = '../index.html'; });
 

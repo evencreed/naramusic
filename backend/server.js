@@ -42,6 +42,37 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+// Seed super admin (idempotent)
+(async function ensureSuperAdmin(){
+  try{
+    const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL || "merttopacoglu@gmail.com";
+    const SUPER_ADMIN_USERNAME = process.env.SUPER_ADMIN_USERNAME || "evencreed";
+    if (!SUPER_ADMIN_EMAIL && !SUPER_ADMIN_USERNAME) return;
+    const usersCol = db.collection("users");
+    let snaps = [];
+    if (SUPER_ADMIN_EMAIL){
+      const s1 = await usersCol.where("email", "==", SUPER_ADMIN_EMAIL.toLowerCase()).limit(5).get();
+      snaps = snaps.concat(s1.docs);
+    }
+    if (SUPER_ADMIN_USERNAME){
+      const s2 = await usersCol.where("username", "==", SUPER_ADMIN_USERNAME).limit(5).get();
+      snaps = snaps.concat(s2.docs);
+    }
+    // de-dup
+    const seen = new Set();
+    const targets = snaps.filter(d=>{ if (seen.has(d.id)) return false; seen.add(d.id); return true; });
+    for (const d of targets){
+      try{
+        const role = d.data().role || "user";
+        if (role !== "superadmin"){
+          await usersCol.doc(d.id).update({ role: "superadmin" });
+          console.log("[roles] promoted to superadmin:", d.id, d.data().username || d.data().email);
+        }
+      }catch(err){ console.warn("[roles] promote failed", d.id, err.message); }
+    }
+  }catch(e){ console.warn("[roles] ensureSuperAdmin warn:", e.message); }
+})();
+
 //
 // 2) Express setup
 //
@@ -54,13 +85,32 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
 const writeLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 60 });
 
-// Roles helper
+// Roles & permissions
+const ROLES_ORDER = ["user", "moderator", "admin", "superadmin"];
+function roleRank(role){
+  const r = String(role||"user").toLowerCase();
+  const i = ROLES_ORDER.indexOf(r);
+  return i === -1 ? 0 : i;
+}
 function requireRole(...roles) {
   return (req, res, next) => {
     const role = req.user?.role || "user";
+    if (role === "superadmin") return next();
     if (!roles.includes(role)) return res.status(403).json({ error: "Forbidden" });
     next();
   };
+}
+function requireMinRole(minRole){
+  return (req, res, next) => {
+    const cur = req.user?.role || "user";
+    if (cur === "superadmin" || roleRank(cur) >= roleRank(minRole)) return next();
+    return res.status(403).json({ error: "Forbidden" });
+  };
+}
+function requireSuperAdmin(req, res, next){
+  const role = req.user?.role || "user";
+  if (role === "superadmin") return next();
+  return res.status(403).json({ error: "Super admin required" });
 }
 
 // Content helpers
@@ -793,6 +843,8 @@ app.post("/api/report", authMiddleware, async (req, res) => {
     reason: String(reason || "").slice(0, 200),
     createdAt: new Date().toISOString(),
     reporterId: req.user.id,
+    seen: false,
+    status: "open",
   });
   if (type === "post" && postId) {
     await db.collection("posts").doc(postId).update({ reports: admin.firestore.FieldValue.increment(1) });
@@ -804,6 +856,16 @@ app.post("/api/report", authMiddleware, async (req, res) => {
 app.get("/api/mod/reports", authMiddleware, requireRole("admin", "moderator"), async (req, res) => {
   const snap = await db.collection("reports").orderBy("createdAt", "desc").limit(200).get();
   res.json(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+});
+
+// Moderation: update report state
+app.post("/api/mod/reports/:id/seen", authMiddleware, requireRole("admin", "moderator"), async (req, res) => {
+  await db.collection("reports").doc(req.params.id).update({ seen: true });
+  res.json({ ok: true });
+});
+app.post("/api/mod/reports/:id/resolve", authMiddleware, requireRole("admin", "moderator"), async (req, res) => {
+  await db.collection("reports").doc(req.params.id).update({ status: "resolved", resolvedAt: new Date().toISOString(), resolvedBy: req.user.id });
+  res.json({ ok: true });
 });
 
 // Notifications
@@ -819,6 +881,32 @@ app.get("/api/notifications", authMiddleware, async (req, res) => {
 app.post("/api/notifications/:id/read", authMiddleware, async (req, res) => {
   await db.collection("notifications").doc(req.params.id).update({ read: true });
   res.json({ ok: true });
+});
+
+// Admin: user listing and role management (superadmin only)
+app.get("/api/admin/users", authMiddleware, requireSuperAdmin, async (req, res) => {
+  try{
+    const q = String(req.query.q || "").trim().toLowerCase();
+    const snap = await db.collection("users").orderBy("createdAt", "desc").limit(300).get();
+    let items = snap.docs.map(d=>({ id:d.id, username:d.data().username, email:d.data().email, role:d.data().role||"user", createdAt:d.data().createdAt, verified:!!d.data().verified }));
+    if (q){ items = items.filter(u=> (u.username||"").toLowerCase().includes(q) || (u.email||"").toLowerCase().includes(q)); }
+    res.json(items);
+  }catch(err){ res.status(500).json({ error: err.message }); }
+});
+
+app.post("/api/admin/users/:id/role", authMiddleware, requireSuperAdmin, async (req, res) => {
+  try{
+    const targetId = req.params.id;
+    const nextRole = String((req.body||{}).role || '').toLowerCase();
+    if (!ROLES_ORDER.includes(nextRole)) return res.status(400).json({ error: "Invalid role" });
+    if (nextRole !== 'superadmin'){
+      const qs = await db.collection('users').where('role','==','superadmin').limit(2).get();
+      if (qs.empty) return res.status(400).json({ error: 'No superadmin exists' });
+      if (qs.size === 1 && qs.docs[0].id === targetId) return res.status(400).json({ error: 'Cannot demote the last superadmin' });
+    }
+    await db.collection('users').doc(targetId).update({ role: nextRole });
+    res.json({ ok:true, id: targetId, role: nextRole });
+  }catch(err){ res.status(500).json({ error: err.message }); }
 });
 
 // Bookmarks: toggle and list
@@ -856,12 +944,15 @@ app.get("/api/users/me/bookmarks", authMiddleware, async (req, res) => {
 
 app.get("/api/posts/category/:cat", async (req, res) => {
   try {
-    const snapshot = await db
-      .collection("posts")
-      .where("category", "==", req.params.cat)
-      .orderBy("createdAt", "desc")
-      .get();
-    const posts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await db.collection("posts").where("category", "==", req.params.cat).get();
+    let posts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    posts.sort((a,b)=>{
+      const ap = a.pinned?1:0, bp = b.pinned?1:0;
+      if (ap!==bp) return bp-ap; // pinned first
+      const at = new Date(a.createdAt||0).getTime();
+      const bt = new Date(b.createdAt||0).getTime();
+      return bt-at; // then newest
+    });
     res.json(posts);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -888,7 +979,7 @@ app.get("/api/users/:id", async (req, res) => {
     const doc = await db.collection("users").doc(req.params.id).get();
     if (!doc.exists) return res.status(404).json({ error: "User not found" });
     const d = doc.data();
-    res.json({ id: doc.id, username: d.username, email: d.email, avatarUrl: d.avatarUrl || null, createdAt: d.createdAt });
+    res.json({ id: doc.id, username: d.username, email: d.email, avatarUrl: d.avatarUrl || null, createdAt: d.createdAt, role: d.role || "user" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

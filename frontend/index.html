@@ -167,6 +167,14 @@
           <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
           <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
         </div>
+        <div class="dropdown">
+          <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">🔔 Bildirimler</button>
+          <ul class="dropdown-menu dropdown-menu-end" style="min-width: 320px; max-height: 360px; overflow:auto" aria-labelledby="notifDropdownBtn" id="notifMenu">
+            <li class="px-3 py-2 text-muted small">Oturum açın veya bildiriminiz yok.</li>
+          </ul>
+        </div>
+        <a href="pages/submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink">Kaydedilenler</a>
+        <a href="pages/mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink">Mod</a>
       </div>
     </div>
   </nav>
@@ -194,21 +202,12 @@
   <section class="hero container mt-4">
     <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
       <div class="carousel-inner rounded">
-        <div class="carousel-item active">
-          <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1600&auto=format&fit=crop" class="d-block w-100" alt="hero1">
+        <div class="carousel-item active" id="heroPinnedSlide">
+          <img id="heroPinnedImg" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1600&auto=format&fit=crop" class="d-block w-100" alt="hero1">
           <div class="carousel-caption text-start">
-            <h3>Öne Çıkan Haber Başlığı</h3>
-            <p class="d-none d-md-block">Kısa özet — ilgi çekici açıklama ve bağlantı.</p>
-            <a href="#" class="btn btn-sm btn-outline-light">İncele</a>
-          </div>
-        </div>
-
-        <div class="carousel-item">
-          <img src="https://images.unsplash.com/photo-1507878866276-a947ef722fee?q=80&w=1600&auto=format&fit=crop" class="d-block w-100" alt="hero2">
-          <div class="carousel-caption text-start">
-            <h3>Röportaj & Özel</h3>
-            <p class="d-none d-md-block">Uzun format röportaj ve içerik önizlemesi.</p>
-            <a href="#" class="btn btn-sm btn-outline-light">Oku</a>
+            <h3 id="heroPinnedTitle">Öne Çıkan</h3>
+            <p id="heroPinnedExcerpt" class="d-none d-md-block">Toplulukta sabitlenmiş gönderi burada vurgulanır.</p>
+            <a id="heroPinnedLink" href="#" class="btn btn-sm btn-outline-light">İncele</a>
           </div>
         </div>
       </div>
@@ -372,7 +371,61 @@
             <option value="endustri">Endüstri Haberleri</option>
             <option value="degerlendirme">Değerlendirme</option>
           </select>
-          <textarea id="postContent" name="content" rows="12" class="form-control mb-2" placeholder="İçerik" required></textarea>
+          <div class="btn-toolbar mb-2" role="toolbar" aria-label="Editor toolbar">
+            <div class="btn-group btn-group-sm me-1" role="group">
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="bold" title="Kalın (Ctrl+B)"><strong>B</strong></button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="italic" title="İtalik (Ctrl+I)"><em>I</em></button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="strike" title="Üstü çizili">S</button>
+            </div>
+            <div class="btn-group btn-group-sm me-1" role="group">
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="h2" title="Başlık H2">H2</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="h3" title="Başlık H3">H3</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="quote" title="Alıntı">“”</button>
+            </div>
+            <div class="btn-group btn-group-sm me-1" role="group">
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="ul" title="Madde işaretli liste">• List</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="ol" title="Numaralı liste">1. List</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="task" title="Görev listesi">[ ]</button>
+            </div>
+            <div class="btn-group btn-group-sm me-1" role="group">
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="link" title="Bağlantı (Ctrl+K)">Link</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="image" title="Resim">🖼️</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="code" title="Kod satırı"><code>{}</code></button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="codeblock" title="Kod bloğu">```</button>
+            </div>
+            <div class="btn-group btn-group-sm me-1" role="group">
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="table" title="Tablo">▦</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="hr" title="Yatay çizgi">―</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="emoji" title="Emoji">😊</button>
+            </div>
+          </div>
+          <div id="emojiPicker" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:300px;">
+            <div class="card-body py-2">
+              <input type="text" class="form-control form-control-sm mb-2" id="emojiSearch" placeholder="Emoji ara…">
+              <div id="emojiGrid" class="d-flex flex-wrap gap-1" style="max-height:200px; overflow:auto"></div>
+            </div>
+          </div>
+          <div id="urlPopover" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:320px;">
+            <div class="card-body py-2">
+              <div class="mb-2 small text-muted" id="urlPopoverTitle">Bağlantı ekle</div>
+              <input type="url" class="form-control form-control-sm mb-2" id="urlPopoverInput" placeholder="https://...">
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="urlPopoverCancel">İptal</button>
+                <button type="button" class="btn btn-sm btn-primary" id="urlPopoverOk">Ekle</button>
+              </div>
+            </div>
+          </div>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <textarea id="postContent" name="content" rows="12" class="form-control" placeholder="İçerik (Markdown destekli)" required></textarea>
+            </div>
+            <div class="col-md-6">
+              <div class="form-control" style="height:100%; overflow:auto; background: var(--input-bg); border-color: var(--border)">
+                <div class="small text-muted mb-1">Önizleme</div>
+                <div id="postPreview" class="markdown-body"></div>
+              </div>
+            </div>
+          </div>
           <div class="row g-2">
             <div class="col-md-6">
               <input id="postMediaUrl" name="mediaUrl" type="url" class="form-control" placeholder="Fotoğraf/GIF URL (opsiyonel)">
@@ -407,10 +460,13 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="js/app.js?v=1"></script>
   <script src="js/lang.js?v=1"></script>
 
   <script>
+    (function(){
+    'use strict';
     // small helpers
     document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -444,6 +500,7 @@
     // app.js will render popular and latest via API
 
     // Form eventleri app.js içinde yönetiliyor
+  })();
   </script>
 </body>
 </html>
@@ -709,152 +766,29 @@
 
 
   <script>
-
-    // small helpers
-
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-
-
-    // theme toggle (data-theme + localStorage)
-    const themeToggle = document.getElementById('themeToggle');
-
-    const root = document.documentElement;
-
-    function applyTheme(theme){
-      if(theme === 'light'){
-        root.setAttribute('data-theme','light');
-        themeToggle.textContent = '🌙';
-
-        document.getElementById('mainNavbar').classList.remove('navbar-dark');
-        document.getElementById('mainNavbar').classList.add('navbar-light');
-      } else {
-
-        root.removeAttribute('data-theme');
-        themeToggle.textContent = '☀️';
-
-        document.getElementById('mainNavbar').classList.remove('navbar-light');
-        document.getElementById('mainNavbar').classList.add('navbar-dark');
+    (function(){
+      'use strict';
+      // small helpers
+      var yearEl = document.getElementById('year'); if (yearEl) yearEl.textContent = new Date().getFullYear();
+      // theme toggle (data-theme + localStorage)
+      var themeToggle2 = document.getElementById('themeToggle');
+      var root2 = document.documentElement;
+      function applyTheme2(theme){
+        var nav = document.getElementById('mainNavbar');
+        if(theme === 'light'){
+          root2.setAttribute('data-theme','light');
+          if (themeToggle2) themeToggle2.textContent = '🌙';
+          if (nav){ nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light'); }
+        } else {
+          root2.removeAttribute('data-theme');
+          if (themeToggle2) themeToggle2.textContent = '☀️';
+          if (nav){ nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark'); }
+        }
       }
-    }
-
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    applyTheme(savedTheme);
-
-    themeToggle.addEventListener('click', () => {
-      const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-      localStorage.setItem('theme', next);
-      applyTheme(next);
-    });
-
-
-
-    // placeholder: populate latestPosts with demo items (replace with fetch to backend)
-
-    const latestEl = document.getElementById('latestPosts');
-
-    const sampleLatest = Array.from({length:6}).map((_,i)=>({
-
-      id: i+1,
-
-      title: ['Yeni single dikkat çekiyor','Canlı konser değerlendirmesi','Albüm incelemesi'][i%3] + ' #' + (i+1),
-
-      excerpt: 'Kısa özet metni... Backend ile /api/posts?sort=latest şeklinde getirerek dinamik yapabilirsiniz.',
-
-      createdAt: Date.now() - (i*3600*1000),
-
-      author: { username: 'Kullanıcı' + (i+5) },
-
-      thumb: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop'
-
-    }));
-
-
-
-    function renderLatest(){
-
-      latestEl.innerHTML = sampleLatest.map(p => `
-
-        <div class="col-12">
-
-          <article class="card p-3">
-
-            <div class="row g-3 align-items-center">
-
-              <div class="col-md-4">
-
-                <img class="post-thumb" src="${p.thumb}" alt="">
-
-              </div>
-
-              <div class="col-md-8">
-
-                <h6 class="mb-1">${p.title}</h6>
-
-                <div class="meta mb-2">${new Date(p.createdAt).toLocaleString()} • ${p.author.username}</div>
-
-                <p class="mb-0 text-truncate">${p.excerpt}</p>
-
-              </div>
-
-            </div>
-
-          </article>
-
-        </div>
-
-      `).join('');
-
-    }
-
-
-
-    renderLatest();
-
-
-
-    // Basic form stubs: replace with real API calls
-
-    document.getElementById('loginForm').addEventListener('submit', e=>{
-
-      e.preventDefault();
-
-      // TODO: call /api/auth/login
-
-      bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
-
-      alert('Giriş simülasyonu (backend entegrasyonu gerekli).');
-
-    });
-
-
-
-    document.getElementById('registerForm').addEventListener('submit', e=>{
-
-      e.preventDefault();
-
-      // TODO: call /api/auth/register
-
-      bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
-
-      alert('Kayıt simülasyonu (backend entegrasyonu gerekli).');
-
-    });
-
-
-
-    document.getElementById('createPostForm').addEventListener('submit', e=>{
-
-      e.preventDefault();
-
-      // TODO: POST /api/posts (auth token)
-
-      bootstrap.Modal.getInstance(document.getElementById('createPostModal')).hide();
-
-      alert('Gönderi oluşturma simülasyonu (backend entegrasyonu gerekli).');
-
-    });
-
+      applyTheme2(localStorage.getItem('theme') || 'dark');
+      if (themeToggle2){ themeToggle2.addEventListener('click', function(){ var next = root2.getAttribute('data-theme')==='light' ? 'dark':'light'; localStorage.setItem('theme', next); applyTheme2(next); }); }
+      // legacy demo content removed; dynamic content handled by app.js
+    })();
   </script>
 
 </body>

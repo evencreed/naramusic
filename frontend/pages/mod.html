@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Moderasyon — Nara Müzik</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
+    </div>
+  </nav>
+  <main class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">🚨 Raporlar</h5>
+      <a href="#" id="manageUsersLink" class="btn btn-sm btn-outline-warning">Kullanıcı Rollerini Yönet</a>
+    </div>
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <select id="reportTypeFilter" class="form-select form-select-sm" style="width:160px">
+        <option value="">Tümü</option>
+        <option value="post">post</option>
+        <option value="comment">comment</option>
+      </select>
+      <select id="reportLockPinFilter" class="form-select form-select-sm" style="width:200px">
+        <option value="">Hepsi</option>
+        <option value="pinned">Sadece sabit gönderiler</option>
+        <option value="locked">Sadece kilitli gönderiler</option>
+      </select>
+    </div>
+    <div id="reports" class="list-group mb-4"></div>
+    <div class="card">
+      <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+        <span>👥 Kullanıcılar</span>
+        <div class="d-flex align-items-center gap-2">
+          <select id="roleFilter" class="form-select form-select-sm" style="width:140px">
+            <option value="">Tümü</option>
+            <option value="user">user</option>
+            <option value="moderator">moderator</option>
+            <option value="admin">admin</option>
+            <option value="superadmin">superadmin</option>
+          </select>
+          <input id="userSearch" class="form-control form-control-sm" placeholder="Ara..." style="width:200px">
+        </div>
+      </div>
+      <div class="list-group list-group-flush" id="users"></div>
+    </div>
+    <div id="state" class="mt-3 text-muted small"></div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (async ()=>{
+      const base = location.hostname.includes('localhost')? 'http://localhost:4000':'https://naramusic.onrender.com';
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user')||'null');
+      const state = document.getElementById('state');
+      if (!user){ state.textContent='Giriş yapın.'; return; }
+      try{
+        const r = await fetch(`${base}/api/mod/reports`, { headers:{ 'Authorization': `Bearer ${token}` }});
+        const items = await r.json();
+        if (items.error){ state.textContent = items.error; return; }
+        const all = Array.isArray(items)? items: [];
+        function renderReports(){
+          const el = document.getElementById('reports');
+          const rt = document.getElementById('reportTypeFilter').value;
+          const lf = document.getElementById('reportLockPinFilter').value;
+          let data = all;
+          if (rt){ data = data.filter(x=> x.type===rt); }
+          if (lf){
+            data = data.filter(x=>{
+              if (x.type!=='post') return false;
+              const post = x; // we only have ids, so basic filtering is limited; show all and annotate client-side if needed.
+              // Without fetching post details here, we can't know; so skip heavy fetch and just return true.
+              return true;
+            });
+          }
+          if (!data.length){ el.innerHTML = '<div class="list-group-item text-muted">Rapor bulunamadı.</div>'; return; }
+          el.innerHTML = data.map(x=>`
+            <div class="list-group-item">
+              <div class="d-flex w-100 justify-content-between align-items-center">
+                <div>
+                  <h6 class="mb-1 d-inline">${x.type==='comment'?'Yorum':'Gönderi'} raporu</h6>
+                  ${x.status==='resolved'?'<span class="badge bg-success ms-2">Çözüldü</span>':''}
+                  ${x.seen && x.status!=='resolved'?'<span class="badge bg-secondary ms-1">Görüldü</span>':''}
+                </div>
+                <small>${new Date(x.createdAt).toLocaleString()}</small>
+              </div>
+              <p class="mb-1">Neden: ${x.reason||'-'}</p>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary mark-seen" data-id="${x.id}" ${x.seen?'disabled':''}>Görüldü</button>
+                <button class="btn btn-sm btn-outline-success mark-res" data-id="${x.id}" ${x.status==='resolved'?'disabled':''}>Çözüldü</button>
+              </div>
+              <small class="text-muted">ID: ${x.id}</small>
+            </div>
+          `).join('');
+        }
+        renderReports();
+        document.getElementById('reportTypeFilter').addEventListener('change', renderReports);
+        document.getElementById('reportLockPinFilter').addEventListener('change', renderReports);
+        document.getElementById('reports').addEventListener('click', async (e)=>{
+          const seenBtn = e.target.closest('.mark-seen');
+          const resBtn = e.target.closest('.mark-res');
+          if (seenBtn){
+            const id = seenBtn.getAttribute('data-id');
+            try{ await fetch(`${base}/api/mod/reports/${id}/seen`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` }}); seenBtn.disabled = true; }catch(_){ alert('Güncellenemedi'); }
+          }
+          if (resBtn){
+            const id = resBtn.getAttribute('data-id');
+            try{ await fetch(`${base}/api/mod/reports/${id}/resolve`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` }}); resBtn.disabled = true; }catch(_){ alert('Güncellenemedi'); }
+          }
+        });
+      }catch(err){ state.textContent='Yüklenemedi.'; }
+
+      // Superadmin user list and role assignment
+      const usersWrap = document.getElementById('users');
+      const searchInput = document.getElementById('userSearch');
+      let allUsers = [];
+      let page = 0; const pageSize = 20;
+      function renderUsers(){
+        const roleFilter = document.getElementById('roleFilter').value;
+        const searchQ = searchInput.value.trim().toLowerCase();
+        let items = allUsers;
+        if (roleFilter){ items = items.filter(u=> (u.role||'user')===roleFilter); }
+        if (searchQ){ items = items.filter(u=> (u.username||'').toLowerCase().includes(searchQ) || (u.email||'').toLowerCase().includes(searchQ)); }
+        const start = page*pageSize; const paged = items.slice(start, start+pageSize);
+        usersWrap.innerHTML = paged.map(u=>`
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold">${u.username||'-'} <span class="text-muted">(${u.email||''})</span></div>
+              <div class="small text-muted">${new Date(u.createdAt||Date.now()).toLocaleString()} • <span class="badge bg-dark">${u.role||'user'}</span></div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <select class="form-select form-select-sm role-select" data-id="${u.id}">
+                <option value="user" ${u.role==='user'?'selected':''}>user</option>
+                <option value="moderator" ${u.role==='moderator'?'selected':''}>moderator</option>
+                <option value="admin" ${u.role==='admin'?'selected':''}>admin</option>
+                <option value="superadmin" ${u.role==='superadmin'?'selected':''}>superadmin</option>
+              </select>
+              <button class="btn btn-sm btn-primary apply-role" data-id="${u.id}">Uygula</button>
+            </div>
+          </div>
+        `).join('') + (items.length>pageSize? `<div class="list-group-item text-center"><button id="prevPage" class="btn btn-sm btn-outline-secondary me-2" ${page===0?'disabled':''}>Önceki</button><button id="nextPage" class="btn btn-sm btn-outline-secondary" ${(start+pageSize)>=items.length?'disabled':''}>Sonraki</button></div>` : '');
+      }
+      async function loadUsers(){
+        try{
+          const r = await fetch(`${base}/api/admin/users`, { headers:{ 'Authorization': `Bearer ${token}` }});
+          const items = await r.json();
+          if (Array.isArray(items)){ allUsers = items; page = 0; renderUsers(); }
+          else { usersWrap.innerHTML = '<div class="list-group-item text-danger">Kullanıcılar yüklenemedi</div>'; }
+        }catch(_){ usersWrap.innerHTML = '<div class="list-group-item text-danger">Kullanıcılar yüklenemedi</div>'; }
+      }
+      await loadUsers();
+      searchInput.addEventListener('input', ()=>{ clearTimeout(window.__us_f1); window.__us_f1 = setTimeout(()=>{ page=0; renderUsers(); }, 200); });
+      document.getElementById('roleFilter').addEventListener('change', ()=>{ page=0; renderUsers(); });
+      usersWrap.addEventListener('click', (e)=>{
+        if (e.target && e.target.id==='prevPage'){ e.preventDefault(); if (page>0){ page--; renderUsers(); } }
+        if (e.target && e.target.id==='nextPage'){ e.preventDefault(); page++; renderUsers(); }
+      });
+      usersWrap.addEventListener('click', async (e)=>{
+        const btn = e.target.closest('.apply-role');
+        if (!btn) return;
+        const id = btn.getAttribute('data-id');
+        const sel = usersWrap.querySelector(`.role-select[data-id="${'${id}'}"]`);
+        const sel2 = usersWrap.querySelector('.role-select[data-id="'+id+'"]');
+        const selectEl = sel || sel2;
+        if (!selectEl) return;
+        try{
+          const r = await fetch(`${base}/api/admin/users/${id}/role`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ role: selectEl.value }) });
+          const d = await r.json();
+          if (d.error){ alert(d.error); } else { await loadUsers(); }
+        }catch(_){ alert('Güncellenemedi'); }
+      });
+    })();
+  </script>
+</body>
+</html>
+
+

@@ -29,7 +29,7 @@
         <button class="btn btn-sm btn-outline-danger d-none" id="deletePostBtn">Sil</button>
         <button class="btn btn-sm btn-outline-secondary" id="reportPostBtn">Raporla</button>
       </div>
-      <h4 id="pTitle">Gönderi</h4>
+      <h4 id="pTitle">Gönderi <span id="pBadges" class="ms-2"></span></h4>
       <div class="text-muted small mb-2" id="pMeta"></div>
       <div id="pMedia" class="mb-3"></div>
       <div id="pContent" class="mb-3"></div>
@@ -84,7 +84,10 @@
       const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}`);
       const p = await r.json();
       POST_DATA = p;
-      document.getElementById('pTitle').textContent = p.title;
+      const titleEl = document.getElementById('pTitle');
+      if (titleEl && titleEl.firstChild){ titleEl.firstChild.nodeValue = p.title + ' '; }
+      const badgeEl = document.getElementById('pBadges');
+      if (badgeEl){ badgeEl.innerHTML = `${p.pinned?'<span class=\'badge bg-warning text-dark me-1\'>📌 Sabit</span>':''}${p.locked?'<span class=\'badge bg-secondary\'>🔒 Kilitli</span>':''}`; }
       document.getElementById('pMeta').textContent = `${p.authorName||'Anonim'} • ${new Date(p.createdAt).toLocaleString()} • ${p.category||''}`;
       document.getElementById('pContent').innerHTML = p.contentHtml || (p.content||'').replace(/\n/g,'<br>');
       if (p.mediaUrl){ document.getElementById('pMedia').innerHTML = `<img src="${p.mediaUrl}" class="img-fluid rounded">`; }
@@ -113,7 +116,9 @@
       }).join('');
     }
 
-    document.getElementById('commentForm').addEventListener('submit', async (e)=>{
+    const cForm = document.getElementById('commentForm');
+    if (POST_DATA && POST_DATA.locked){ cForm.querySelector('button[type="submit"]').disabled = true; cForm.querySelector('.form-text').textContent = 'Bu gönderi kilitli; yorum yapılamaz.'; }
+    cForm.addEventListener('submit', async (e)=>{
       e.preventDefault();
       if(!user){ alert('Yorum yapmak için giriş yapın.'); return; }
       const text = document.getElementById('commentText').value.trim();
