@@ -361,6 +361,17 @@ function setupNewPostForm() {
 window.addEventListener('load', ()=>{
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
+  // Helper: fully close any open modals and remove stray backdrops
+  function closeAllModals(){
+    try{
+      document.querySelectorAll('.modal.show').forEach(m=>{
+        try{ bootstrap.Modal.getOrCreateInstance(m).hide(); }catch(_){ }
+      });
+      document.querySelectorAll('.modal-backdrop').forEach(b=>b.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('padding-right');
+    }catch(e){ console.warn('closeAllModals warn', e); }
+  }
   // Login modalına "Şifremi unuttum?" akışını ekle
   const loginModal = document.getElementById('loginModal');
   if (loginModal){
@@ -422,7 +433,9 @@ window.addEventListener('load', ()=>{
         if(data.error){ alert(data.error); return; }
         localStorage.setItem('user', JSON.stringify(data.user)); localStorage.setItem('token', data.token);
         CURRENT_USER = data.user; AUTH_TOKEN = data.token; updateAuthUI();
-        bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
+        const reg = document.getElementById('registerModal');
+        if (reg){ bootstrap.Modal.getOrCreateInstance(reg).hide(); }
+        closeAllModals();
       }catch(err){ console.error(err); alert('Kayıt hatası'); }
     });
   }
@@ -437,7 +450,9 @@ window.addEventListener('load', ()=>{
         if(data.error){ alert(data.error); return; }
         localStorage.setItem('user', JSON.stringify(data.user)); localStorage.setItem('token', data.token);
         CURRENT_USER = data.user; AUTH_TOKEN = data.token; updateAuthUI();
-        bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+        const logm = document.getElementById('loginModal');
+        if (logm){ bootstrap.Modal.getOrCreateInstance(logm).hide(); }
+        closeAllModals();
       }catch(err){ console.error(err); alert('Giriş hatası'); }
     });
   }
