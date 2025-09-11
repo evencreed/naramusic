@@ -433,6 +433,114 @@ function setupNewPostForm() {
 }
 
 // Create Post modal: live markdown preview
+/* YouTube embed helpers (client-side enhancement for sanitized content) */
+function youtubeIdFromUrl(url){
+  try{
+    const u = new URL(url, location.href);
+    const host = u.hostname.toLowerCase();
+    const allowed = ['youtube.com','www.youtube.com','m.youtube.com','youtu.be'];
+    if (!allowed.includes(host)) return null;
+
+    let id = null;
+    if (host === 'youtu.be'){
+      const seg = u.pathname.split('/').filter(Boolean)[0] || '';
+      if (/^[A-Za-z0-9_-]{11}$/.test(seg)) id = seg;
+    } else if (host === 'youtube.com' || host === 'www.youtube.com' || host === 'm.youtube.com'){
+      if (u.pathname === '/watch'){
+        const v = u.searchParams.get('v') || '';
+        if (/^[A-Za-z0-9_-]{11}$/.test(v)) id = v;
+      } else if (u.pathname.startsWith('/shorts/')){
+        const seg = u.pathname.split('/')[2] || '';
+        if (/^[A-Za-z0-9_-]{11}$/.test(seg)) id = seg;
+      }
+    }
+    if (!id) return null;
+
+    // parse start time from t=, start=, or #t= fragments
+    let start = 0;
+    const tParam = u.searchParams.get('t') || u.searchParams.get('start') || (u.hash && u.hash.startsWith('#t=') ? u.hash.slice(3) : '');
+    if (tParam){
+      const t = String(tParam);
+      const m = t.match(/(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/i);
+      if (m && (m[1] || m[2] || m[3])){
+        start = (parseInt(m[1]||'0',10)*3600) + (parseInt(m[2]||'0',10)*60) + (parseInt(m[3]||'0',10));
+      } else {
+        const n = parseInt(t.replace(/[^\d]/g,''),10);
+        if (!isNaN(n)) start = n;
+      }
+    }
+    return { id, start: start > 0 ? start : 0 };
+  }catch(_){ return null; }
+}
+
+function enhanceYouTubeEmbeds(container){
+  if (!container) return;
+
+  const createWrapper = (videoId, startSec)=>{
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;width:100%;padding-top:56.25%;background:#000;border-radius:.5rem;overflow:hidden;';
+    const src = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1` + (startSec ? `&start=${startSec}` : '');
+    const iframe = document.createElement('iframe');
+    iframe.src = src;
+    iframe.title = 'YouTube video player';
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    iframe.allowFullscreen = true;
+    iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:0;';
+    wrap.appendChild(iframe);
+    return wrap;
+  };
+
+  // Transform anchors
+  container.querySelectorAll('a[href]').forEach(a=>{
+    try{
+      const info = youtubeIdFromUrl(a.href);
+      if (info && info.id){
+        const w = createWrapper(info.id, info.start);
+        a.replaceWith(w);
+      }
+    }catch(_){}
+  });
+
+  // Transform bare text URLs inside paragraphs
+  const ytUrlRe = /\bhttps?:\/\/(?:www\.)?(?:m\.)?(?:youtube\.com\/watch\?[^ \n\r\t<>"]+|youtube\.com\/shorts\/[A-Za-z0-9_-]{11}\S*|youtu\.be\/[A-Za-z0-9_-]{11}\S*)/gi;
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+    acceptNode(node){
+      if (!node.parentElement) return NodeFilter.FILTER_REJECT;
+      if (node.parentElement.tagName.toLowerCase() !== 'p') return NodeFilter.FILTER_SKIP;
+      if (!node.nodeValue || !ytUrlRe.test(node.nodeValue)) return NodeFilter.FILTER_SKIP;
+      ytUrlRe.lastIndex = 0;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const toProcess = [];
+  let node;
+  while ((node = walker.nextNode())) toProcess.push(node);
+
+  toProcess.forEach(textNode=>{
+    const text = textNode.nodeValue || '';
+    ytUrlRe.lastIndex = 0;
+    let last = 0;
+    const frag = document.createDocumentFragment();
+    let m;
+    while ((m = ytUrlRe.exec(text))){
+      const urlStr = m[0];
+      const idx = m.index;
+      if (idx > last) frag.appendChild(document.createTextNode(text.slice(last, idx)));
+      const info = youtubeIdFromUrl(urlStr);
+      if (info && info.id){
+        frag.appendChild(createWrapper(info.id, info.start));
+      } else {
+        frag.appendChild(document.createTextNode(urlStr));
+      }
+      last = idx + urlStr.length;
+    }
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    textNode.parentNode.replaceChild(frag, textNode);
+  });
+}
+// expose for reuse
+window.enhanceYouTubeEmbeds = enhanceYouTubeEmbeds;
+
 function setupLiveMarkdownPreview(){
   const textarea = document.getElementById('postContent');
   const preview = document.getElementById('postPreview');
@@ -446,6 +554,9 @@ function setupLiveMarkdownPreview(){
         preview.innerHTML = raw
           .replace(/\n\n/g,'</p><p>')
           .replace(/\n/g,'<br>');
+      }
+      if (typeof window.enhanceYouTubeEmbeds === 'function') {
+        window.enhanceYouTubeEmbeds(preview);
       }
     }catch(_){ preview.textContent = raw; }
   };
@@ -897,6 +1008,18 @@ if (searchInput){
         attachPostCardHandlers(container);
       }
     }, 300);
+  });
+
+  // Enter ile gelişmiş arama sayfasına git
+  searchInput.addEventListener('keydown', (e)=>{
+    if (e.key === 'Enter'){
+      const val = searchInput.value.trim();
+      if (val){
+        e.preventDefault();
+        const base = location.pathname.includes('/pages/') ? '' : 'pages/';
+        location.href = `${base}search.html?q=${encodeURIComponent(val)}`;
+      }
+    }
   });
 }
 

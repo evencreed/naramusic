@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Yönetim Paneli — Nara Müzik</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .kpi-card .kpi { font-size: 1.6rem; font-weight: 700; }
+    .kpi-card .label { color: var(--muted, #9aa3ae); font-size: .9rem; }
+    .text-muted-small { color: var(--muted, #9aa3ae); font-size: .85rem; }
+    .spark { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; white-space: pre; }
+    .table td, .table th { vertical-align: middle; }
+    .truncate-200 { max-width: 260px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  </style>
+</head>
+<body>
+  <!-- Navbar (lightweight; shares IDs with index for consistency) -->
+  <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
+        <a href="submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink">Kaydedilenler</a>
+        <a href="mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink">Mod</a>
+        <div id="authButtons" class="d-flex gap-1">
+          <button class="btn btn-outline-light btn-sm" onclick="location.href='../index.html#login'">Giriş</button>
+          <button class="btn btn-outline-light btn-sm" onclick="location.href='../index.html#register'">Kayıt</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mt-4" id="gate">
+    <!-- Will be replaced by dashboard if authorized -->
+  </main>
+
+  <!-- Templates -->
+  <template id="dashboardTpl">
+    <section class="mb-3">
+      <h4 class="mb-0">Yönetim Paneli</h4>
+      <div class="text-muted-small" id="generatedLine"></div>
+    </section>
+
+    <!-- KPIs -->
+    <section class="row g-3 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="card kpi-card h-100 p-3">
+          <div class="label">Toplam Kullanıcılar</div>
+          <div class="kpi" id="totalUsers">–</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card kpi-card h-100 p-3">
+          <div class="label">Toplam Gönderiler</div>
+          <div class="kpi" id="totalPosts">–</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card kpi-card h-100 p-3">
+          <div class="label">Toplam Yorumlar</div>
+          <div class="kpi" id="totalComments">–</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card kpi-card h-100 p-3">
+          <div class="label">Açık / Çözülen Raporlar</div>
+          <div class="kpi"><span id="openReports">–</span> / <span id="resolvedReports">–</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="card mb-4">
+      <div class="card-body d-flex flex-wrap align-items-center gap-2">
+        <label for="rangeDays" class="me-2 mb-0">Aralık (gün):</label>
+        <select id="rangeDays" class="form-select form-select-sm" style="width:120px">
+          <option value="7">7</option>
+          <option value="14">14</option>
+          <option value="30">30</option>
+          <option value="60">60</option>
+        </select>
+        <button id="refreshBtn" class="btn btn-sm btn-primary">Yenile</button>
+        <div class="ms-auto text-muted-small" id="state"></div>
+      </div>
+    </section>
+
+    <!-- Distribution + Time Series -->
+    <section class="row g-3 mb-4">
+      <div class="col-lg-5">
+        <div class="card h-100">
+          <div class="card-header">📊 Kategori Dağılımı</div>
+          <div class="list-group list-group-flush" id="perCategory">
+            <div class="list-group-item text-muted">Yükleniyor…</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="card mb-3">
+          <div class="card-header">📈 Günlük Gönderiler (son N gün)</div>
+          <div class="list-group list-group-flush" id="postsSeries">
+            <div class="list-group-item text-muted">Yükleniyor…</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">👥 Günlük Kayıtlar (son N gün)</div>
+          <div class="list-group list-group-flush" id="usersSeries">
+            <div class="list-group-item text-muted">Yükleniyor…</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Top posts -->
+    <section class="card mb-4">
+      <div class="card-header">🔥 En Çok Görüntülenen Gönderiler</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Başlık</th>
+              <th>Kategori</th>
+              <th>Görüntülenme</th>
+              <th>Beğeni</th>
+              <th>Tarih</th>
+            </tr>
+          </thead>
+          <tbody id="topPosts">
+            <tr><td colspan="5" class="text-muted">Yükleniyor…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Recent posts -->
+    <section class="card mb-5">
+      <div class="card-header">🆕 Son Gönderiler</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Başlık</th>
+              <th>Kategori</th>
+              <th>Beğeni</th>
+              <th>Görüntülenme</th>
+              <th>Tarih</th>
+            </tr>
+          </thead>
+          <tbody id="recentPosts">
+            <tr><td colspan="5" class="text-muted">Yükleniyor…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </template>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    (function(){
+      // Theme toggle (mirrors index.html behavior)
+      try{
+        const themeToggle = document.getElementById('themeToggle');
+        const root = document.documentElement;
+        function applyTheme(theme){
+          if(theme === 'light'){
+            root.setAttribute('data-theme','light');
+            if (themeToggle) themeToggle.textContent = '🌙';
+            const nav = document.getElementById('mainNavbar');
+            if (nav){ nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light'); }
+          } else {
+            root.removeAttribute('data-theme');
+            if (themeToggle) themeToggle.textContent = '☀️';
+            const nav = document.getElementById('mainNavbar');
+            if (nav){ nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark'); }
+          }
+        }
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        applyTheme(savedTheme);
+        if (themeToggle){
+          themeToggle.addEventListener('click', () => {
+            const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', next);
+            applyTheme(next);
+          });
+        }
+      }catch(_){}
+
+      // Admin gate
+      const gate = document.getElementById('gate');
+      const user = JSON.parse(localStorage.getItem('user')||'null');
+      const token = localStorage.getItem('token') || null;
+      const role = (user && user.role) ? String(user.role).toLowerCase() : 'user';
+      const isAdmin = role === 'admin' || role === 'superadmin';
+
+      if (!user || !isAdmin) {
+        gate.innerHTML = `
+          <div class="d-flex align-items-center justify-content-center" style="min-height:60vh">
+            <div class="card shadow-sm" style="max-width:520px">
+              <div class="card-body">
+                <h5 class="card-title mb-2">Erişim Engellendi</h5>
+                <p class="card-text">Yalnızca admin erişebilir.</p>
+                <a class="btn btn-primary" href="../index.html#login">Giriş Yap</a>
+              </div>
+            </div>
+          </div>
+        `;
+        return; // do not attempt API calls without token
+      }
+
+      // Render dashboard shell
+      const tpl = document.getElementById('dashboardTpl');
+      gate.innerHTML = '';
+      gate.appendChild(tpl.content.cloneNode(true));
+
+      // Shared auth UI refresh
+      try { if (typeof window.updateAuthUI === 'function') window.updateAuthUI(); } catch(_){}
+
+      const rangeSelect = document.getElementById('rangeDays');
+      const refreshBtn = document.getElementById('refreshBtn');
+      const stateEl = document.getElementById('state');
+      const generatedLine = document.getElementById('generatedLine');
+
+      async function fetchAnalytics(){
+        const rd = parseInt(rangeSelect.value || '7', 10) || 7;
+        const url = new URL(`${BACKEND_BASE}/api/admin/analytics`);
+        url.searchParams.set('rangeDays', String(rd));
+        setLoading(true, 'Yükleniyor…');
+        try{
+          const r = await fetch(url.toString(), { headers: { 'Authorization': `Bearer ${token}` }});
+          if (!r.ok){
+            const err = await safeJson(r);
+            throw new Error(err.error || `HTTP ${r.status}`);
+          }
+          const data = await r.json();
+          populateDashboard(data);
+          setLoading(false, 'Tamamlandı');
+        }catch(e){
+          console.error(e);
+          setLoading(false, 'Hata: ' + (e.message || 'Bilinmeyen'));
+        }
+      }
+
+      function setLoading(loading, msg){
+        if (refreshBtn){ refreshBtn.disabled = !!loading; }
+        if (rangeSelect){ rangeSelect.disabled = !!loading; }
+        if (stateEl){ stateEl.textContent = msg || ''; }
+      }
+
+      function safeNumber(x){ const n = Number(x||0); return isFinite(n)? n: 0; }
+      function safeDateStr(iso){ const t = new Date(iso||0); return isNaN(t.getTime())? '—' : t.toLocaleDateString('tr-TR'); }
+
+      function populateDashboard(d){
+        // KPIs
+        const totals = d.totals || {};
+        byId('totalUsers').textContent = safeNumber(totals.users);
+        byId('totalPosts').textContent = safeNumber(totals.posts);
+        byId('totalComments').textContent = safeNumber(totals.comments);
+        byId('openReports').textContent = safeNumber(totals.reportsOpen);
+        byId('resolvedReports').textContent = safeNumber(totals.reportsResolved);
+        if (generatedLine){ generatedLine.textContent = `Aralık: son ${d.rangeDays || 7} gün • Üretim zamanı: ${safeDateTime(d.generatedAt)}`; }
+
+        // Per-category
+        const pc = d.perCategory || {};
+        const perCatEl = byId('perCategory');
+        const entries = Object.entries(pc).sort((a,b)=> (b[1]||0)-(a[1]||0));
+        perCatEl.innerHTML = entries.length
+          ? entries.map(([cat,cnt]) => `<div class="list-group-item d-flex justify-content-between"><span>${escapeHtml(cat)}</span><span class="badge bg-secondary">${cnt}</span></div>`).join('')
+          : `<div class="list-group-item text-muted">Veri yok</div>`;
+
+        // Time series
+        renderSeries(d.timeSeries?.postsPerDay || [], 'postsSeries');
+        renderSeries(d.timeSeries?.usersPerDay || [], 'usersSeries');
+
+        // Tables
+        renderPostsTable(d.topPostsByViews || [], 'topPosts', ['title','category','views','likes','createdAt'], true);
+        renderPostsTable(d.recentPosts || [], 'recentPosts', ['title','category','likes','views','createdAt'], false);
+      }
+
+      function renderSeries(arr, containerId){
+        const el = byId(containerId);
+        if (!Array.isArray(arr) || !arr.length){
+          el.innerHTML = `<div class="list-group-item text-muted">Veri yok</div>`;
+          return;
+        }
+        const max = Math.max(1, ...arr.map(x => Number(x.count||0)));
+        const WIDTH = 18; // characters
+        el.innerHTML = arr.map(x=>{
+          const count = Number(x.count||0);
+          const blocks = Math.max(0, Math.round((count/max) * WIDTH));
+          const bar = '█'.repeat(blocks);
+          const label = `${x.date}: ${count.toString().padStart(3,' ')}`;
+          return `<div class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="spark">${label}</span>
+            <span class="spark" aria-hidden="true">${bar}</span>
+          </div>`;
+        }).join('');
+      }
+
+      function renderPostsTable(items, tbodyId, cols, showViewsFirst){
+        const tb = byId(tbodyId);
+        if (!Array.isArray(items) || !items.length){
+          tb.innerHTML = `<tr><td colspan="5" class="text-muted">Veri yok</td></tr>`;
+          return;
+        }
+        const base = location.pathname.includes('/pages/') ? '' : 'pages/';
+        tb.innerHTML = items.map(p=>{
+          const id = p.id;
+          const title = escapeHtml(p.title || '');
+          const category = escapeHtml(p.category || '');
+          const views = safeNumber(p.views);
+          const likes = safeNumber(p.likes);
+          const dateStr = safeDateStr(p.createdAt);
+          const link = `${base}post.html?id=${encodeURIComponent(id)}`;
+          if (tbodyId === 'topPosts'){
+            return `<tr>
+              <td><a class="link-light text-decoration-none truncate-200" href="${link}" title="${title}">${title}</a></td>
+              <td><span class="badge bg-secondary">${category}</span></td>
+              <td>${views}</td>
+              <td>${likes}</td>
+              <td>${dateStr}</td>
+            </tr>`;
+          } else {
+            return `<tr>
+              <td><a class="link-light text-decoration-none truncate-200" href="${link}" title="${title}">${title}</a></td>
+              <td><span class="badge bg-secondary">${category}</span></td>
+              <td>${likes}</td>
+              <td>${views}</td>
+              <td>${dateStr}</td>
+            </tr>`;
+          }
+        }).join('');
+      }
+
+      function byId(id){ return document.getElementById(id); }
+      function safeJson(r){ return r.json().catch(()=>({error:'Unknown'})); }
+      function safeDateTime(iso){ const d = new Date(iso||0); return isNaN(d.getTime())? '—' : d.toLocaleString('tr-TR'); }
+      function escapeHtml(s){
+        const div = document.createElement('div');
+        div.textContent = String(s);
+        return div.innerHTML;
+      }
+
+      // Events
+      if (refreshBtn){ refreshBtn.addEventListener('click', fetchAnalytics); }
+      if (rangeSelect){ rangeSelect.addEventListener('change', fetchAnalytics); }
+
+      // Initial fetch with 7 days default
+      if (rangeSelect){ rangeSelect.value = '7'; }
+      fetchAnalytics();
+    })();
+  </script>
+</body>
+</html>

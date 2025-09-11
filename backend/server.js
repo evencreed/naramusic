@@ -9,6 +9,7 @@ const multer = require("multer");
 const rateLimit = require("express-rate-limit");
 const sanitizeHtml = require("sanitize-html");
 const { marked } = require("marked");
+const sgMail = require('@sendgrid/mail');
 
 //
 // 1) Firebase Service Account setup
@@ -41,6 +42,11 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
+
+// SendGrid setup
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 // Seed super admin (idempotent)
 (async function ensureSuperAdmin(){
@@ -166,10 +172,37 @@ app.get("/api/health", (req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 });
 
-// Utility: send verification (console log stub or real email integration)
+// Utility: send verification email
 async function sendVerificationEmail(toEmail, link){
-  // Production: integrate with a provider (e.g., SendGrid, Mailgun)
-  console.log("[verify] send to:", toEmail, "link:", link);
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn("[verify] SENDGRID_API_KEY not set, falling back to console log");
+    console.log("[verify] send to:", toEmail, "link:", link);
+    return;
+  }
+  try {
+    const msg = {
+      to: toEmail,
+      from: 'noreply@naramuzik.com',
+      subject: 'Email Doğrulama - Nara Müzik',
+      text: `Merhaba,\n\nHesabınızı doğrulamak için aşağıdaki bağlantıya tıklayın:\n${link}\n\nBu bağlantı 7 gün geçerlidir.\n\nNara Müzik`,
+      html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111">
+        <p>Merhaba,</p>
+        <p>Hesabınızı doğrulamak için aşağıdaki bağlantıya tıklayın:</p>
+        <p><a href="${link}" style="background:#111;color:#fff;padding:10px 14px;border-radius:6px;text-decoration:none;display:inline-block">Doğrulama Bağlantısı</a></p>
+        <p>Bağlantı çalışmıyorsa bu URL’yi tarayıcınıza yapıştırın:</p>
+        <p><a href="${link}">${link}</a></p>
+        <hr style="border:none;border-top:1px solid #eee;margin:16px 0" />
+        <p style="color:#666">Bu bağlantı 7 gün geçerlidir. Eğer bu isteği siz yapmadıysanız, bu e-postayı yok sayabilirsiniz.</p>
+        <p style="color:#666">— Nara Müzik</p>
+      </div>`,
+    };
+    await sgMail.send(msg);
+    console.log("[verify] email sent to:", toEmail);
+  } catch (error) {
+    // Graceful handling: log and continue without throwing to avoid breaking flows
+    const msg = (error && (error.message || error.toString())) || "unknown error";
+    console.error("[verify] send error:", msg);
+  }
 }
 
 function generateEmailToken(){
@@ -312,6 +345,156 @@ app.get("/api/spotify/playlist", async (req, res) => {
         };
       }),
     };
+    res.json(simplified);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// 5.2) Spotify Artist and Album detail endpoints
+app.get("/api/spotify/artist", async (req, res) => {
+  try {
+    const input = req.query.id || req.query.artist; // support id or full url
+    if (!input) return res.status(400).json({ error: "Missing id or artist" });
+
+    // Extract ID from full URL or spotify: uri if needed
+    let artistId = String(input).trim();
+    const m1 = artistId.match(/artist\/(.*?)(?:$|[/?#])/);
+    const m2 = artistId.match(/spotify:artist:([a-zA-Z0-9]+)/);
+    if (m1 && m1[1]) artistId = m1[1];
+    else if (m2 && m2[1]) artistId = m2[1];
+
+    const token = await getSpotifyAccessToken();
+    const fetch = (await import("node-fetch")).default;
+    const baseHeaders = { Authorization: `Bearer ${token}` };
+
+    // Artist profile
+    const rArtist = await fetch(`https://api.spotify.com/v1/artists/${encodeURIComponent(artistId)}`, {
+      headers: baseHeaders,
+    });
+    const artist = await rArtist.json();
+    if (!rArtist.ok) {
+      return res
+        .status(rArtist.status)
+        .json({ error: artist.error?.message || artist.message || "spotify error", status: rArtist.status, details: artist });
+    }
+
+    // Top tracks — try TR first, fallback to US if TR fails
+    let rTop = await fetch(`https://api.spotify.com/v1/artists/${encodeURIComponent(artistId)}/top-tracks?market=TR`, {
+      headers: baseHeaders,
+    });
+    if (!rTop.ok) {
+      rTop = await fetch(`https://api.spotify.com/v1/artists/${encodeURIComponent(artistId)}/top-tracks?market=US`, {
+        headers: baseHeaders,
+      });
+    }
+    const top = await rTop.json();
+    if (!rTop.ok) {
+      return res
+        .status(rTop.status)
+        .json({ error: top.error?.message || top.message || "spotify error", status: rTop.status, details: top });
+    }
+
+    // Albums (albums + singles)
+    const rAlbums = await fetch(
+      `https://api.spotify.com/v1/artists/${encodeURIComponent(artistId)}/albums?include_groups=album,single&limit=20`,
+      { headers: baseHeaders }
+    );
+    const albumsData = await rAlbums.json();
+    if (!rAlbums.ok) {
+      return res
+        .status(rAlbums.status)
+        .json({ error: albumsData.error?.message || albumsData.message || "spotify error", status: rAlbums.status, details: albumsData });
+    }
+
+    // Minimized JSON payload
+    const simplified = {
+      id: artist.id,
+      name: artist.name,
+      images: artist.images,
+      followers: artist.followers?.total,
+      genres: artist.genres,
+      external_urls: artist.external_urls,
+      topTracks: Array.isArray(top.tracks)
+        ? top.tracks.map((t) => ({
+            id: t.id,
+            name: t.name,
+            preview_url: t.preview_url,
+            external_urls: t.external_urls,
+            duration_ms: t.duration_ms,
+            album: t.album
+              ? {
+                  id: t.album.id,
+                  name: t.album.name,
+                  images: t.album.images,
+                  release_date: t.album.release_date,
+                }
+              : null,
+          }))
+        : [],
+      albums: Array.isArray(albumsData.items)
+        ? albumsData.items.map((a) => ({
+            id: a.id,
+            name: a.name,
+            images: a.images,
+            release_date: a.release_date,
+            total_tracks: a.total_tracks,
+            external_urls: a.external_urls,
+          }))
+        : [],
+    };
+
+    res.json(simplified);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/spotify/album", async (req, res) => {
+  try {
+    const input = req.query.id || req.query.album; // support id or full url
+    if (!input) return res.status(400).json({ error: "Missing id or album" });
+
+    // Extract ID from full URL or spotify: uri if needed
+    let albumId = String(input).trim();
+    const m1 = albumId.match(/album\/(.*?)(?:$|[/?#])/);
+    const m2 = albumId.match(/spotify:album:([a-zA-Z0-9]+)/);
+    if (m1 && m1[1]) albumId = m1[1];
+    else if (m2 && m2[1]) albumId = m2[1];
+
+    const token = await getSpotifyAccessToken();
+    const fetch = (await import("node-fetch")).default;
+    const r = await fetch(`https://api.spotify.com/v1/albums/${encodeURIComponent(albumId)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      return res
+        .status(r.status)
+        .json({ error: data.error?.message || data.message || "spotify error", status: r.status, details: data });
+    }
+
+    const simplified = {
+      id: data.id,
+      name: data.name,
+      images: data.images,
+      release_date: data.release_date,
+      total_tracks: data.total_tracks,
+      external_urls: data.external_urls,
+      artists: (data.artists || []).map((a) => ({
+        id: a.id,
+        name: a.name,
+        external_urls: a.external_urls,
+      })),
+      tracks: (data.tracks?.items || []).map((t) => ({
+        id: t.id,
+        name: t.name,
+        preview_url: t.preview_url,
+        duration_ms: t.duration_ms,
+        external_urls: t.external_urls,
+        track_number: t.track_number,
+      })),
+    };
+
     res.json(simplified);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -498,6 +681,7 @@ app.get("/api/messages/inbox", authMiddleware, async (req, res) => {
 app.post("/api/posts", authMiddleware, writeLimiter, async (req, res) => {
   try {
     const { title, content, category, mediaUrl, linkUrl, tags } = req.body;
+    const rawPoll = (req.body || {}).poll;
     const { id: authorId, username: authorName, avatarUrl: authorAvatar } = req.user;
 
     const safeContent = String(content || "");
@@ -525,6 +709,51 @@ app.post("/api/posts", authMiddleware, writeLimiter, async (req, res) => {
       locked: false,
       reports: 0,
     };
+
+    // Optional Poll
+    if (rawPoll && typeof rawPoll === "object") {
+      // sanitize question and options
+      const question = sanitizePollText(rawPoll.question);
+      const optionsInput = Array.isArray(rawPoll.options) ? rawPoll.options : [];
+      const optionsSan = optionsInput.map((o) => sanitizePollText(o)).filter((s) => !!s);
+
+      // validations
+      if (!question || question.length < 10 || question.length > 140) {
+        return res.status(400).json({ error: "invalid poll question" });
+      }
+      if (!Array.isArray(optionsSan) || optionsSan.length < 2 || optionsSan.length > 6) {
+        return res.status(400).json({ error: "invalid poll options" });
+      }
+      // per-option length and uniqueness (case-insensitive)
+      const seen = new Set();
+      for (const opt of optionsSan) {
+        if (opt.length < 1 || opt.length > 60) {
+          return res.status(400).json({ error: "invalid poll options" });
+        }
+        const key = opt.toLowerCase();
+        if (seen.has(key)) {
+          return res.status(400).json({ error: "invalid poll options" });
+        }
+        seen.add(key);
+      }
+
+      const multiple = !!rawPoll.multiple; // default false
+      const closesAt = normalizePollClosesAt(rawPoll.closesAt);
+
+      const pollObj = {
+        question,
+        options: optionsSan.map((text) => ({
+          id: Math.random().toString(36).slice(2, 8),
+          text,
+          votes: 0,
+        })),
+        totalVotes: 0,
+        multiple,
+        closesAt: closesAt || null,
+      };
+
+      newPost.poll = pollObj;
+    }
 
     const docRef = await db.collection("posts").add(newPost);
     res.json({ id: docRef.id, ...newPost });
@@ -569,6 +798,114 @@ app.get("/api/posts/:id", async (req, res) => {
     res.json({ id: doc.id, ...doc.data() });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Poll-only fetch
+app.get("/api/posts/:id/poll", async (req, res) => {
+  try {
+    const ref = db.collection("posts").doc(req.params.id);
+    const doc = await ref.get();
+    if (!doc.exists) return res.status(404).json({ error: "post not found" });
+    const data = doc.data();
+    if (!data || !data.poll) return res.status(404).json({ error: "poll not found" });
+    return res.json(data.poll);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Voted status helper
+app.get("/api/polls/voted", authMiddleware, async (req, res) => {
+  try {
+    const postId = String(req.query.postId || "").trim();
+    if (!postId) return res.status(400).json({ error: "missing postId" });
+    const voteRef = db.collection("posts").doc(postId).collection("pollVotes").doc(req.user.id);
+    const voteDoc = await voteRef.get();
+    if (!voteDoc.exists) return res.json({ voted: false });
+    const vd = voteDoc.data() || {};
+    return res.json({ voted: true, optionId: vd.optionId || null });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Vote endpoint
+app.post("/api/polls/vote", authMiddleware, writeLimiter, async (req, res) => {
+  try {
+    const { postId, optionId } = req.body || {};
+    if (!postId || !optionId) {
+      return res.status(400).json({ error: "missing postId/optionId" });
+    }
+    const ref = db.collection("posts").doc(String(postId));
+    const baseDoc = await ref.get();
+    if (!baseDoc.exists) return res.status(404).json({ error: "post not found" });
+    const baseData = baseDoc.data();
+    if (!baseData || !baseData.poll) return res.status(404).json({ error: "poll not found" });
+
+    // poll closed?
+    const poll0 = baseData.poll;
+    if (poll0 && poll0.closesAt) {
+      const d = new Date(poll0.closesAt);
+      if (!isNaN(d.getTime()) && d.getTime() <= Date.now()) {
+        return res.status(410).json({ error: "poll closed" });
+      }
+    }
+
+    // option exists?
+    const validOpt = Array.isArray(poll0.options) ? poll0.options.find((o) => String(o.id) === String(optionId)) : null;
+    if (!validOpt) return res.status(400).json({ error: "invalid optionId" });
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const doc = await tx.get(ref);
+        if (!doc.exists) throw new Error("NOT_FOUND");
+        const data = doc.data() || {};
+        const poll = data.poll;
+        if (!poll) throw new Error("NO_POLL");
+
+        // closed re-check inside tx
+        if (poll.closesAt) {
+          const d = new Date(poll.closesAt);
+          if (!isNaN(d.getTime()) && d.getTime() <= Date.now()) {
+            throw new Error("POLL_CLOSED");
+          }
+        }
+
+        const voteRef = ref.collection("pollVotes").doc(req.user.id);
+        const voteDoc = await tx.get(voteRef);
+        if (voteDoc.exists) throw new Error("ALREADY_VOTED");
+
+        // increment chosen option + total
+        const opts = Array.isArray(poll.options) ? poll.options.slice() : [];
+        const idx = opts.findIndex((o) => String(o.id) === String(optionId));
+        if (idx === -1) throw new Error("INVALID_OPTION");
+        const updatedOpt = { ...opts[idx], votes: Number(opts[idx].votes || 0) + 1 };
+        opts[idx] = updatedOpt;
+        const updatedPoll = {
+          ...poll,
+          options: opts,
+          totalVotes: Number(poll.totalVotes || 0) + 1,
+        };
+
+        tx.update(ref, { poll: updatedPoll });
+        tx.set(voteRef, { userId: req.user.id, optionId: String(optionId), createdAt: new Date().toISOString() });
+      });
+    } catch (e) {
+      const msg = (e && e.message) || "";
+      if (msg === "ALREADY_VOTED") return res.status(400).json({ error: "already voted" });
+      if (msg === "POLL_CLOSED") return res.status(410).json({ error: "poll closed" });
+      if (msg === "INVALID_OPTION") return res.status(400).json({ error: "invalid optionId" });
+      if (msg === "NO_POLL" || msg === "NOT_FOUND") return res.status(404).json({ error: "post/poll not found" });
+      return res.status(500).json({ error: "internal error" });
+    }
+
+    // Return updated poll
+    const after = await ref.get();
+    const out = after.data();
+    return res.json(out.poll || null);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
@@ -686,20 +1023,123 @@ app.get("/api/posts/by-slug/:slug", async (req, res) => {
 
 // Search
 app.get("/api/search", async (req, res) => {
-  const q = String(req.query.q || "").toLowerCase().trim();
-  if (!q) return res.json([]);
-  const snap = await db.collection("posts").orderBy("createdAt", "desc").limit(400).get();
-  const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  const results = items
-    .filter((p) => {
-      return (
-        (p.title || "").toLowerCase().includes(q) ||
-        (p.content || "").toLowerCase().includes(q) ||
-        (Array.isArray(p.tags) && p.tags.some((t) => String(t).includes(q)))
-      );
-    })
-    .slice(0, 50);
-  res.json(results);
+  try {
+    const qRaw = String(req.query.q || "");
+    const q = qRaw.toLowerCase().trim();
+
+    const category = typeof req.query.category === "string" ? String(req.query.category).trim().toLowerCase() : "";
+    const tagsParam = typeof req.query.tags === "string"
+      ? String(req.query.tags)
+          .split(",")
+          .map((s) => s.trim().toLowerCase())
+          .filter(Boolean)
+      : [];
+
+    const fromRaw = req.query.from ? String(req.query.from).trim() : "";
+    const toRaw = req.query.to ? String(req.query.to).trim() : "";
+
+    const sort = req.query.sort === "views" ? "views" : "created";
+    const order = req.query.order === "asc" ? "asc" : "desc";
+
+    let limit = parseInt(req.query.limit || "50", 10);
+    if (isNaN(limit) || limit <= 0) limit = 50;
+    if (limit > 100) limit = 100;
+
+    // Validate dates
+    let fromDate = null;
+    let toDate = null;
+    if (fromRaw) {
+      const d = new Date(fromRaw);
+      if (isNaN(d.getTime())) return res.status(400).json({ error: "Invalid 'from' date" });
+      fromDate = d;
+    }
+    if (toRaw) {
+      const d = new Date(toRaw);
+      if (isNaN(d.getTime())) return res.status(400).json({ error: "Invalid 'to' date" });
+      toDate = d;
+    }
+
+    // Backward-compat: if absolutely no filters provided (including q), return empty array
+    const noFilters =
+      !q &&
+      !category &&
+      (!tagsParam || tagsParam.length === 0) &&
+      !fromDate &&
+      !toDate;
+
+    if (noFilters) {
+      return res.json([]);
+    }
+
+    // Keep Firestore simple: fetch recent posts and filter in memory
+    const snap = await db
+      .collection("posts")
+      .orderBy("createdAt", "desc")
+      .limit(400)
+      .get();
+    let items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Apply filters
+    items = items.filter((p) => {
+      // Category
+      if (category && String(p.category || "").toLowerCase() !== category) return false;
+
+      // Tags (AND match, case-insensitive)
+      if (tagsParam.length) {
+        const postTags = Array.isArray(p.tags) ? p.tags.map((t) => String(t).toLowerCase()) : [];
+        for (const t of tagsParam) {
+          if (!postTags.includes(t)) return false;
+        }
+      }
+
+      // Date range inclusive (based on createdAt)
+      if (fromDate || toDate) {
+        const ts = new Date(p.createdAt || 0).getTime();
+        if (fromDate && ts < fromDate.getTime()) return false;
+        if (toDate && ts > toDate.getTime()) return false;
+      }
+
+      // Text query (title/content/tags substring, case-insensitive)
+      if (q) {
+        const title = String(p.title || "").toLowerCase();
+        const content = String(p.content || "").toLowerCase();
+        const tagsLc = Array.isArray(p.tags) ? p.tags.map((t) => String(t).toLowerCase()) : [];
+        const hit = title.includes(q) || content.includes(q) || tagsLc.some((t) => t.includes(q));
+        if (!hit) return false;
+      }
+
+      return true;
+    });
+
+    // Sort with pinned-first preference
+    items.sort((a, b) => {
+      const ap = a.pinned ? 1 : 0;
+      const bp = b.pinned ? 1 : 0;
+      if (ap !== bp) return bp - ap; // pinned first globally
+
+      let av, bv;
+      if (sort === "views") {
+        av = Number(a.views || 0);
+        bv = Number(b.views || 0);
+      } else {
+        av = new Date(a.createdAt || 0).getTime();
+        bv = new Date(b.createdAt || 0).getTime();
+      }
+
+      if (av === bv) {
+        // stable tiebreaker by createdAt desc
+        const at = new Date(a.createdAt || 0).getTime();
+        const bt = new Date(b.createdAt || 0).getTime();
+        return bt - at;
+      }
+      return order === "asc" ? av - bv : bv - av;
+    });
+
+    // Apply limit
+    res.json(items.slice(0, limit));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Pagination
@@ -1014,6 +1454,418 @@ app.post("/api/users/me/avatar", authMiddleware, upload.single("avatar"), async 
     await db.collection("users").doc(req.user.id).update({ avatarUrl: dataUrl });
     res.json({ avatarUrl: dataUrl });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Admin Analytics
+ * GET /api/admin/analytics
+ * Guards: admin or superadmin (requireMinRole("admin"))
+ * Query params:
+ *  - rangeDays: integer, default 7, min 1, max 60
+ *  - topLimit: integer, default 10, max 30
+ *
+ * Implementation strategy:
+ *  - Fetch recent documents with orderBy("createdAt","desc") and limit(500)
+ *  - Derive stats in memory (consistent with /api/search)
+ *  - Parse createdAt as ISO date; skip invalid
+ */
+app.get("/api/admin/analytics", authMiddleware, requireMinRole("admin"), async (req, res) => {
+  try {
+    let rangeDays = parseInt(String(req.query.rangeDays || "7"), 10);
+    let topLimit = parseInt(String(req.query.topLimit || "10"), 10);
+    if (isNaN(rangeDays)) rangeDays = 7;
+    if (isNaN(topLimit)) topLimit = 10;
+    if (rangeDays < 1 || rangeDays > 60 || topLimit < 1 || topLimit > 30) {
+      return res.status(400).json({ error: "Invalid parameter" });
+    }
+
+    const MAX_SCAN = 500;
+
+    // Build YYYY-MM-DD keys for the last N days (inclusive of today)
+    const dayKeys = [];
+    const daySet = new Set();
+    const today = new Date();
+    for (let i = rangeDays - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      dayKeys.push(key);
+      daySet.add(key);
+    }
+
+    const totals = { users: 0, posts: 0, comments: 0, reportsOpen: 0, reportsResolved: 0 };
+    const perCategory = {};
+
+    // Posts: recent slice for derived stats
+    const postsSnap = await db
+      .collection("posts")
+      .orderBy("createdAt", "desc")
+      .limit(MAX_SCAN)
+      .get();
+
+    totals.posts = postsSnap.size;
+    const posts = postsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // comments sum + per-category counts
+    for (const p of posts) {
+      totals.comments += Number(p.comments || 0);
+      const cat = String(p.category || "other");
+      perCategory[cat] = (perCategory[cat] || 0) + 1;
+    }
+
+    // Top posts by views (from the scanned window)
+    const topPostsByViews = posts
+      .slice()
+      .sort((a, b) => Number(b.views || 0) - Number(a.views || 0))
+      .slice(0, topLimit)
+      .map((p) => ({
+        id: p.id,
+        title: p.title || "",
+        views: Number(p.views || 0),
+        likes: Number(p.likes || 0),
+        createdAt: p.createdAt || null,
+        category: p.category || null,
+      }));
+
+    // Recent posts (already ordered by createdAt desc)
+    const recentPosts = posts.slice(0, topLimit).map((p) => ({
+      id: p.id,
+      title: p.title || "",
+      views: Number(p.views || 0),
+      likes: Number(p.likes || 0),
+      createdAt: p.createdAt || null,
+      category: p.category || null,
+    }));
+
+    // Time series: posts per day
+    const postsPerDayMap = {};
+    dayKeys.forEach((k) => (postsPerDayMap[k] = 0));
+    for (const p of posts) {
+      const t = new Date(p.createdAt || 0);
+      if (isNaN(t.getTime())) continue;
+      const key = t.toISOString().slice(0, 10);
+      if (daySet.has(key)) postsPerDayMap[key] += 1;
+    }
+    const postsPerDay = dayKeys.map((k) => ({ date: k, count: postsPerDayMap[k] || 0 }));
+
+    // Users: recent slice for totals and time series
+    const usersSnap = await db
+      .collection("users")
+      .orderBy("createdAt", "desc")
+      .limit(MAX_SCAN)
+      .get();
+
+    totals.users = usersSnap.size;
+    const users = usersSnap.docs.map((d) => d.data());
+
+    const usersPerDayMap = {};
+    dayKeys.forEach((k) => (usersPerDayMap[k] = 0));
+    for (const u of users) {
+      const t = new Date(u.createdAt || 0);
+      if (isNaN(t.getTime())) continue;
+      const key = t.toISOString().slice(0, 10);
+      if (daySet.has(key)) usersPerDayMap[key] += 1;
+    }
+    const usersPerDay = dayKeys.map((k) => ({ date: k, count: usersPerDayMap[k] || 0 }));
+
+    // Reports: count open/resolved from a recent window
+    const reportsSnap = await db
+      .collection("reports")
+      .orderBy("createdAt", "desc")
+      .limit(MAX_SCAN)
+      .get();
+    for (const d of reportsSnap.docs) {
+      const s = String(d.data().status || "").toLowerCase();
+      if (s === "open") totals.reportsOpen += 1;
+      else if (s === "resolved") totals.reportsResolved += 1;
+    }
+
+    res.json({
+      totals,
+      perCategory,
+      topPostsByViews,
+      recentPosts,
+      timeSeries: { postsPerDay, usersPerDay },
+      rangeDays,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("[analytics] error:", err);
+    res.status(500).json({ error: err.message || "Internal error" });
+  }
+});
+
+/**
+ * 8.1) Private Messaging (User-to-User)
+ * Firestore collection: "messages"
+ * Document fields:
+ *  - threadKey: string `${minUserId}:${maxUserId}`
+ *  - fromUserId, fromUsername
+ *  - toUserId, toUsername
+ *  - text: plain sanitized string
+ *  - createdAt: ISO string
+ *  - read: boolean
+ */
+function sanitizeMessageText(input){
+  let s = String(input || "");
+  // Strip all HTML, keep plain text only
+  s = sanitizeHtml(s, { allowedTags: [], allowedAttributes: {} });
+  // Remove control chars
+  s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  // Collapse whitespace
+  s = s.replace(/\s+/g, " ").trim();
+  if (s.length > 2000) s = s.slice(0, 2000);
+  return s;
+}
+
+// Poll sanitization: strip HTML/control, collapse whitespace, trim
+function sanitizePollText(input){
+  let s = String(input || "");
+  s = sanitizeHtml(s, { allowedTags: [], allowedAttributes: {} });
+  s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  s = s.replace(/\s+/g, " ").trim();
+  // Hard cap to reasonable size; validations will enforce exact limits
+  if (s.length > 300) s = s.slice(0, 300);
+  return s;
+}
+
+// Normalize closesAt: return ISO string or null. Invalid/past -> null
+function normalizePollClosesAt(input){
+  if (!input) return null;
+  try{
+    const d = new Date(String(input));
+    if (isNaN(d.getTime())) return null;
+    if (d.getTime() <= Date.now()) return null;
+    return d.toISOString();
+  }catch(_){ return null; }
+}
+function threadKeyFor(a, b){
+  return [String(a), String(b)].sort().join(":");
+}
+async function resolveUser(by){
+  const usersCol = db.collection("users");
+  if (by.toUserId){
+    const doc = await usersCol.doc(String(by.toUserId)).get();
+    if (doc.exists) return { id: doc.id, ...doc.data() };
+    return null;
+  }
+  if (by.toUsername){
+    const snap = await usersCol.where("username","==", String(by.toUsername)).limit(1).get();
+    if (!snap.empty){
+      const d = snap.docs[0];
+      return { id: d.id, ...d.data() };
+    }
+    return null;
+  }
+  return null;
+}
+
+// 8.1.1) Send a message
+app.post("/api/messages/send", authMiddleware, writeLimiter, async (req, res) => {
+  try{
+    const { toUserId, toUsername, text } = req.body || {};
+    const me = req.user;
+    if (!me?.id) return res.status(401).json({ error: "Unauthorized" });
+
+    // Validate recipient
+    if (!(toUserId || toUsername)) return res.status(400).json({ error: "Missing recipient" });
+
+    // Validate text
+    const cleaned = sanitizeMessageText(text);
+    if (!cleaned || cleaned.length < 1) return res.status(400).json({ error: "Text required" });
+    if (cleaned.length > 2000) return res.status(400).json({ error: "Text too long" });
+
+    // Resolve recipient
+    const recip = await resolveUser({ toUserId, toUsername });
+    if (!recip) return res.status(404).json({ error: "Recipient not found" });
+
+    if (String(recip.id) === String(me.id)) return res.status(400).json({ error: "Cannot send to self" });
+
+    const tk = threadKeyFor(me.id, recip.id);
+    const now = new Date().toISOString();
+
+    const payload = {
+      threadKey: tk,
+      fromUserId: me.id,
+      fromUsername: me.username || null,
+      toUserId: recip.id,
+      toUsername: recip.username || null,
+      text: cleaned,
+      createdAt: now,
+      read: false,
+    };
+
+    const ref = await db.collection("messages").add(payload);
+
+    // Optional: notification
+    try{
+      await db.collection("notifications").add({
+        toUserId: recip.id,
+        type: "message",
+        fromUser: me.username || null,
+        threadKey: tk,
+        createdAt: now,
+        read: false,
+      });
+    }catch(_){ /* non-fatal */ }
+
+    return res.json({ id: ref.id, ...payload });
+  }catch(err){
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 8.1.2) List threads with last message + unread counts
+app.get("/api/messages/threads", authMiddleware, async (req, res) => {
+  try{
+    const meId = req.user?.id;
+    if (!meId) return res.status(401).json({ error: "Unauthorized" });
+
+    // Firestore doesn't support OR in a single query; merge two recents
+    const [outSnap, inSnap] = await Promise.all([
+      db.collection("messages").where("fromUserId","==", meId).orderBy("createdAt","desc").limit(200).get(),
+      db.collection("messages").where("toUserId","==", meId).orderBy("createdAt","desc").limit(200).get()
+    ]);
+
+    const docs = [...outSnap.docs, ...inSnap.docs].map(d=>({ id: d.id, ...d.data() }));
+    // Sort combined by createdAt desc
+    docs.sort((a,b)=> new Date(b.createdAt||0) - new Date(a.createdAt||0));
+
+    const byThread = new Map();
+    const unreadByThread = new Map();
+
+    for (const m of docs){
+      const key = m.threadKey;
+      if (!byThread.has(key)) {
+        byThread.set(key, m); // first seen is the latest due to sorting
+      }
+      if (String(m.toUserId) === String(meId) && !m.read){
+        unreadByThread.set(key, (unreadByThread.get(key) || 0) + 1);
+      }
+    }
+
+    const result = [];
+    for (const [key, last] of byThread.entries()){
+      const otherUserId = String(last.fromUserId) === String(meId) ? last.toUserId : last.fromUserId;
+      const otherUsername = String(last.fromUserId) === String(meId) ? (last.toUsername || null) : (last.fromUsername || null);
+      result.push({
+        threadKey: key,
+        otherUserId,
+        otherUsername,
+        lastText: last.text || "",
+        lastAt: last.createdAt || null,
+        unreadCount: unreadByThread.get(key) || 0,
+      });
+    }
+    // Already latest-first
+    res.json(result);
+  }catch(err){
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 8.1.3) Fetch a thread by other user (userId or username)
+app.get("/api/messages/thread", authMiddleware, async (req, res) => {
+  try{
+    const me = req.user;
+    const userIdParam = req.query.userId ? String(req.query.userId).trim() : "";
+    const usernameParam = req.query.username ? String(req.query.username).trim() : "";
+
+    if (!userIdParam && !usernameParam) return res.status(400).json({ error: "Missing userId or username" });
+
+    let other = null;
+    if (userIdParam){
+      other = await db.collection("users").doc(userIdParam).get();
+      if (!other.exists) return res.status(404).json({ error: "User not found" });
+      other = { id: other.id, ...other.data() };
+    } else {
+      const qs = await db.collection("users").where("username","==", usernameParam).limit(1).get();
+      if (qs.empty) return res.status(404).json({ error: "User not found" });
+      const d = qs.docs[0];
+      other = { id: d.id, ...d.data() };
+    }
+
+    if (String(other.id) === String(me.id)) return res.status(403).json({ error: "Cannot open thread with self" });
+
+    const tk = threadKeyFor(me.id, other.id);
+
+    const snap = await db
+      .collection("messages")
+      .where("threadKey","==", tk)
+      .orderBy("createdAt","asc")
+      .limit(200)
+      .get();
+
+    const items = snap.docs.map(d=>({
+      id: d.id,
+      fromUserId: d.data().fromUserId,
+      toUserId: d.data().toUserId,
+      text: d.data().text,
+      createdAt: d.data().createdAt,
+      read: !!d.data().read,
+    }));
+
+    return res.json(items);
+  }catch(err){
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 8.1.4) Mark thread as read (messages addressed to me)
+app.post("/api/messages/thread/:otherId/read", authMiddleware, async (req, res) => {
+  try{
+    const me = req.user;
+    const otherId = String(req.params.otherId || "").trim();
+    if (!otherId) return res.status(400).json({ error: "Missing otherId" });
+    if (String(otherId) === String(me.id)) return res.status(403).json({ error: "Invalid otherId" });
+
+    const tk = threadKeyFor(me.id, otherId);
+
+    // Fetch recent messages in this thread, then filter addressed to me and unread
+    const snap = await db
+      .collection("messages")
+      .where("threadKey","==", tk)
+      .orderBy("createdAt","desc")
+      .limit(200)
+      .get();
+
+    const toMark = snap.docs.filter(d=>{
+      const data = d.data();
+      return String(data.toUserId) === String(me.id) && !data.read;
+    });
+
+    if (!toMark.length) return res.json({ ok: true, updated: 0 });
+
+    const batch = db.batch();
+    toMark.forEach(d=> batch.update(d.ref, { read: true }));
+    await batch.commit();
+
+    return res.json({ ok: true, updated: toMark.length });
+  }catch(err){
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 8.1.5) Total unread count for current user (recent window)
+app.get("/api/messages/unread-count", authMiddleware, async (req, res) => {
+  try{
+    const meId = req.user?.id;
+    if (!meId) return res.status(401).json({ error: "Unauthorized" });
+
+    // Avoid composite index requirements: scan recent messages to me and count read==false in memory
+    const snap = await db
+      .collection("messages")
+      .where("toUserId","==", meId)
+      .orderBy("createdAt","desc")
+      .limit(500)
+      .get();
+
+    let unread = 0;
+    snap.docs.forEach(d=>{ if (!d.data().read) unread += 1; });
+    res.json({ unread });
+  }catch(err){
     res.status(500).json({ error: err.message });
   }
 });

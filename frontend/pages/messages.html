@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mesajlar — Nara Müzik</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --text:#eaeaea;
+      --panel:#121214;
+      --muted:#9aa3ae;
+      --accent:#77c2ff;
+      --accent-contrast:#0a1118;
+      --border: rgba(255,255,255,0.06);
+      --elev-1: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      --input-bg:#0f1113;
+    }
+    :root[data-theme="light"]{
+      --bg:#f8fafc;
+      --text:#0f172a;
+      --panel:#ffffff;
+      --muted:#5b6778;
+      --accent:#2563eb;
+      --accent-contrast:#ffffff;
+      --border: rgba(15,23,42,0.08);
+      --elev-1: linear-gradient(180deg, rgba(2,6,23,0.02), rgba(2,6,23,0.01));
+      --input-bg:#f1f5f9;
+    }
+    :root[data-theme="light"] .text-light{ color: var(--text) !important; }
+    :root[data-theme="light"] .bg-dark{ background-color: var(--input-bg) !important; }
+    :root[data-theme="light"] .form-control.bg-dark,
+    :root[data-theme="light"] .form-select.bg-dark{ background-color: var(--input-bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
+    :root[data-theme="light"] .btn-outline-light{ color: var(--text) !important; border-color: var(--border) !important; }
+    :root[data-theme="light"] .btn-outline-light:hover{ background: var(--text) !important; color: var(--accent-contrast) !important; }
+    :root[data-theme="light"] .badge.bg-secondary{ background-color: color-mix(in oklab, var(--text) 10%, transparent) !important; color: var(--text) !important; }
+
+    html,body{height:100%}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      padding-top:72px;
+    }
+    .topbar{
+      position:fixed; top:0; left:0; right:0; height:40px;
+      background:var(--panel); z-index:1040;
+      border-bottom:1px solid var(--border);
+    }
+    .topbar .container{height:100%; display:flex; align-items:center; gap:12px; font-size:13px}
+    .mainnav{
+      position:fixed; top:40px; left:0; right:0; z-index:1039;
+      border-bottom:1px solid var(--border);
+      background:transparent;
+    }
+    .navbar-brand{font-weight:800; letter-spacing:.6px}
+    .nav-link{color:color-mix(in oklab, var(--text) 85%, transparent)}
+    .nav-link:hover{color:var(--accent)}
+    main.container{max-width:1150px}
+    .card{background:var(--elev-1); border:1px solid var(--border)}
+    .list-group-item{background:transparent; border-color: var(--border); color: var(--text)}
+    .thread-item{cursor:pointer}
+    .msgbox{height:55vh; overflow:auto; background: var(--input-bg); border:1px solid var(--border); border-radius:.5rem; padding:10px}
+    .msg{max-width:75%; padding:8px 12px; border-radius:10px; margin:6px 0; display:inline-block}
+    .msg.me{background:#1f2937; margin-left:auto; text-align:right}
+    .msg.other{background:#0e141b}
+    .msg time{display:block; font-size:11px; color:var(--muted); margin-top:4px}
+    @media (max-width:991px){
+      .mainnav{top:0}
+      body{padding-top:56px}
+      .topbar{display:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar d-none d-lg-block">
+    <div class="container">
+      <div class="me-auto small text-muted">Nara Müzik — Müzik tartışma topluluğu</div>
+      <div class="d-flex gap-3">
+        <a href="../index.html#about" class="text-muted">About</a>
+        <a href="contact.html" class="text-muted">Contact</a>
+        <a href="submit.html" class="text-muted">Submit</a>
+      </div>
+    </div>
+  </div>
+  <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
+    <div class="container-fluid">
+      <div class="d-flex align-items-center">
+        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">☰</button>
+        <a class="navbar-brand me-3" href="../index.html">Nara Müzik</a>
+        <div class="d-none d-lg-flex align-items-center gap-2">
+          <a class="nav-link px-2" href="yenimuzik.html">Yeni Müzik</a>
+          <a class="nav-link px-2" href="endustri.html">Endüstri Haberleri</a>
+          <a class="nav-link px-2" href="degerlendirme.html">Değerlendirme</a>
+          <a class="nav-link px-2" href="album.html">Albüm İnceleme</a>
+          <a class="nav-link px-2" href="roportaj.html">Röportajlar</a>
+          <a class="nav-link px-2" href="etkinlik.html">Etkinlikler</a>
+          <a class="nav-link px-2" href="dizifilm.html">Dizi & Filmler</a>
+        </div>
+      </div>
+      <div class="d-flex ms-auto align-items-center gap-2">
+        <div class="d-none d-md-block">
+          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
+        </div>
+        <select id="languageSwitcher" class="form-select form-select-sm bg-dark text-light border-light d-none d-md-block" style="width:110px">
+          <option value="tr">TR</option>
+          <option value="en">EN</option>
+        </select>
+        <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
+        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">Yeni Gönderi</button>
+        <div id="authButtons" class="d-flex gap-1">
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
+        </div>
+        <div class="dropdown">
+          <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">🔔 Bildirimler</button>
+          <ul class="dropdown-menu dropdown-menu-end" style="min-width: 320px; max-height: 360px; overflow:auto" aria-labelledby="notifDropdownBtn" id="notifMenu">
+            <li class="px-3 py-2 text-muted small">Oturum açın veya bildiriminiz yok.</li>
+          </ul>
+        </div>
+        <a href="submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink">Kaydedilenler</a>
+        <a href="mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink">Mod</a>
+      </div>
+    </div>
+  </nav>
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="sideMenu">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Kategoriler</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+      <ul class="list-unstyled mb-0">
+        <li><a href="yenimuzik.html">Yeni Müzik</a></li>
+        <li><a href="endustri.html">Endüstri Haberleri</a></li>
+        <li><a href="degerlendirme.html">Değerlendirme</a></li>
+        <li><a href="album.html">Albüm İnceleme</a></li>
+        <li><a href="roportaj.html">Röportajlar</a></li>
+        <li><a href="etkinlik.html">Etkinlikler</a></li>
+        <li><a href="dizifilm.html">Dizi ve Filmler</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <main class="container mt-4" id="messagesMain">
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <div class="card mb-3">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Konuşmalar</strong>
+            <div class="d-flex gap-2">
+              <button id="refreshThreadsBtn" class="btn btn-sm btn-outline-light">Yenile</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="mb-2">
+              <input id="newConvUsername" class="form-control form-control-sm mb-2" placeholder="@kullanıcıadı (yeni konuşma)">
+              <textarea id="newConvText" class="form-control form-control-sm mb-2" rows="2" placeholder="Mesaj…"></textarea>
+              <button id="startConvBtn" class="btn btn-sm btn-primary w-100">Başlat ve Gönder</button>
+            </div>
+            <div id="threadList" class="list-group small"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card mb-3">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <div><strong id="threadTitleUsername">Seçili konuşma yok</strong></div>
+            <div class="d-flex gap-2">
+              <button id="markReadBtn" class="btn btn-sm btn-outline-light" disabled>Oku işaretle</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="messageList" class="msgbox"></div>
+            <div class="mt-3">
+              <textarea id="messageInput" rows="3" class="form-control mb-2" placeholder="Mesaj yazın..."></textarea>
+              <div class="d-flex justify-content-end">
+                <button id="sendBtn" class="btn btn-primary">Gönder</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="text-center py-4 mt-5">
+    <div class="container">
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
+    </div>
+  </footer>
+
+  <!-- Modals (Login / Register / Create Post) -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="loginForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Giriş Yap</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
+          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary w-100">Giriş</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="registerForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Kayıt Ol</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input name="username" class="form-control mb-2" placeholder="Kullanıcı Adı" required>
+          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
+          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success w-100">Kayıt Ol</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form id="newPostForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Yeni Gönderi Oluştur</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input id="postTitle" name="title" class="form-control mb-2" placeholder="Başlık" required>
+          <select id="postCategory" name="category" class="form-select mb-2">
+            <option value="yenimuzik">Yeni Müzik</option>
+            <option value="endustri">Endüstri Haberleri</option>
+            <option value="degerlendirme">Değerlendirme</option>
+            <option value="album">Albüm İnceleme</option>
+            <option value="roportaj">Röportajlar</option>
+            <option value="etkinlik">Etkinlikler</option>
+            <option value="dizifilm">Dizi & Filmler</option>
+          </select>
+          <div class="btn-toolbar mb-2" role="toolbar" aria-label="Editor toolbar"></div>
+          <textarea id="postContent" name="content" rows="6" class="form-control d-none" placeholder="İçerik"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary w-100">Paylaş</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/lang.js"></script>
+  <script>
+  (async function(){
+    'use strict';
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Theme toggle like other pages
+    const themeToggle = document.getElementById('themeToggle');
+    const root = document.documentElement;
+    function applyTheme(theme){
+      const nav = document.getElementById('mainNavbar');
+      if(theme === 'light'){
+        root.setAttribute('data-theme','light');
+        themeToggle.textContent = '🌙';
+        nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light');
+      } else {
+        root.removeAttribute('data-theme');
+        themeToggle.textContent = '☀️';
+        nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark');
+      }
+    }
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(savedTheme);
+    themeToggle.addEventListener('click', () => {
+      const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      localStorage.setItem('theme', next); applyTheme(next);
+    });
+
+    // Auth gate
+    let CURRENT_USER = null; let AUTH_TOKEN = null;
+    try{ CURRENT_USER = JSON.parse(localStorage.getItem('user')||'null'); }catch(_){ CURRENT_USER = null; }
+    AUTH_TOKEN = localStorage.getItem('token') || null;
+    if (typeof updateAuthUI === 'function'){ updateAuthUI(); }
+
+    const main = document.getElementById('messagesMain');
+    if (!CURRENT_USER || !AUTH_TOKEN){
+      main.innerHTML = `
+        <div class="d-flex align-items-center justify-content-center" style="min-height:50vh">
+          <div class="card shadow-sm" style="max-width:520px">
+            <div class="card-body text-center">
+              <h5 class="mb-2">Özel mesajları görmek için giriş yapın.</h5>
+              <p class="text-muted small mb-3">Kullanıcılarla birebir sohbet edebilmek için oturum açın.</p>
+              <div class="d-flex justify-content-center gap-2">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
+                <a class="btn btn-outline-light" href="../index.html">Ana sayfa</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // Base URLs and elements
+    const BASE = (typeof BACKEND_BASE!=='undefined' && BACKEND_BASE) ? BACKEND_BASE : (location.hostname.includes('localhost')?'http://localhost:4000':'https://naramusic.onrender.com');
+    const authHeaders = { 'Authorization': 'Bearer ' + AUTH_TOKEN };
+    const threadListEl = document.getElementById('threadList');
+    const threadTitleEl = document.getElementById('threadTitleUsername');
+    const messageListEl = document.getElementById('messageList');
+    const markReadBtn = document.getElementById('markReadBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const inputMsg = document.getElementById('messageInput');
+    const startConvBtn = document.getElementById('startConvBtn');
+    const inputNewUser = document.getElementById('newConvUsername');
+    const inputNewText = document.getElementById('newConvText');
+
+    let threads = [];
+    let selected = null; // { otherId, otherUsername }
+
+    function fmtDate(s){ try{ return new Date(s).toLocaleString('tr-TR'); }catch(_){ return ''; } }
+    function escapeHtml(str){ return String(str||'').replace(/[&<>"]/g, m=> ({'&':'&','<':'<','>':'>','"':'"'}[m])); }
+    function scrollToBottom(){ try{ messageListEl.scrollTop = messageListEl.scrollHeight; }catch(_){ } }
+
+   async function loadThreads(){
+      try{
+        const r = await fetch(BASE + '/api/messages/threads', { headers: authHeaders });
+        const data = await r.json();
+        threads = Array.isArray(data) ? data : [];
+        renderThreads();
+      }catch(err){
+        console.error('threads load error', err);
+        threadListEl.innerHTML = '<div class="text-danger small">Konuşmalar yüklenemedi.</div>';
+      }
+    }
+
+    function renderThreads(){
+      if (!threads.length){
+        threadListEl.innerHTML = '<div class="text-muted">Konuşma yok.</div>';
+        return;
+      }
+      threadListEl.innerHTML = threads.map(t=>{
+        const badge = t.unreadCount>0 ? `<span class="badge bg-primary ms-auto">${t.unreadCount}</span>` : '';
+        const active = selected && String(selected.otherId)===String(t.otherUserId) ? 'active' : '';
+        const when = t.lastAt ? `<div class="small text-muted">${fmtDate(t.lastAt)}</div>` : '';
+        return `
+          <a href="#" class="list-group-item list-group-item-action d-flex align-items-start gap-2 thread-item ${active}" data-other-id="${t.otherUserId}" data-username="${t.otherUsername||''}">
+            <div>
+              <div class="fw-semibold">@${escapeHtml(t.otherUsername||'')}</div>
+              <div class="text-truncate" style="max-width:220px">${escapeHtml(t.lastText||'')}</div>
+              ${when}
+            </div>
+            ${badge}
+          </a>
+        `;
+      }).join('');
+    }
+
+    async function openThreadBy(otherId, otherUsername){
+      selected = { otherId, otherUsername };
+      threadTitleEl.textContent = otherUsername ? '@'+otherUsername : 'Sohbet';
+      markReadBtn.disabled = false;
+      messageListEl.innerHTML = '<div class="text-muted">Yükleniyor…</div>';
+      await loadThreadMessages();
+      await markThreadRead();
+    }
+
+    async function loadThreadMessages(){
+      try{
+        const url = new URL(BASE.replace(/\/$/,'') + '/api/messages/thread');
+        url.searchParams.set('userId', selected.otherId);
+        const r = await fetch(url.toString(), { headers: authHeaders });
+        const items = await r.json();
+        renderMessages(Array.isArray(items)?items:[]);
+      }catch(err){
+        console.error('thread load error', err);
+        messageListEl.innerHTML = '<div class="text-danger small">Mesajlar yüklenemedi.</div>';
+      }
+    }
+
+    function renderMessages(items){
+      if (!items.length){
+        messageListEl.innerHTML = '<div class="text-muted">Mesaj yok.</div>';
+        return;
+      }
+      messageListEl.innerHTML = items.map(m=>{
+        const mine = String(m.fromUserId) === String(CURRENT_USER.id);
+        const cls = mine ? 'msg me' : 'msg other';
+        return `<div class="${cls}"><div>${escapeHtml(m.text||'')}</div><time>${fmtDate(m.createdAt)}</time></div>`;
+      }).join('');
+      scrollToBottom();
+    }
+
+    async function markThreadRead(){
+      try{
+        await fetch(BASE + '/api/messages/thread/' + encodeURIComponent(selected.otherId) + '/read', { method:'POST', headers: authHeaders });
+        // Update unread badge locally
+        const t = threads.find(x=> String(x.otherUserId)===String(selected.otherId));
+        if (t){ t.unreadCount = 0; renderThreads(); }
+      }catch(err){ console.warn('mark read failed', err); }
+    }
+
+    async function sendInThread(){
+      const text = inputMsg.value.trim();
+      if (!selected || !selected.otherId){ alert('Önce bir konuşma seçin.'); return; }
+      if (!text){ return; }
+      sendBtn.disabled = true;
+      try{
+        const r = await fetch(BASE + '/api/messages/send', {
+          method:'POST',
+          headers: { ...authHeaders, 'Content-Type':'application/json' },
+          body: JSON.stringify({ toUserId: selected.otherId, text })
+        });
+        const data = await r.json();
+        if (data && !data.error){
+          inputMsg.value = '';
+          // Append optimistic
+          const div = document.createElement('div');
+          div.className = 'msg me';
+          div.innerHTML = '<div>'+escapeHtml(data.text||text)+'</div><time>'+fmtDate(data.createdAt||new Date().toISOString())+'</time>';
+          messageListEl.appendChild(div);
+          scrollToBottom();
+          // Refresh threads
+          await loadThreads();
+        } else {
+          alert(data.error || 'Gönderilemedi');
+        }
+      }catch(err){
+        console.error(err); alert('Gönderilemedi');
+      }finally{
+        sendBtn.disabled = false;
+      }
+    }
+
+    async function startNewConversation(){
+      const unameRaw = inputNewUser.value.trim();
+      const msg = inputNewText.value.trim();
+      if (!unameRaw || !msg){ alert('Kullanıcı adı ve mesaj gereklidir.'); return; }
+      const uname = unameRaw.replace(/^@+/,'');
+      startConvBtn.disabled = true;
+      try{
+        const r = await fetch(BASE + '/api/messages/send', {
+          method:'POST',
+          headers: { ...authHeaders, 'Content-Type':'application/json' },
+          body: JSON.stringify({ toUsername: uname, text: msg })
+        });
+        const data = await r.json();
+        if (data && !data.error){
+          inputNewText.value = '';
+          await loadThreads();
+          await openThreadBy(data.toUserId, data.toUsername || uname);
+        } else {
+          alert(data.error || 'Gönderilemedi');
+        }
+      }catch(err){
+        console.error(err); alert('Gönderilemedi');
+      }finally{
+        startConvBtn.disabled = false;
+      }
+    }
+
+    // Event bindings
+    document.getElementById('refreshThreadsBtn').addEventListener('click', async ()=>{
+      await loadThreads();
+      if (selected) await loadThreadMessages();
+    });
+    document.getElementById('markReadBtn').addEventListener('click', markThreadRead);
+    document.getElementById('sendBtn').addEventListener('click', sendInThread);
+    inputMsg.addEventListener('keydown', (e)=>{ if (e.key==='Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); sendInThread(); } });
+    startConvBtn.addEventListener('click', startNewConversation);
+    threadListEl.addEventListener('click', (e)=>{
+      const a = e.target.closest('.thread-item'); if (!a) return;
+      e.preventDefault();
+      const otherId = a.getAttribute('data-other-id');
+      const username = a.getAttribute('data-username') || '';
+      openThreadBy(otherId, username);
+    });
+
+    // Initial load + query param select
+    await loadThreads();
+    const sp = new URLSearchParams(location.search);
+    const qpUserId = sp.get('userId'); const qpUsername = sp.get('username');
+    if (qpUserId){
+      const t = threads.find(x=> String(x.otherUserId)===String(qpUserId));
+      if (t) { openThreadBy(t.otherUserId, t.otherUsername||''); }
+      else {
+        // Try open by directly fetching thread (if any)
+        try{
+          const url = new URL(BASE.replace(/\/$/,'') + '/api/messages/thread'); url.searchParams.set('userId', qpUserId);
+          const r = await fetch(url.toString(), { headers: authHeaders }); const items = await r.json();
+          if (Array.isArray(items) && items.length){
+            const otherId = qpUserId;
+            const otherUsername = (threads.find(x=> String(x.otherUserId)===String(otherId))?.otherUsername) || '';
+            openThreadBy(otherId, otherUsername);
+          }
+        }catch(_){}
+      }
+    } else if (qpUsername){
+      const t = threads.find(x=> (x.otherUsername||'').toLowerCase() === qpUsername.toLowerCase());
+      if (t){ openThreadBy(t.otherUserId, t.otherUsername||qpUsername); }
+      else {
+        // No thread yet — prefill new conversation
+        inputNewUser.value = qpUsername.startsWith('@') ? qpUsername : '@'+qpUsername;
+      }
+    } else {
+      // Select first thread if available
+      if (threads.length){ openThreadBy(threads[0].otherUserId, threads[0].otherUsername||''); }
+    }
+
+    // Polling every ~12s
+    setInterval(async ()=>{
+      const prevSelected = selected && selected.otherId;
+      await loadThreads();
+      if (prevSelected){ await loadThreadMessages(); }
+    }, 12000);
+  })();
+  </script>
+</body>
+</html>

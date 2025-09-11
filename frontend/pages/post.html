@@ -49,7 +49,143 @@
     </section>
   </main>
 
+  <!-- Edit Post Modal -->
+  <div class="modal fade" id="editPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form id="editPostForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Gönderiyi Düzenle</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input id="editTitle" class="form-control mb-2" placeholder="Başlık" required>
+          <select id="editCategory" class="form-select mb-2">
+            <option value="yenimuzik">Yeni Müzik</option>
+            <option value="endustri">Endüstri Haberleri</option>
+            <option value="degerlendirme">Değerlendirme</option>
+            <option value="album">Albüm İnceleme</option>
+            <option value="roportaj">Röportajlar</option>
+            <option value="etkinlik">Etkinlikler</option>
+            <option value="dizifilm">Dizi & Filmler</option>
+          </select>
+
+          <!-- Markdown toolbar (same structure as index) -->
+          <div class="btn-toolbar mb-2" role="toolbar" aria-label="Editor toolbar">
+            <div class="btn-group btn-group-sm me-1" role="group">
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="bold" title="Kalın (Ctrl+B)"><strong>B</strong></button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="italic" title="İtalik (Ctrl+I)"><em>I</em></button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="strike" title="Üstü çizili">S</button>
+            </div>
+            <div class="btn-group btn-group-sm me-1" role="group">
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="h2" title="Başlık H2">H2</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="h3" title="Başlık H3">H3</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="quote" title="Alıntı">“”</button>
+            </div>
+            <div class="btn-group btn-group-sm me-1" role="group">
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="ul" title="Madde işaretli liste">• List</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="ol" title="Numaralı liste">1. List</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="task" title="Görev listesi">[ ]</button>
+            </div>
+            <div class="btn-group btn-group-sm me-1" role="group">
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="link" title="Bağlantı (Ctrl+K)">Link</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="image" title="Resim">🖼️</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="code" title="Kod satırı"><code>{}</code></button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="codeblock" title="Kod bloğu">```</button>
+            </div>
+            <div class="btn-group btn-group-sm me-1" role="group">
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="table" title="Tablo">▦</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="hr" title="Yatay çizgi">―</button>
+              <button type="button" class="btn btn-outline-secondary" data-md-btn="emoji" title="Emoji">😊</button>
+            </div>
+          </div>
+
+          <!-- Emoji picker and URL popover (same IDs so app.js hooks work) -->
+          <div id="emojiPicker" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:300px;">
+            <div class="card-body py-2">
+              <input type="text" class="form-control form-control-sm mb-2" id="emojiSearch" placeholder="Emoji ara…">
+              <div id="emojiGrid" class="d-flex flex-wrap gap-1" style="max-height:200px; overflow:auto"></div>
+            </div>
+          </div>
+          <div id="urlPopover" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:320px;">
+            <div class="card-body py-2">
+              <div class="mb-2 small text-muted" id="urlPopoverTitle">Bağlantı ekle</div>
+              <input type="url" class="form-control form-control-sm mb-2" id="urlPopoverInput" placeholder="https://...">
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="urlPopoverCancel">İptal</button>
+                <button type="button" class="btn btn-sm btn-primary" id="urlPopoverOk">Ekle</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-md-6">
+              <textarea id="postContent" rows="12" class="form-control" placeholder="İçerik (Markdown destekli)" required></textarea>
+            </div>
+            <div class="col-md-6">
+              <div class="form-control" style="height:100%; overflow:auto;">
+                <div class="small text-muted mb-1">Önizleme</div>
+                <div id="postPreview" class="markdown-body"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-2 mt-2">
+            <div class="col-md-6">
+              <input id="editMediaUrl" type="url" class="form-control" placeholder="Fotoğraf/GIF URL (opsiyonel)">
+            </div>
+            <div class="col-md-6">
+              <input id="editLinkUrl" type="url" class="form-control" placeholder="Harici Link (opsiyonel)">
+            </div>
+          </div>
+
+          <input id="editTags" class="form-control mt-2" placeholder="Etiketler (virgülle ayırın)">
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-warning w-100">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Comment Modal -->
+  <div class="modal fade" id="editCommentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="editCommentForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Yorumu Düzenle</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <textarea id="editCommentText" class="form-control" rows="5" required placeholder="Yorum"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button id="editCommentSubmitBtn" type="submit" class="btn btn-primary">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- Report Modal -->
+  <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="reportForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Raporla</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <textarea id="reportReason" class="form-control" rows="5" placeholder="Rapor nedeni (opsiyonel)"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button id="reportSubmitBtn" type="submit" class="btn btn-primary">Gönder</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="../js/app.js"></script>
   <script>
     // theme setup
@@ -79,6 +215,68 @@
     const user = JSON.parse(localStorage.getItem('user')||'null');
     const token = localStorage.getItem('token')||null;
 
+    // Report Modal: setup and submit
+    const reportModalEl = document.getElementById('reportModal');
+    const reportForm = document.getElementById('reportForm');
+    const reportReasonEl = document.getElementById('reportReason');
+    const reportSubmitBtn = document.getElementById('reportSubmitBtn');
+    let reportModal = null;
+    if (reportModalEl){
+      reportModal = bootstrap.Modal.getOrCreateInstance(reportModalEl);
+    }
+    if (reportForm){
+      reportForm.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        if(!user || !token){ alert('Raporlamak için giriş yapın'); return; }
+
+        const btn = reportSubmitBtn || reportForm.querySelector('button[type="submit"]');
+        if (btn){
+          btn.disabled = true;
+          btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Gönderiliyor...';
+        }
+
+        const type = (reportForm.dataset.type === 'comment') ? 'comment' : 'post';
+        const payload = {
+          type,
+          postId,
+          reason: (reportReasonEl?.value || '')
+        };
+        if (type === 'comment' && reportForm.dataset.cid){
+          payload.commentId = reportForm.dataset.cid;
+        }
+
+        try{
+          const r = await fetch(`${BACKEND_BASE}/api/report`, {
+            method:'POST',
+            headers:{
+              'Content-Type':'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+          });
+          const data = await r.json().catch(()=> ({}));
+          if (!r.ok || data.error){
+            alert(data.error || 'Rapor gönderilemedi');
+            return;
+          }
+          try { reportModal?.hide(); } catch(_){}
+          alert('Raporlandı');
+          // clear context after submit
+          reportForm.dataset.type = '';
+          reportForm.dataset.cid = '';
+          if (reportReasonEl) reportReasonEl.value = '';
+        } catch(err){
+          console.error(err);
+          alert('Rapor gönderilemedi');
+        } finally {
+          if (btn){
+            btn.disabled = false;
+            btn.textContent = 'Gönder';
+          }
+        }
+      });
+    }
+
     let POST_DATA = null;
     async function loadPost(){
       const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}`);
@@ -90,6 +288,7 @@
       if (badgeEl){ badgeEl.innerHTML = `${p.pinned?'<span class=\'badge bg-warning text-dark me-1\'>📌 Sabit</span>':''}${p.locked?'<span class=\'badge bg-secondary\'>🔒 Kilitli</span>':''}`; }
       document.getElementById('pMeta').textContent = `${p.authorName||'Anonim'} • ${new Date(p.createdAt).toLocaleString()} • ${p.category||''}`;
       document.getElementById('pContent').innerHTML = p.contentHtml || (p.content||'').replace(/\n/g,'<br>');
+      { const cEl = document.getElementById('pContent'); if (window.enhanceYouTubeEmbeds) window.enhanceYouTubeEmbeds(cEl); }
       if (p.mediaUrl){ document.getElementById('pMedia').innerHTML = `<img src="${p.mediaUrl}" class="img-fluid rounded">`; }
       if (p.linkUrl){ document.getElementById('pLink').innerHTML = `<a class="btn btn-sm btn-outline-secondary" target="_blank" href="${p.linkUrl}">Bağlantıyı Aç</a>`; }
       document.getElementById('likeCount').textContent = p.likes || 0;
@@ -144,11 +343,128 @@
       const d = await r.json(); if (d.error){ alert(d.error); return; } location.href = '../index.html';
     });
     document.getElementById('reportPostBtn').addEventListener('click', async ()=>{
-      if(!user){ alert('Raporlamak için giriş yapın'); return; }
-      const reason = prompt('Rapor nedeni (opsiyonel):') || '';
-      await fetch(`${BACKEND_BASE}/api/report`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ type:'post', postId, reason }) });
-      alert('Raporlandı');
+      if(!user || !token){ alert('Raporlamak için giriş yapın'); return; }
+      if (!reportModal) { reportModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('reportModal')); }
+      if (reportForm && reportReasonEl){
+        reportForm.dataset.type = 'post';
+        delete reportForm.dataset.cid;
+        reportReasonEl.value = '';
+        reportModal.show();
+      }
     });
+
+    // Edit Post Modal: open, prefill, submit
+    const editBtn = document.getElementById('editPostBtn');
+    const editModalEl = document.getElementById('editPostModal');
+    const editForm = document.getElementById('editPostForm');
+    let editModal = null;
+
+    if (editBtn && editModalEl){
+      editModal = bootstrap.Modal.getOrCreateInstance(editModalEl);
+      editBtn.addEventListener('click', ()=>{
+        if (!POST_DATA){ alert('Gönderi yükleniyor...'); return; }
+        const cat = (POST_DATA.category || '').toLowerCase();
+        const tagsArr = Array.isArray(POST_DATA.tags) ? POST_DATA.tags : [];
+
+        const tEl = document.getElementById('editTitle');
+        const cEl = document.getElementById('editCategory');
+        const contentEl = document.getElementById('postContent');
+        const mEl = document.getElementById('editMediaUrl');
+        const lEl = document.getElementById('editLinkUrl');
+        const tgEl = document.getElementById('editTags');
+
+        if (tEl) tEl.value = POST_DATA.title || '';
+        if (cEl) cEl.value = cat || 'yenimuzik';
+        if (contentEl) { contentEl.value = POST_DATA.content || ''; contentEl.dispatchEvent(new Event('input')); }
+        if (mEl) mEl.value = POST_DATA.mediaUrl || '';
+        if (lEl) lEl.value = POST_DATA.linkUrl || '';
+        if (tgEl) tgEl.value = tagsArr.join(', ');
+
+        editModal.show();
+      });
+    }
+
+    if (editForm){
+      editForm.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        if (!user || !token){ alert('Düzenlemek için giriş yapın.'); return; }
+
+        const title = (document.getElementById('editTitle')?.value || '').trim();
+        const category = (document.getElementById('editCategory')?.value || '').trim();
+        const content = document.getElementById('postContent')?.value || '';
+        const mediaUrl = (document.getElementById('editMediaUrl')?.value || '').trim();
+        const linkUrl = (document.getElementById('editLinkUrl')?.value || '').trim();
+        const tags = (document.getElementById('editTags')?.value || '')
+          .split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+
+        if (!title || !content){ alert('Başlık ve içerik zorunludur.'); return; }
+
+        try{
+          const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}`, {
+            method:'PUT',
+            headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ title, content, category, mediaUrl, linkUrl, tags })
+          });
+          const data = await r.json();
+          if (data.error){ alert(data.error); return; }
+
+          try { editModal?.hide(); } catch(_){}
+          // Simplicity: reload to reflect updates everywhere
+          location.reload();
+
+          // Optionally keep state in memory
+          // POST_DATA = data;
+        } catch(err){
+          console.error(err);
+          alert('Gönderi güncellenemedi');
+        }
+      });
+    }
+
+    // Edit Comment Modal: setup and submit
+    const editCommentModalEl = document.getElementById('editCommentModal');
+    const editCommentForm = document.getElementById('editCommentForm');
+    const editCommentTextEl = document.getElementById('editCommentText');
+    const editCommentSubmitBtn = document.getElementById('editCommentSubmitBtn');
+    let editCommentModal = null;
+    if (editCommentModalEl){
+      editCommentModal = bootstrap.Modal.getOrCreateInstance(editCommentModalEl);
+      if (editCommentForm){
+        editCommentForm.addEventListener('submit', async (ev)=>{
+          ev.preventDefault();
+          if(!user || !token){ alert('Düzenlemek için giriş yapın.'); return; }
+          const cid = editCommentForm.dataset.cid;
+          const newText = (editCommentTextEl?.value || '').trim();
+          if(!newText){ editCommentTextEl?.focus(); return; }
+          const btn = editCommentSubmitBtn || editCommentForm.querySelector('button[type="submit"]');
+          if (btn){
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Kaydediliyor...';
+          }
+          try{
+            const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments/${cid}`, {
+              method:'PUT',
+              headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({ text: newText })
+            });
+            const d = await r.json();
+            if(d.error){ alert(d.error); return; }
+            const targetTextEl = document.querySelector(`[data-cid="${cid}"] .mb-1`);
+            if (targetTextEl){ targetTextEl.textContent = newText; }
+            try { editCommentModal.hide(); } catch(_){}
+            editCommentForm.dataset.cid = '';
+          } catch(err){
+            console.error(err);
+            alert('Yorum güncellenemedi');
+          } finally {
+            if (btn){
+              btn.disabled = false;
+              btn.textContent = 'Kaydet';
+            }
+          }
+        });
+      }
+    }
 
     // Comment controls (like/edit/delete/report)
     document.getElementById('comments').addEventListener('click', async (e)=>{
@@ -163,16 +479,26 @@
         const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments/${cid}`, { method:'DELETE', headers:{ 'Authorization': `Bearer ${token}` }});
         const d = await r.json(); if(d.error){ alert(d.error); return; } loadComments();
       } else if (e.target.closest('.c-edit')){
-        const current = wrap.querySelector('.mb-1').textContent;
-        const next = prompt('Yorumu düzenle:', current);
-        if (next==null) return;
-        const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments/${cid}`, { method:'PUT', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ text: next }) });
-        const d = await r.json(); if(d.error){ alert(d.error); return; } loadComments();
+        if(!user || !token){ alert('Düzenlemek için giriş yapın.'); return; }
+        const current = wrap.querySelector('.mb-1')?.textContent || '';
+        if (!editCommentModal){
+          editCommentModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editCommentModal'));
+        }
+        if (editCommentForm && editCommentTextEl){
+          editCommentForm.dataset.cid = cid;
+          editCommentTextEl.value = current;
+          editCommentTextEl.focus();
+          editCommentModal.show();
+        }
       } else if (e.target.closest('.c-report')){
-        if(!user){ alert('Giriş yapın'); return; }
-        const reason = prompt('Rapor nedeni (opsiyonel):') || '';
-        await fetch(`${BACKEND_BASE}/api/report`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ type:'comment', postId, commentId: cid, reason }) });
-        alert('Raporlandı');
+        if(!user || !token){ alert('Giriş yapın'); return; }
+        if (!reportModal) { reportModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('reportModal')); }
+        if (reportForm && reportReasonEl){
+          reportForm.dataset.type = 'comment';
+          reportForm.dataset.cid = cid;
+          reportReasonEl.value = '';
+          reportModal.show();
+        }
       }
     });
 
@@ -181,5 +507,6 @@
   </script>
 </body>
 </html>
+
 
 

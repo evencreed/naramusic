@@ -3,23 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Naramüzik</title>
+  <title>Aktivite Akışı — Nara Müzik</title>
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <meta name="description" content="Nara Müzik — müzik haberleri, incelemeler ve topluluk tartışmaları.">
-  <meta property="og:title" content="Nara Müzik">
-  <meta property="og:description" content="Müzik topluluğu: Yeni parçalar, röportajlar, etkinlikler.">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="https://example.com/og-image.jpg">
-  <meta name="robots" content="index, follow">
 
-    <!-- site CSS (ekleyin) -->
-  <link rel="stylesheet" href="css/style.css?v=1">
+  <!-- Site CSS -->
+  <link rel="stylesheet" href="../css/style.css">
 
   <style>
     :root{
-      /* dark theme (default) */
       --bg:#0b0b0b;
       --text:#eaeaea;
       --panel:#121214;
@@ -29,9 +22,7 @@
       --border: rgba(255,255,255,0.06);
       --elev-1: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       --input-bg:#0f1113;
-    } 
-
-    /* light theme tokens */
+    }
     :root[data-theme="light"]{
       --bg:#f8fafc;
       --text:#0f172a;
@@ -43,8 +34,6 @@
       --elev-1: linear-gradient(180deg, rgba(2,6,23,0.02), rgba(2,6,23,0.01));
       --input-bg:#f1f5f9;
     }
-
-    /* Light theme overrides for Bootstrap utility classes to ensure contrast */
     :root[data-theme="light"] .text-light{ color: var(--text) !important; }
     :root[data-theme="light"] .bg-dark{ background-color: var(--input-bg) !important; }
     :root[data-theme="light"] .form-control.bg-dark,
@@ -60,93 +49,63 @@
       font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
       padding-top:72px;
     }
-
-    /* Top thin utility bar (optional) */
     .topbar{
-      position:fixed;
-      top:0;
-      left:0;
-      right:0;
-      height:40px;
-      background:var(--panel);
-      z-index:1040;
+      position:fixed; top:0; left:0; right:0; height:40px;
+      background:var(--panel); z-index:1040;
       border-bottom:1px solid var(--border);
     }
     .topbar .container{height:100%; display:flex; align-items:center; gap:12px; font-size:13px}
-
-    /* Main navbar */
     .mainnav{
-      position:fixed;
-      top:40px;
-      left:0;
-      right:0;
-      z-index:1039;
+      position:fixed; top:40px; left:0; right:0; z-index:1039;
       border-bottom:1px solid var(--border);
       background:transparent;
     }
-
     .navbar-brand{font-weight:800; letter-spacing:.6px}
     .nav-link{color:color-mix(in oklab, var(--text) 85%, transparent)}
     .nav-link:hover{color:var(--accent)}
 
-    /* Hero carousel */
-    .hero .carousel-item{height:340px}
-    .hero .carousel-item img{object-fit:cover; height:100%; width:100%; filter:brightness(.6)}
-    .hero .carousel-caption{bottom:24px; left:24px; right:auto; text-align:left}
-    .hero .carousel-caption h3{font-weight:800}
-
-    /* Content layout */
     main.container{max-width:1150px}
-    .content-left{min-height:400px}
     .card{background:var(--elev-1); border:1px solid var(--border)}
-    .card .meta{font-size:12px; color:var(--muted)}
     .post-thumb{height:120px; object-fit:cover; width:100%; border-radius:.25rem}
+    .section-header{display:flex; align-items:center; justify-content:space-between}
+    .collapse-toggle{all:unset; cursor:pointer}
 
-    /* Sidebar */
-    .sidebar .widget{background:transparent; border:1px solid var(--border); padding:14px; margin-bottom:16px}
-    .sidebar h6{font-size:14px; margin-bottom:10px}
-    .small-list .item{display:flex; gap:10px; align-items:flex-start; margin-bottom:10px}
-    .small-list img{width:72px; height:56px; object-fit:cover; border-radius:4px}
-
-    /* responsive tweaks */
     @media (max-width:991px){
       .mainnav{top:0}
       body{padding-top:56px}
       .topbar{display:none}
-      .hero .carousel-item{height:220px}
     }
   </style>
 </head>
 <body>
-
-  <!-- Optional thin topbar -->
+  <!-- Üst ince bar -->
   <div class="topbar d-none d-lg-block">
     <div class="container">
       <div class="me-auto small text-muted">Nara Müzik — Müzik tartışma topluluğu</div>
       <div class="d-flex gap-3">
-        <a href="#about" class="text-muted">About</a>
-        <a href="pages/contact.html" class="text-muted">Contact</a>
-        <a href="pages/submit.html" class="text-muted">Submit</a>
+        <a href="../index.html#about" class="text-muted">About</a>
+        <a href="contact.html" class="text-muted">Contact</a>
+        <a href="submit.html" class="text-muted">Submit</a>
       </div>
     </div>
   </div>
 
-  <!-- Main navbar -->
+  <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
     <div class="container-fluid">
       <div class="d-flex align-items-center">
         <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">☰</button>
-        <a class="navbar-brand me-3" href="index.html">Nara Müzik</a>
+        <a class="navbar-brand me-3" href="../index.html">Nara Müzik</a>
 
         <!-- desktop links -->
         <div class="d-none d-lg-flex align-items-center gap-2">
-          <a class="nav-link px-2" href="pages/yenimuzik.html">Yeni Müzik</a>
-          <a class="nav-link px-2" href="pages/endustri.html">Endüstri Haberleri</a>
-          <a class="nav-link px-2" href="pages/degerlendirme.html">Değerlendirme</a>
-          <a class="nav-link px-2" href="pages/album.html">Albüm İnceleme</a>
-          <a class="nav-link px-2" href="pages/roportaj.html">Röportajlar</a>
-          <a class="nav-link px-2" href="pages/etkinlik.html">Etkinlikler</a>
-          <a class="nav-link px-2" href="pages/dizifilm.html">Dizi & Filmler</a>
+          <a class="nav-link px-2" href="yenimuzik.html">Yeni Müzik</a>
+          <a class="nav-link px-2" href="endustri.html">Endüstri Haberleri</a>
+          <a class="nav-link px-2" href="degerlendirme.html">Değerlendirme</a>
+          <a class="nav-link px-2" href="album.html">Albüm İnceleme</a>
+          <a class="nav-link px-2" href="roportaj.html">Röportajlar</a>
+          <a class="nav-link px-2" href="etkinlik.html">Etkinlikler</a>
+          <a class="nav-link px-2" href="dizifilm.html">Dizi & Filmler</a>
         </div>
       </div>
 
@@ -154,15 +113,12 @@
         <div class="d-none d-md-block">
           <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
         </div>
-
         <select id="languageSwitcher" class="form-select form-select-sm bg-dark text-light border-light d-none d-md-block" style="width:110px">
           <option value="tr">TR</option>
           <option value="en">EN</option>
         </select>
-
         <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
         <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">Yeni Gönderi</button>
-
         <div id="authButtons" class="d-flex gap-1">
           <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
           <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
@@ -173,13 +129,13 @@
             <li class="px-3 py-2 text-muted small">Oturum açın veya bildiriminiz yok.</li>
           </ul>
         </div>
-        <a href="pages/submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink">Kaydedilenler</a>
-        <a href="pages/mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink">Mod</a>
+        <a href="submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink">Kaydedilenler</a>
+        <a href="mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink">Mod</a>
       </div>
     </div>
   </nav>
 
-  <!-- Offcanvas sidebar for small screens -->
+  <!-- Mobil offcanvas menü -->
   <div class="offcanvas offcanvas-start" tabindex="-1" id="sideMenu">
     <div class="offcanvas-header">
       <h5 class="offcanvas-title">Kategoriler</h5>
@@ -187,137 +143,82 @@
     </div>
     <div class="offcanvas-body">
       <ul class="list-unstyled mb-0">
-        <li><a href="pages/yenimuzik.html">Yeni Müzik</a></li>
-        <li><a href="pages/endustri.html">Endüstri Haberleri</a></li>
-        <li><a href="pages/degerlendirme.html">Değerlendirme</a></li>
-        <li><a href="pages/album.html">Albüm İnceleme</a></li>
-        <li><a href="pages/roportaj.html">Röportajlar</a></li>
-        <li><a href="pages/etkinlik.html">Etkinlikler</a></li>
-        <li><a href="pages/dizifilm.html">Dizi ve Filmler</a></li>
+        <li><a href="yenimuzik.html">Yeni Müzik</a></li>
+        <li><a href="endustri.html">Endüstri Haberleri</a></li>
+        <li><a href="degerlendirme.html">Değerlendirme</a></li>
+        <li><a href="album.html">Albüm İnceleme</a></li>
+        <li><a href="roportaj.html">Röportajlar</a></li>
+        <li><a href="etkinlik.html">Etkinlikler</a></li>
+        <li><a href="dizifilm.html">Dizi ve Filmler</a></li>
       </ul>
     </div>
   </div>
 
-  <!-- HERO (carousel) -->
-  <section class="hero container mt-4">
-    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
-      <div class="carousel-inner rounded">
-        <div class="carousel-item active" id="heroPinnedSlide">
-          <img id="heroPinnedImg" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1600&auto=format&fit=crop" class="d-block w-100" alt="hero1">
-          <div class="carousel-caption text-start">
-            <h3 id="heroPinnedTitle">Öne Çıkan</h3>
-            <p id="heroPinnedExcerpt" class="d-none d-md-block">Toplulukta sabitlenmiş gönderi burada vurgulanır.</p>
-            <a id="heroPinnedLink" href="#" class="btn btn-sm btn-outline-light">İncele</a>
-          </div>
+  <main class="container mt-4" id="activityMain">
+    <h4 class="mb-3">Aktivite Akışı</h4>
+
+    <!-- Bildirilerim -->
+    <div class="card mb-3">
+      <div class="card-header section-header">
+        <span>🔔 Bildirilerim</span>
+        <button class="collapse-toggle small text-muted" data-bs-toggle="collapse" data-bs-target="#collapseNotifications" aria-expanded="true" aria-controls="collapseNotifications">Gizle/Göster</button>
+      </div>
+      <div id="collapseNotifications" class="collapse show">
+        <div class="card-body">
+          <div id="activityNotifications" class="list-group small"></div>
         </div>
       </div>
-
-      <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-      </button>
     </div>
-  </section>
 
-  <!-- Main 2-column layout -->
-  <main class="container mt-4">
-    <div class="row g-4">
-      <!-- LEFT: posts -->
-      <div class="col-lg-8 content-left">
-        <section>
-          <h5 class="mb-3">📰 En Popüler</h5>
+    <!-- Kaydedilenler -->
+   <div class="card mb-3">
+     <div class="card-header section-header">
+       <span>🔖 Kaydedilenler</span>
+       <button class="collapse-toggle small text-muted" data-bs-toggle="collapse" data-bs-target="#collapseBookmarks" aria-expanded="true" aria-controls="collapseBookmarks">Gizle/Göster</button>
+     </div>
+     <div id="collapseBookmarks" class="collapse show">
+       <div class="card-body">
+         <div id="activityBookmarks" class="row g-3"></div>
+       </div>
+     </div>
+   </div>
 
-          <div class="row g-3 mb-4" id="popularPosts"></div>
-        </section>
+    <!-- Gönderilerim -->
+   <div class="card mb-3">
+     <div class="card-header section-header">
+       <span>✍️ Gönderilerim</span>
+       <button class="collapse-toggle small text-muted" data-bs-toggle="collapse" data-bs-target="#collapseMyPosts" aria-expanded="true" aria-controls="collapseMyPosts">Gizle/Göster</button>
+     </div>
+     <div id="collapseMyPosts" class="collapse show">
+       <div class="card-body">
+         <div id="activityMyPosts" class="row g-3"></div>
+       </div>
+     </div>
+   </div>
 
-        <section>
-          <h5 class="mb-3">🆕 En Son Eklenenler</h5>
-          <div class="row g-3" id="latestPosts"></div>
-          <div class="text-center mt-3">
-            <button id="loadMoreLatest" class="btn btn-outline-light btn-sm">Daha Fazla</button>
-          </div>
-        </section>
-      </div>
-
-      <!-- RIGHT: sidebar -->
-      <aside class="col-lg-4 sidebar">
-        <div class="widget">
-          <h6>🔍 Popüler</h6>
-          <div class="small-list">
-            <div class="item">
-              <img src="https://images.unsplash.com/photo-1517519014922-8fc1b4f9b42b?q=80&w=400&auto=format&fit=crop" alt="">
-              <div>
-                <div class="fw-semibold">Popüler Gönderi Başlığı</div>
-                <div class="meta">1.2K okuma</div>
-              </div>
-            </div>
-
-            <div class="item">
-              <img src="https://images.unsplash.com/photo-1504457046656-3df3d3c03d91?q=80&w=400&auto=format&fit=crop" alt="">
-              <div>
-                <div class="fw-semibold">Başka Popüler</div>
-                <div class="meta">980 okuma</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="widget">
-          <h6>🧾 Son Yorumlar</h6>
-          <div class="small-list">
-            <div class="item">
-              <div>
-                <div class="fw-semibold">KullanıcıA</div>
-                <div class="meta">“Harika parça...” • 2 saat önce</div>
-              </div>
-            </div>
-
-            <div class="item">
-              <div>
-                <div class="fw-semibold">KullanıcıB</div>
-                <div class="meta">“İncelemeniz çok faydalı.” • 1 gün önce</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="widget">
-          <h6>🗂 Kategoriler</h6>
-          <div class="d-flex flex-wrap gap-2">
-            <a href="pages/yenimuzik.html" class="badge bg-secondary text-light">Yeni Müzik</a>
-            <a href="pages/degerlendirme.html" class="badge bg-secondary text-light">Değerlendirme</a>
-            <a href="pages/roportaj.html" class="badge bg-secondary text-light">Röportaj</a>
-            <a href="pages/etkinlik.html" class="badge bg-secondary text-light">Etkinlik</a>
-          </div>
-        </div>
-
-        <div class="widget text-center">
-          <h6>Topluluk</h6>
-          <p class="small text-muted mb-0">Üyeler katılıp gönderi paylaşabilir. Giriş/Kayıt ile başlayın.</p>
-          <div class="mt-2">
-            <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#registerModal">Üye Ol</button>
-          </div>
-        </div>
-      </aside>
-    </div>
+    <!-- Sitede En Son -->
+   <div class="card mb-3">
+     <div class="card-header section-header">
+       <span>🆕 Sitede En Son</span>
+       <div class="d-flex align-items-center gap-2">
+         <small><a class="text-decoration-none" href="../index.html">Daha fazla</a></small>
+         <button class="collapse-toggle small text-muted" data-bs-toggle="collapse" data-bs-target="#collapseLatest" aria-expanded="true" aria-controls="collapseLatest">Gizle/Göster</button>
+       </div>
+     </div>
+     <div id="collapseLatest" class="collapse show">
+       <div class="card-body">
+         <div id="activityLatest" class="row g-3"></div>
+       </div>
+     </div>
+   </div>
   </main>
 
   <!-- Footer -->
   <footer class="text-center py-4 mt-5">
     <div class="container">
-      <small class="text-muted">© <span id="year"></span> MyForum — Tüm hakları saklıdır.</small>
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
     </div>
   </footer>
-
-  <!-- About section -->
-  <section id="about" class="py-5 border-top" style="border-color: var(--border) !important;">
-    <div class="container">
-      <h5 class="mb-2">Hakkında</h5>
-      <p class="text-muted mb-0">Nara Müzik, topluluk odaklı bir müzik platformudur. Üyeler yeni parçaları, röportajları ve etkinlikleri paylaşır; biz de keşfi kolaylaştıran sade bir arayüz sunarız.</p>
-    </div>
-  </section>
 
   <!-- Modals (Login / Register / Create Post) -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
@@ -370,6 +271,10 @@
             <option value="yenimuzik">Yeni Müzik</option>
             <option value="endustri">Endüstri Haberleri</option>
             <option value="degerlendirme">Değerlendirme</option>
+            <option value="album">Albüm İnceleme</option>
+            <option value="roportaj">Röportajlar</option>
+            <option value="etkinlik">Etkinlikler</option>
+            <option value="dizifilm">Dizi & Filmler</option>
           </select>
           <div class="btn-toolbar mb-2" role="toolbar" aria-label="Editor toolbar">
             <div class="btn-group btn-group-sm me-1" role="group">
@@ -434,41 +339,6 @@
               <input id="postLinkUrl" name="linkUrl" type="url" class="form-control" placeholder="Harici Link (opsiyonel)">
             </div>
           </div>
-          <!-- Optional Poll UI -->
-          <div class="mt-3 border-top pt-3">
-            <div class="form-check form-switch mb-2">
-              <input class="form-check-input" type="checkbox" id="pollEnable">
-              <label class="form-check-label" for="pollEnable">Anket ekle</label>
-            </div>
-
-            <div id="pollFields" class="card card-body" style="display:none; background: var(--input-bg); border-color: var(--border)">
-              <div class="mb-2">
-                <input id="pollQuestion" class="form-control" placeholder="Anket sorusu (10-140 karakter)">
-              </div>
-
-              <div id="pollOptionsWrap" class="mb-2">
-                <div class="input-group mb-2">
-                  <span class="input-group-text">1</span>
-                  <input id="pollOption1" class="form-control poll-option" placeholder="Seçenek 1 (1-60 karakter)">
-                </div>
-                <div class="input-group mb-2">
-                  <span class="input-group-text">2</span>
-                  <input id="pollOption2" class="form-control poll-option" placeholder="Seçenek 2 (1-60 karakter)">
-                </div>
-              </div>
-
-              <div class="d-flex gap-2 mb-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="addPollOption">Seçenek Ekle</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="removePollOption">Son Seçeneği Kaldır</button>
-              </div>
-
-              <div class="mb-2">
-                <label for="pollClosesAt" class="form-label small text-muted">İsteğe bağlı bitiş zamanı</label>
-                <input id="pollClosesAt" type="datetime-local" class="form-control form-control-sm">
-                <div class="form-text">Belirtilirse, bu zamandan sonra oy verilemez.</div>
-              </div>
-            </div>
-          </div>
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary w-100">Paylaş</button>
@@ -496,46 +366,185 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="js/app.js?v=1"></script>
-  <script src="js/lang.js?v=1"></script>
-
+  <script src="../js/app.js"></script>
+  <script src="../js/lang.js"></script>
   <script>
     (function(){
-    'use strict';
-    // small helpers
-    document.getElementById('year').textContent = new Date().getFullYear();
+      'use strict';
+      document.getElementById('year').textContent = new Date().getFullYear();
 
-    // theme toggle (data-theme + localStorage)
-    const themeToggle = document.getElementById('themeToggle');
-    const root = document.documentElement;
-
-    function applyTheme(theme){
-      if(theme === 'light'){
-        root.setAttribute('data-theme','light');
-        themeToggle.textContent = '🌙';
-        document.getElementById('mainNavbar').classList.remove('navbar-dark');
-        document.getElementById('mainNavbar').classList.add('navbar-light');
-      } else {
-        root.removeAttribute('data-theme');
-        themeToggle.textContent = '☀️';
-        document.getElementById('mainNavbar').classList.remove('navbar-light');
-        document.getElementById('mainNavbar').classList.add('navbar-dark');
+      // Tema uygulaması (index/diğer sayfalarla aynı mantık)
+      const themeToggle = document.getElementById('themeToggle');
+      const root = document.documentElement;
+      function applyTheme(theme){
+        const nav = document.getElementById('mainNavbar');
+        if(theme === 'light'){
+          root.setAttribute('data-theme','light');
+          themeToggle.textContent = '🌙';
+          nav.classList.remove('navbar-dark');
+          nav.classList.add('navbar-light');
+        } else {
+          root.removeAttribute('data-theme');
+          themeToggle.textContent = '☀️';
+          nav.classList.remove('navbar-light');
+          nav.classList.add('navbar-dark');
+        }
       }
-    }
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      applyTheme(savedTheme);
+      themeToggle.addEventListener('click', () => {
+        const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
 
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    applyTheme(savedTheme);
+      // Auth gate
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const token = localStorage.getItem('token') || null;
+      const main = document.getElementById('activityMain');
+      if (!user || !token){
+        main.innerHTML = `
+          <div class="d-flex align-items-center justify-content-center" style="min-height:50vh">
+            <div class="card shadow-sm" style="max-width:520px">
+              <div class="card-body text-center">
+                <h5 class="mb-2">Aktivite akışını görmek için giriş yapın.</h5>
+                <p class="text-muted small mb-3">Bildirimleriniz, kaydedilenleriniz ve kendi gönderileriniz burada görünecek.</p>
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
+                  <a class="btn btn-outline-light" href="../index.html">Ana sayfa</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
 
-    themeToggle.addEventListener('click', () => {
-      const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-      localStorage.setItem('theme', next);
-      applyTheme(next);
-    });
+      // Helpers
+      const BASE = (typeof BACKEND_BASE !== 'undefined' && BACKEND_BASE) ? BACKEND_BASE : (location.hostname.includes('localhost') ? 'http://localhost:4000' : 'https://naramusic.onrender.com');
+      const authHeaders = { 'Authorization': 'Bearer ' + token };
+      const basePath = location.pathname.includes('/pages/') ? '' : 'pages/';
 
-    // app.js will render popular and latest via API
+      const elNotif = document.getElementById('activityNotifications');
+      const elBmk = document.getElementById('activityBookmarks');
+      const elMine = document.getElementById('activityMyPosts');
+      const elLatest = document.getElementById('activityLatest');
 
-    // Form eventleri app.js içinde yönetiliyor
-  })();
+      function fmtDate(d){ try{ return new Date(d).toLocaleString('tr-TR'); }catch(_){ return ''; } }
+      function postCardHtml(p){
+        const thumb = p.mediaUrl ? `<img src="${p.mediaUrl}" alt="" class="post-thumb mb-2">` : '';
+        const linkBtn = p.linkUrl ? `<a href="${p.linkUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">Bağlantı</a>` : '';
+        const tags = Array.isArray(p.tags) ? p.tags.map(t=>`<span class="badge bg-dark ms-1">#${t}</span>`).join('') : '';
+        return `
+          <div class="col-md-6">
+            <div class="card h-100 shadow-sm" data-post-id="${p.id}">
+              <div class="card-body">
+                ${p.pinned?'<span class="badge bg-warning text-dark me-1">📌 Sabit</span>':''}${p.locked?'<span class="badge bg-secondary me-1">🔒 Kilitli</span>':''}
+                ${thumb}
+                <h5 class="card-title">${p.title||''}</h5>
+                <div class="mb-2">
+                  <span class="badge bg-secondary">${p.category||''}</span>
+                  ${tags}
+                </div>
+                <p class="card-text">${(p.content||'').substring(0,150)}...</p>
+                <div class="small text-muted">${fmtDate(p.createdAt||0)} • ${p.authorName||''}</div>
+                ${linkBtn ? `<div class="mt-2">${linkBtn}</div>` : ''}
+                <div class="mt-2 d-flex gap-2">
+                  <button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>
+                  <button class="btn btn-sm btn-outline-light bookmark-btn" data-id="${p.id}">🔖 Kaydet</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderNotifications(items){
+        if (!Array.isArray(items) || !items.length){
+          const el = document.getElementById('activityNotifications');
+          el.innerHTML = '<div class="text-muted">Bildiriminiz yok.</div>';
+          return;
+        }
+        elNotif.innerHTML = items.map(n=>{
+          const type = n.type==='mention' ? 'Bahsetme' : (n.type || 'Bildirim');
+          const from = n.fromUser ? ('@'+n.fromUser) : '';
+          const badge = n.read ? '' : '<span class="badge bg-primary ms-2">Yeni</span>';
+          return `
+            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+              <div>
+                <strong>${type}</strong> ${from ? '• '+from : ''} <small class="text-muted">• ${fmtDate(n.createdAt)}</small>
+              </div>
+              <div>${badge}</div>
+            </a>
+          `;
+        }).join('');
+      }
+
+      function renderPosts(list, into){
+        if (!Array.isArray(list) || !list.length){
+          into.innerHTML = '<div class="col-12"><div class="text-muted">İçerik yok.</div></div>';
+          return;
+        }
+        into.innerHTML = list.map(postCardHtml).join('');
+        if (typeof window.attachPostCardHandlers === 'function'){
+          attachPostCardHandlers(into);
+        }
+      }
+
+      (async ()=>{
+        try{
+          const latestUrl = new URL(BASE.replace(/\/$/, '') + '/api/posts');
+          latestUrl.searchParams.set('limit','10');
+          const requests = [
+            fetch(BASE + '/api/notifications', { headers: authHeaders }),
+            fetch(BASE + '/api/users/me/bookmarks', { headers: authHeaders }),
+            fetch(BASE + '/api/users/' + encodeURIComponent(user.id) + '/posts'),
+            fetch(latestUrl.toString())
+          ];
+          const [rN, rB, rM, rL] = await Promise.allSettled(requests);
+
+          // Notifications
+          if (rN.status === 'fulfilled'){
+            const items = await rN.value.json();
+            renderNotifications(Array.isArray(items) ? items : []);
+          } else {
+            elNotif.innerHTML = '<div class="text-danger small">Bildiriler yüklenemedi.</div>';
+          }
+
+          // Bookmarks
+          if (rB.status === 'fulfilled'){
+            const items = await rB.value.json();
+            renderPosts(Array.isArray(items) ? items : [], elBmk);
+          } else {
+            elBmk.innerHTML = '<div class="col-12"><div class="text-danger small">Kaydedilenler yüklenemedi.</div></div>';
+          }
+
+          // My posts
+          if (rM.status === 'fulfilled'){
+            const items = await rM.value.json();
+            renderPosts(Array.isArray(items) ? items : [], elMine);
+          } else {
+            elMine.innerHTML = '<div class="col-12"><div class="text-danger small">Gönderileriniz yüklenemedi.</div></div>';
+          }
+
+          // Latest
+          if (rL.status === 'fulfilled'){
+            const data = await rL.value.json();
+            const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data)?data:[]);
+            renderPosts(items, elLatest);
+          } else {
+            elLatest.innerHTML = '<div class="col-12"><div class="text-danger small">En son gönderiler yüklenemedi.</div></div>';
+          }
+
+        }catch(err){
+          console.error('Activity load error', err);
+          elNotif.innerHTML = '<div class="text-danger small">Bildiriler yüklenemedi.</div>';
+          elBmk.innerHTML = '<div class="col-12"><div class="text-danger small">Kaydedilenler yüklenemedi.</div></div>';
+          elMine.innerHTML = '<div class="col-12"><div class="text-danger small">Gönderileriniz yüklenemedi.</div></div>';
+          elLatest.innerHTML = '<div class="col-12"><div class="text-danger small">En son gönderiler yüklenemedi.</div></div>';
+        }
+      })();
+    })();
   </script>
 </body>
 </html>

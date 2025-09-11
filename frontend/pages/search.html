@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gelişmiş Arama — Nara Müzik</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Site CSS -->
+  <link rel="stylesheet" href="../css/style.css">
+
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --text:#eaeaea;
+      --panel:#121214;
+      --muted:#9aa3ae;
+      --accent:#77c2ff;
+      --accent-contrast:#0a1118;
+      --border: rgba(255,255,255,0.06);
+      --elev-1: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      --input-bg:#0f1113;
+    }
+    :root[data-theme="light"]{
+      --bg:#f8fafc;
+      --text:#0f172a;
+      --panel:#ffffff;
+      --muted:#5b6778;
+      --accent:#2563eb;
+      --accent-contrast:#ffffff;
+      --border: rgba(15,23,42,0.08);
+      --elev-1: linear-gradient(180deg, rgba(2,6,23,0.02), rgba(2,6,23,0.01));
+      --input-bg:#f1f5f9;
+    }
+    :root[data-theme="light"] .text-light{ color: var(--text) !important; }
+    :root[data-theme="light"] .bg-dark{ background-color: var(--input-bg) !important; }
+    :root[data-theme="light"] .form-control.bg-dark,
+    :root[data-theme="light"] .form-select.bg-dark{ background-color: var(--input-bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
+    :root[data-theme="light"] .btn-outline-light{ color: var(--text) !important; border-color: var(--border) !important; }
+    :root[data-theme="light"] .btn-outline-light:hover{ background: var(--text) !important; color: var(--accent-contrast) !important; }
+    :root[data-theme="light"] .badge.bg-secondary{ background-color: color-mix(in oklab, var(--text) 10%, transparent) !important; color: var(--text) !important; }
+
+    html,body{height:100%}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      padding-top:72px;
+    }
+    .topbar{
+      position:fixed; top:0; left:0; right:0; height:40px;
+      background:var(--panel); z-index:1040;
+      border-bottom:1px solid var(--border);
+    }
+    .topbar .container{height:100%; display:flex; align-items:center; gap:12px; font-size:13px}
+    .mainnav{
+      position:fixed; top:40px; left:0; right:0; z-index:1039;
+      border-bottom:1px solid var(--border);
+      background:transparent;
+    }
+    .navbar-brand{font-weight:800; letter-spacing:.6px}
+    .nav-link{color:color-mix(in oklab, var(--text) 85%, transparent)}
+    .nav-link:hover{color:var(--accent)}
+
+    main.container{max-width:1150px}
+    .card{background:var(--elev-1); border:1px solid var(--border)}
+    .post-thumb{height:120px; object-fit:cover; width:100%; border-radius:.25rem}
+
+    @media (max-width:991px){
+      .mainnav{top:0}
+      body{padding-top:56px}
+      .topbar{display:none}
+    }
+  </style>
+</head>
+<body>
+  <!-- Üst ince bar -->
+  <div class="topbar d-none d-lg-block">
+    <div class="container">
+      <div class="me-auto small text-muted">Nara Müzik — Müzik tartışma topluluğu</div>
+      <div class="d-flex gap-3">
+        <a href="../index.html#about" class="text-muted">About</a>
+        <a href="contact.html" class="text-muted">Contact</a>
+        <a href="submit.html" class="text-muted">Submit</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
+    <div class="container-fluid">
+      <div class="d-flex align-items-center">
+        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">☰</button>
+        <a class="navbar-brand me-3" href="../index.html">Nara Müzik</a>
+
+        <!-- desktop links -->
+        <div class="d-none d-lg-flex align-items-center gap-2">
+          <a class="nav-link px-2" href="yenimuzik.html">Yeni Müzik</a>
+          <a class="nav-link px-2" href="endustri.html">Endüstri Haberleri</a>
+          <a class="nav-link px-2" href="degerlendirme.html">Değerlendirme</a>
+          <a class="nav-link px-2" href="album.html">Albüm İnceleme</a>
+          <a class="nav-link px-2" href="roportaj.html">Röportajlar</a>
+          <a class="nav-link px-2" href="etkinlik.html">Etkinlikler</a>
+          <a class="nav-link px-2" href="dizifilm.html">Dizi & Filmler</a>
+        </div>
+      </div>
+
+      <div class="d-flex ms-auto align-items-center gap-2">
+        <div class="d-none d-md-block">
+          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
+        </div>
+        <select id="languageSwitcher" class="form-select form-select-sm bg-dark text-light border-light d-none d-md-block" style="width:110px">
+          <option value="tr">TR</option>
+          <option value="en">EN</option>
+        </select>
+        <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
+
+        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">Yeni Gönderi</button>
+        <div id="authButtons" class="d-flex gap-1">
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
+        </div>
+        <a href="submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink">Kaydedilenler</a>
+        <a href="mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink">Mod</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobil offcanvas menü -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="sideMenu">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Kategoriler</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+      <ul class="list-unstyled mb-0">
+        <li><a href="yenimuzik.html">Yeni Müzik</a></li>
+        <li><a href="endustri.html">Endüstri Haberleri</a></li>
+        <li><a href="degerlendirme.html">Değerlendirme</a></li>
+        <li><a href="album.html">Albüm İnceleme</a></li>
+        <li><a href="roportaj.html">Röportajlar</a></li>
+        <li><a href="etkinlik.html">Etkinlikler</a></li>
+        <li><a href="dizifilm.html">Dizi ve Filmler</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <main class="container mt-4">
+    <h4 class="mb-3">🔎 Gelişmiş Arama</h4>
+
+    <!-- Filtre Formu -->
+    <form id="searchForm" class="card mb-4">
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-lg-4">
+            <label for="q" class="form-label small text-muted">Metin</label>
+            <input id="q" class="form-control bg-dark text-light" placeholder="Metin ara">
+          </div>
+          <div class="col-lg-3">
+            <label for="category" class="form-label small text-muted">Kategori</label>
+            <select id="category" class="form-select bg-dark text-light">
+              <option value="">Hepsi</option>
+              <option value="yenimuzik">Yeni Müzik</option>
+              <option value="endustri">Endüstri</option>
+              <option value="degerlendirme">Değerlendirme</option>
+              <option value="album">Albüm</option>
+              <option value="roportaj">Röportaj</option>
+              <option value="etkinlik">Etkinlik</option>
+              <option value="dizifilm">Dizi & Film</option>
+            </select>
+          </div>
+          <div class="col-lg-5">
+            <label for="tags" class="form-label small text-muted">Etiketler</label>
+            <input id="tags" class="form-control bg-dark text-light" placeholder="Etiketler (virgülle)">
+          </div>
+          <div class="col-md-3">
+            <label for="from" class="form-label small text-muted">Başlangıç Tarihi</label>
+            <input id="from" type="date" class="form-control bg-dark text-light">
+          </div>
+          <div class="col-md-3">
+            <label for="to" class="form-label small text-muted">Bitiş Tarihi</label>
+            <input id="to" type="date" class="form-control bg-dark text-light">
+          </div>
+          <div class="col-md-3">
+            <label for="sort" class="form-label small text-muted">Sıralama</label>
+            <select id="sort" class="form-select bg-dark text-light">
+              <option value="created">Oluşturma Tarihi</option>
+              <option value="views">Görüntülenme</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="order" class="form-label small text-muted">Yön</label>
+            <select id="order" class="form-select bg-dark text-light">
+              <option value="desc">Azalan</option>
+              <option value="asc">Artan</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-3 d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Ara</button>
+          <button type="button" class="btn btn-outline-light" id="resetBtn">Sıfırla</button>
+          <div id="resultsInfo" class="ms-auto small text-muted"></div>
+        </div>
+      </div>
+    </form>
+
+    <!-- Sonuçlar -->
+    <div class="row g-3" id="searchResults"></div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-4 mt-5">
+    <div class="container">
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
+    </div>
+  </footer>
+
+  <!-- Modals (Login / Register / Create Post) -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="loginForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Giriş Yap</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
+          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary w-100">Giriş</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="registerForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Kayıt Ol</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input name="username" class="form-control mb-2" placeholder="Kullanıcı Adı" required>
+          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
+          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success w-100">Kayıt Ol</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form id="newPostForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Yeni Gönderi Oluştur</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input id="postTitle" name="title" class="form-control mb-2" placeholder="Başlık" required>
+          <select id="postCategory" name="category" class="form-select mb-2">
+            <option value="yenimuzik">Yeni Müzik</option>
+            <option value="endustri">Endüstri Haberleri</option>
+            <option value="degerlendirme">Değerlendirme</option>
+            <option value="album">Albüm İnceleme</option>
+            <option value="roportaj">Röportajlar</option>
+            <option value="etkinlik">Etkinlikler</option>
+            <option value="dizifilm">Dizi & Filmler</option>
+          </select>
+          <textarea id="postContent" name="content" rows="10" class="form-control mb-2" placeholder="İçerik" required></textarea>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <input id="postMediaUrl" name="mediaUrl" type="url" class="form-control" placeholder="Fotoğraf/GIF URL (opsiyonel)">
+            </div>
+            <div class="col-md-6">
+              <input id="postLinkUrl" name="linkUrl" type="url" class="form-control" placeholder="Harici Link (opsiyonel)">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary w-100">Paylaş</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/lang.js"></script>
+  <script>
+    (function(){
+      'use strict';
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // Tema uygulaması (index/diğer sayfalarla aynı mantık)
+      const themeToggle = document.getElementById('themeToggle');
+      const root = document.documentElement;
+      function applyTheme(theme){
+        const nav = document.getElementById('mainNavbar');
+        if(theme === 'light'){
+          root.setAttribute('data-theme','light');
+          themeToggle.textContent = '🌙';
+          nav.classList.remove('navbar-dark');
+          nav.classList.add('navbar-light');
+        } else {
+          root.removeAttribute('data-theme');
+          themeToggle.textContent = '☀️';
+          nav.classList.remove('navbar-light');
+          nav.classList.add('navbar-dark');
+        }
+      }
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      applyTheme(savedTheme);
+      themeToggle.addEventListener('click', () => {
+        const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
+
+      // Form ve sonuçlar
+      const form = document.getElementById('searchForm');
+      const resultsEl = document.getElementById('searchResults');
+      const infoEl = document.getElementById('resultsInfo');
+      const resetBtn = document.getElementById('resetBtn');
+
+      // URL'deki paramları form'a doldur
+      const usp = new URLSearchParams(location.search);
+      const get = (k)=> usp.get(k) || '';
+      const setVal = (id,val)=>{ const el = document.getElementById(id); if (el != null) el.value = val; };
+
+      setVal('q', get('q'));
+      setVal('category', get('category'));
+      setVal('tags', get('tags'));
+      if (get('from')) setVal('from', get('from').slice(0,10));
+      if (get('to')) setVal('to', get('to').slice(0,10));
+      setVal('sort', get('sort') || 'created');
+      setVal('order', get('order') || 'desc');
+
+      function buildQueryFromForm(){
+        const q = document.getElementById('q').value.trim();
+        const category = document.getElementById('category').value.trim();
+        const tags = document.getElementById('tags').value.trim();
+        const from = document.getElementById('from').value;
+        const to = document.getElementById('to').value;
+        const sort = document.getElementById('sort').value;
+        const order = document.getElementById('order').value;
+
+        const search = new URLSearchParams();
+        if (q) search.set('q', q);
+        if (category) search.set('category', category);
+        if (tags) search.set('tags', tags);
+        if (from){
+          const fIso = new Date(from + 'T00:00:00.000').toISOString();
+          search.set('from', fIso);
+        }
+        if (to){
+          const tIso = new Date(to + 'T23:59:59.999').toISOString();
+          search.set('to', tIso);
+        }
+        if (sort) search.set('sort', sort);
+        if (order) search.set('order', order);
+        return search;
+      }
+
+      async function runSearch(){
+        const params = buildQueryFromForm();
+
+        // URL'yi güncelle (geriye dönülebilir)
+        const newUrl = location.pathname + (params.toString() ? ('?' + params.toString()) : '');
+        history.replaceState(null, '', newUrl);
+
+        // Backend'e çağrı
+        const base = (typeof BACKEND_BASE !== 'undefined' && BACKEND_BASE) ? BACKEND_BASE : (location.hostname.includes('localhost') ? 'http://localhost:4000' : 'https://naramusic.onrender.com');
+        const url = new URL(base.replace(/\/$/, '') + '/api/search');
+        params.forEach((v,k)=> url.searchParams.set(k,v));
+
+        // Hiç filtre yoksa backend boş döner; burada kullanıcıya bilgi gösterelim
+        if (!Array.from(params.keys()).length){
+          resultsEl.innerHTML = '<div class="col-12"><div class="alert alert-secondary">Filtre girin ve "Ara" butonuna basın.</div></div>';
+          infoEl.textContent = '';
+          return;
+        }
+
+        resultsEl.innerHTML = '<div class="col-12"><div class="text-muted">Yükleniyor…</div></div>';
+        infoEl.textContent = '';
+
+        try{
+          const r = await fetch(url.toString());
+          const data = await r.json();
+          if (!r.ok){
+            const msg = (data && (data.error||data.message)) || 'Arama hatası';
+            resultsEl.innerHTML = `<div class="col-12"><div class="alert alert-danger">${msg}</div></div>`;
+            return;
+          }
+          const items = Array.isArray(data) ? data : [];
+          if (!items.length){
+            resultsEl.innerHTML = '<div class="col-12"><div class="alert alert-secondary">Sonuç bulunamadı.</div></div>';
+            infoEl.textContent = '0 sonuç';
+            return;
+          }
+          // Kartları render et (loadLatestPosts/loadCategoryPosts ile uyumlu)
+          resultsEl.innerHTML = items.map(p=>{
+            const pinned = p.pinned ? '<span class="badge bg-warning text-dark me-1">📌 Sabit</span>' : '';
+            const locked = p.locked ? '<span class="badge bg-secondary me-1">🔒 Kilitli</span>' : '';
+            const thumb = p.mediaUrl ? `<img src="${p.mediaUrl}" alt="" class="post-thumb mb-2">` : '';
+            const linkBtn = p.linkUrl ? `<div class="mt-2"><a href="${p.linkUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">Bağlantı</a></div>` : '';
+            const tags = Array.isArray(p.tags) ? p.tags.map(t=>`<span class="badge bg-dark ms-1">#${t}</span>`).join('') : '';
+            const author = p.authorName ? `<small class="text-muted"> • ${p.authorName}</small>` : '';
+            return `
+              <div class="col-md-6">
+                <div class="card h-100 shadow-sm" data-post-id="${p.id}">
+                  <div class="card-body">
+                    ${pinned}${locked}
+                    ${thumb}
+                    <h5 class="card-title">${p.title || ''}</h5>
+                    <div class="mb-2">
+                      <span class="badge bg-secondary">${p.category || ''}</span>
+                      ${tags}
+                    </div>
+                    <p class="card-text">${(p.content||'').substring(0,150)}...</p>
+                    <div class="small text-muted">${new Date(p.createdAt||0).toLocaleString()}${author}</div>
+                    ${linkBtn}
+                    <div class="mt-2 d-flex gap-2">
+                      <button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>
+                      <button class="btn btn-sm btn-outline-light bookmark-btn" data-id="${p.id}">🔖 Kaydet</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+          // Kart click-to-detail
+          if (typeof window.attachPostCardHandlers === 'function'){
+            attachPostCardHandlers(resultsEl);
+          }
+          infoEl.textContent = `${items.length} sonuç`;
+        }catch(err){
+          console.error(err);
+          resultsEl.innerHTML = '<div class="col-12"><div class="alert alert-danger">Arama yapılamadı.</div></div>';
+        }
+      }
+
+      form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        runSearch();
+      });
+
+      resetBtn.addEventListener('click', ()=>{
+        form.reset();
+        // defaults
+        document.getElementById('sort').value = 'created';
+        document.getElementById('order').value = 'desc';
+        history.replaceState(null, '', location.pathname);
+        resultsEl.innerHTML = '';
+        document.getElementById('q').focus();
+        document.getElementById('resultsInfo').textContent = '';
+      });
+
+      // İlk yüklemede auto-run (URL'de param varsa)
+      if (Array.from(usp.keys()).length){
+        runSearch();
+      }
+    })();
+  </script>
+</body>
+</html>
