@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Profil — Nara Müzik</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/styles.css">
   <style>
     :root{ --bg:#0b0b0b; --text:#eaeaea; --panel:#121214; --muted:#9aa3ae; --accent:#77c2ff; --accent-contrast:#0a1118; --border: rgba(255,255,255,0.06); --elev-1: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); --input-bg:#0f1113; }
     :root[data-theme="light"]{ --bg:#f8fafc; --text:#0f172a; --panel:#ffffff; --muted:#5b6778; --accent:#2563eb; --accent-contrast:#ffffff; --border: rgba(15,23,42,0.08); --elev-1: linear-gradient(180deg, rgba(2,6,23,0.02), rgba(2,6,23,0.01)); --input-bg:#f1f5f9; }
@@ -19,6 +19,15 @@
     :root[data-theme="light"] .form-select.bg-dark{ background-color: var(--input-bg) !important; color: var(--text) !important; border-color: var(--border) !important }
     :root[data-theme="light"] .btn-outline-light{ color: var(--text) !important; border-color: var(--border) !important }
     :root[data-theme="light"] .btn-outline-light:hover{ background: var(--text) !important; color: var(--accent-contrast) !important }
+    /* Force white text in dark mode specifically for profile page */
+    :root:not([data-theme="light"]) body,
+    :root:not([data-theme="light"]) .card,
+    :root:not([data-theme="light"]) .card * {
+      color:#ffffff !important;
+    }
+    :root:not([data-theme="light"]) .text-muted { color:#cbd5e1 !important; }
+    :root:not([data-theme="light"]) .form-control,
+    :root:not([data-theme="light"]) .form-select { color:#ffffff !important; background-color:#0f1113 !important; border-color: rgba(255,255,255,0.12) !important; }
   </style>
 </head>
 <body>
