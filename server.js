@@ -771,6 +771,39 @@ app.post("/api/notifications/:id/read", authMiddleware, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Bookmarks: toggle and list
+app.post("/api/posts/:id/bookmark", authMiddleware, async (req, res) => {
+  try {
+    const userRef = db.collection("users").doc(req.user.id);
+    await db.runTransaction(async (tx) => {
+      const u = await tx.get(userRef);
+      if (!u.exists) throw new Error("User not found");
+      const cur = new Set(u.data().bookmarks || []);
+      if (cur.has(req.params.id)) cur.delete(req.params.id); else cur.add(req.params.id);
+      tx.update(userRef, { bookmarks: Array.from(cur) });
+    });
+    const u2 = await userRef.get();
+    res.json({ bookmarks: u2.data().bookmarks || [], bookmarked: (u2.data().bookmarks || []).includes(req.params.id) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/users/me/bookmarks", authMiddleware, async (req, res) => {
+  try {
+    const u = await db.collection("users").doc(req.user.id).get();
+    const ids = u.exists ? (u.data().bookmarks || []) : [];
+    if (!ids.length) return res.json([]);
+    // Firestore doesn't support IN with too many items; cap to 30 for safety
+    const chunk = ids.slice(0, 30);
+    const snaps = await Promise.all(chunk.map((id) => db.collection("posts").doc(id).get()));
+    const items = snaps.filter((d) => d.exists).map((d) => ({ id: d.id, ...d.data() }));
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get("/api/posts/category/:cat", async (req, res) => {
   try {
     const snapshot = await db
