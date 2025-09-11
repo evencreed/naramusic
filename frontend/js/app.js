@@ -273,9 +273,9 @@ function attachPostCardHandlers(scope){
   const cards = root.querySelectorAll('.card[data-post-id]');
   cards.forEach(card => {
     card.style.cursor = 'pointer';
-    card.addEventListener('click', async ()=>{
+    card.addEventListener('click', async (ev)=>{
+      if (ev.target.closest('.btn, .bookmark-btn, .like-btn, a')) return;
       const id = card.getAttribute('data-post-id');
-      // Detay sayfasına yönlendir (yorumlarla birlikte)
       const base = location.pathname.includes('/pages/') ? '' : 'pages/';
       location.href = `${base}post.html?id=${encodeURIComponent(id)}`;
     });
@@ -534,4 +534,18 @@ document.addEventListener('click', async (e)=>{
   const r = await fetch(`${BACKEND_BASE}/api/posts/${id}/like`, { method:'POST', headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` }});
   const data = await r.json();
   if (!data.error){ btn.innerHTML = `👍 ${data.likes}`; }
+});
+
+// Bookmarks toggle
+document.addEventListener('click', async (e)=>{
+  const b = e.target.closest('.bookmark-btn');
+  if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  if (!CURRENT_USER){ alert('Kaydetmek için giriş yapın'); return; }
+  const id = b.getAttribute('data-id');
+  try{
+    const r = await fetch(`${BACKEND_BASE}/api/posts/${id}/bookmark`, { method:'POST', headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` }});
+    const data = await r.json();
+    if (!data.error){ b.innerHTML = data.bookmarked ? '🔖 Kaydedildi' : '🔖 Kaydet'; }
+  }catch(err){ console.error(err); }
 });
