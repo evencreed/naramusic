@@ -33,6 +33,26 @@ body{
   padding-top:72px;
 }
 
+/* Force readable text in dark theme */
+:root:not([data-theme="light"]) {
+  --text:#ffffff;
+  --muted:#cbd5e1;
+}
+:root:not([data-theme="light"]) body,
+:root:not([data-theme="light"]) h1,
+:root:not([data-theme="light"]) h2,
+:root:not([data-theme="light"]) h3,
+:root:not([data-theme="light"]) h4,
+:root:not([data-theme="light"]) h5,
+:root:not([data-theme="light"]) h6,
+:root:not([data-theme="light"]) p,
+:root:not([data-theme="light"]) li,
+:root:not([data-theme="light"]) small,
+:root:not([data-theme="light"]) label,
+:root:not([data-theme="light"]) .form-label {
+  color: var(--text) !important;
+}
+
 /* Topbar */
 .topbar{
   background:#0a0a0a;
