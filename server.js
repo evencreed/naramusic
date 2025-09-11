@@ -89,6 +89,7 @@ function renderMarkdown(md) {
 // 3) JWT helpers
 //
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
+const APP_BASE_URL = process.env.APP_BASE_URL || "https://naramusic.vercel.app";
 
 function signToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
@@ -114,6 +115,16 @@ function authMiddleware(req, res, next) {
 app.get("/api/health", (req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 });
+
+// Utility: send verification (console log stub or real email integration)
+async function sendVerificationEmail(toEmail, link){
+  // Production: integrate with a provider (e.g., SendGrid, Mailgun)
+  console.log("[verify] send to:", toEmail, "link:", link);
+}
+
+function generateEmailToken(){
+  return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+}
 
 //
 // 5) Translate Proxy (Google Translate API)
@@ -279,6 +290,7 @@ app.post("/api/auth/register", authLimiter, async (req, res) => {
       return res.status(400).json({ error: "Email already registered" });
 
     const hash = await bcrypt.hash(password, 10);
+    const verifyToken = generateEmailToken();
     const userDoc = await usersCol.add({
       username,
       email: normEmail,
@@ -286,10 +298,16 @@ app.post("/api/auth/register", authLimiter, async (req, res) => {
       createdAt: new Date().toISOString(),
       avatarUrl: null,
       role: "user",
+      verified: false,
+      verifyToken,
     });
 
-    const user = { id: userDoc.id, username, email: normEmail, avatarUrl: null, role: "user" };
+    const user = { id: userDoc.id, username, email: normEmail, avatarUrl: null, role: "user", verified: false };
     const token = signToken(user);
+
+    // send verification email (stub)
+    const link = `${APP_BASE_URL}/pages/verify.html?uid=${encodeURIComponent(userDoc.id)}&token=${encodeURIComponent(verifyToken)}`;
+    await sendVerificationEmail(normEmail, link);
 
     res.json({ user, token });
   } catch (err) {
@@ -319,13 +337,45 @@ app.post("/api/auth/login", authLimiter, async (req, res) => {
     const ok = await bcrypt.compare(password, data.passwordHash || "");
     if (!ok) return res.status(400).json({ error: "Invalid credentials" });
 
-    const user = { id: doc.id, username: data.username, email: data.email, avatarUrl: data.avatarUrl || null, role: data.role || "user" };
+    const user = { id: doc.id, username: data.username, email: data.email, avatarUrl: data.avatarUrl || null, role: data.role || "user", verified: !!data.verified };
     const token = signToken(user);
 
     res.json({ user, token });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// Request email verification link
+app.post("/api/auth/send-verification", authMiddleware, async (req, res) => {
+  try{
+    const uref = db.collection("users").doc(req.user.id);
+    const u = await uref.get();
+    if (!u.exists) return res.status(404).json({ error: "User not found"});
+    const data = u.data();
+    if (data.verified) return res.json({ ok:true, already:true });
+    const token = generateEmailToken();
+    await uref.update({ verifyToken: token });
+    const link = `${APP_BASE_URL}/pages/verify.html?uid=${encodeURIComponent(uref.id)}&token=${encodeURIComponent(token)}`;
+    await sendVerificationEmail(data.email, link);
+    res.json({ ok:true });
+  }catch(err){ res.status(500).json({ error: err.message }); }
+});
+
+// Verify endpoint (called by verify page)
+app.post("/api/auth/verify", async (req, res) => {
+  try{
+    const { uid, token } = req.body || {};
+    if (!uid || !token) return res.status(400).json({ error: "Missing fields" });
+    const uref = db.collection("users").doc(uid);
+    const u = await uref.get();
+    if (!u.exists) return res.status(404).json({ error: "User not found"});
+    const data = u.data();
+    if (data.verified) return res.json({ ok:true, already:true });
+    if (!data.verifyToken || data.verifyToken !== token) return res.status(400).json({ error: "Invalid token" });
+    await uref.update({ verified: true, verifyToken: admin.firestore.FieldValue.delete() });
+    res.json({ ok:true });
+  }catch(err){ res.status(500).json({ error: err.message }); }
 });
 
 // Password reset: set a new password by email (no email send; simple flow)
