@@ -436,6 +436,7 @@ window.addEventListener('load', ()=>{
         const reg = document.getElementById('registerModal');
         if (reg){ bootstrap.Modal.getOrCreateInstance(reg).hide(); }
         closeAllModals();
+        alert('Kayıt başarılı. E-postanızı doğrulamanız için bağlantı gönderildi.');
       }catch(err){ console.error(err); alert('Kayıt hatası'); }
     });
   }
@@ -453,6 +454,12 @@ window.addEventListener('load', ()=>{
         const logm = document.getElementById('loginModal');
         if (logm){ bootstrap.Modal.getOrCreateInstance(logm).hide(); }
         closeAllModals();
+        if (!data.user?.verified){
+          // kullanıcıya doğrulama linki isteği opsiyonu sun
+          if (confirm('E-postanız doğrulanmamış görünüyor. Doğrulama bağlantısı gönderilsin mi?')){
+            try{ await fetch(`${BACKEND_BASE}/api/auth/send-verification`, { method:'POST', headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` } }); alert('Doğrulama e-postası gönderildi.'); }catch(_){ alert('Gönderilemedi.'); }
+          }
+        }
       }catch(err){ console.error(err); alert('Giriş hatası'); }
     });
   }
