@@ -1079,3 +1079,22 @@ document.addEventListener('click', async (e)=>{
     if (!data.error){ b.innerHTML = data.bookmarked ? '🔖 Kaydedildi' : '🔖 Kaydet'; }
   }catch(err){ console.error(err); }
 });
+
+// Navbar temaya uygun renkte değiştiriliyor
+function updateNavbarTheme() {
+  const navbar = document.querySelector(".navbar");
+  if (!navbar) return;
+
+  const isDarkTheme = document.body.classList.contains("dark-theme");
+  if (isDarkTheme) {
+    navbar.classList.remove("navbar-light", "bg-light");
+    navbar.classList.add("navbar-dark", "bg-dark");
+  } else {
+    navbar.classList.remove("navbar-dark", "bg-dark");
+    navbar.classList.add("navbar-light", "bg-light");
+  }
+}
+
+// Sayfa yüklendiğinde ve tema değiştiğinde çalıştır
+window.addEventListener("DOMContentLoaded", updateNavbarTheme);
+window.addEventListener("themeChange", updateNavbarTheme);

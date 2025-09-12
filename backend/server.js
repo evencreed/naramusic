@@ -507,10 +507,22 @@ app.get("/api/spotify/album", async (req, res) => {
 app.post("/api/auth/register", authLimiter, async (req, res) => {
   try {
     const { username, email, password } = req.body || {};
-    if (!username || !email || !password)
-      return res.status(400).json({ error: "Missing fields" });
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: "Eksik alanlar" });
+    }
 
+    // Şifre uzunluğu kontrolü
+    if (password.length < 6) {
+      return res.status(400).json({ error: "Şifre en az 6 karakter olmalıdır" });
+    }
+
+    // Kullanıcı adı benzersizliği kontrolü
     const usersCol = db.collection("users");
+    const usernameCheck = await usersCol.where("username", "==", username).limit(1).get();
+    if (!usernameCheck.empty) {
+      return res.status(400).json({ error: "Kullanıcı adı zaten alınmış" });
+    }
+
     const rawEmail = String(email).trim();
     const normEmail = rawEmail.toLowerCase();
 
@@ -548,27 +560,25 @@ app.post("/api/auth/register", authLimiter, async (req, res) => {
   }
 });
 
+// Giriş sırasında kullanıcı doğrulama
 app.post("/api/auth/login", authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body || {};
-    if (!email || !password)
-      return res.status(400).json({ error: "Missing fields" });
-    const usersCol = db.collection("users");
-    const rawEmail = String(email).trim();
-    const normEmail = rawEmail.toLowerCase();
-
-    // Try with exact email first (for legacy mixed-case entries), then normalized
-    let snapshot = await usersCol.where("email", "==", rawEmail).limit(1).get();
-    if (snapshot.empty) {
-      snapshot = await usersCol.where("email", "==", normEmail).limit(1).get();
+    if (!email || !password) {
+      return res.status(400).json({ error: "Eksik alanlar" });
     }
-    if (snapshot.empty)
-      return res.status(400).json({ error: "Invalid credentials" });
+
+    // Kullanıcı bulunamazsa hata mesajı
+    const usersCol = db.collection("users");
+    const snapshot = await usersCol.where("email", "==", email.toLowerCase()).limit(1).get();
+    if (snapshot.empty) {
+      return res.status(400).json({ error: "Geçersiz giriş bilgileri" });
+    }
 
     const doc = snapshot.docs[0];
     const data = doc.data();
     const ok = await bcrypt.compare(password, data.passwordHash || "");
-    if (!ok) return res.status(400).json({ error: "Invalid credentials" });
+    if (!ok) return res.status(400).json({ error: "Geçersiz giriş bilgileri" });
 
     const user = { id: doc.id, username: data.username, email: data.email, avatarUrl: data.avatarUrl || null, role: data.role || "user", verified: !!data.verified };
     const token = signToken(user);
@@ -1304,8 +1314,22 @@ app.post("/api/mod/reports/:id/seen", authMiddleware, requireRole("admin", "mode
   res.json({ ok: true });
 });
 app.post("/api/mod/reports/:id/resolve", authMiddleware, requireRole("admin", "moderator"), async (req, res) => {
-  await db.collection("reports").doc(req.params.id).update({ status: "resolved", resolvedAt: new Date().toISOString(), resolvedBy: req.user.id });
-  res.json({ ok: true });
+  try {
+    const reportId = req.params.id;
+    const reportRef = db.collection("reports").doc(reportId);
+    const reportSnap = await reportRef.get();
+    if (!reportSnap.exists) {
+      return res.status(404).json({ error: "Rapor bulunamadı" });
+    }
+    await reportRef.update({
+      status: "resolved",
+      resolvedAt: new Date().toISOString(),
+      resolvedBy: req.user.id,
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Notifications
@@ -1321,6 +1345,28 @@ app.get("/api/notifications", authMiddleware, async (req, res) => {
 app.post("/api/notifications/:id/read", authMiddleware, async (req, res) => {
   await db.collection("notifications").doc(req.params.id).update({ read: true });
   res.json({ ok: true });
+});
+
+// Bildirimler için okundu olarak işaretleme uç noktası
+app.post("/api/notifications/mark-all-read", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const snapshot = await db
+      .collection("notifications")
+      .where("toUserId", "==", userId)
+      .where("read", "==", false)
+      .get();
+
+    const batch = db.batch();
+    snapshot.docs.forEach((doc) => {
+      batch.update(doc.ref, { read: true });
+    });
+
+    await batch.commit();
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Admin: user listing and role management (superadmin only)
@@ -1438,6 +1484,23 @@ app.put("/api/users/me", authMiddleware, async (req, res) => {
     const d = doc.data();
     const user = { id: doc.id, username: d.username, email: d.email, avatarUrl: d.avatarUrl || null };
     res.json({ user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Kullanıcı profili için yeni alanlar ekleniyor
+app.put("/api/users/me/profile", authMiddleware, async (req, res) => {
+  try {
+    const { bio, favoriteGenres, playlists } = req.body || {};
+    const update = {};
+    if (typeof bio === "string") update.bio = bio.trim();
+    if (Array.isArray(favoriteGenres)) update.favoriteGenres = favoriteGenres.slice(0, 5);
+    if (Array.isArray(playlists)) update.playlists = playlists.slice(0, 5);
+    if (!Object.keys(update).length) return res.status(400).json({ error: "Nothing to update" });
+    await db.collection("users").doc(req.user.id).update(update);
+    const doc = await db.collection("users").doc(req.user.id).get();
+    res.json({ profile: doc.data() });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1866,6 +1929,107 @@ app.get("/api/messages/unread-count", authMiddleware, async (req, res) => {
     snap.docs.forEach(d=>{ if (!d.data().read) unread += 1; });
     res.json({ unread });
   }catch(err){
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Etkinlik paylaşımı için yeni uç nokta
+app.post("/api/events", authMiddleware, async (req, res) => {
+  try {
+    const { title, description, date, location, tags } = req.body || {};
+    if (!title || !description || !date || !location) {
+      return res.status(400).json({ error: "Eksik alanlar" });
+    }
+    const newEvent = {
+      title,
+      description,
+      date: new Date(date).toISOString(),
+      location,
+      tags: Array.isArray(tags) ? tags.slice(0, 10).map((t) => String(t).toLowerCase()) : [],
+      createdAt: new Date().toISOString(),
+      createdBy: req.user.id,
+    };
+    const docRef = await db.collection("events").add(newEvent);
+    res.json({ id: docRef.id, ...newEvent });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Anket oluşturma için yeni uç nokta
+app.post("/api/polls", authMiddleware, async (req, res) => {
+  try {
+    const { question, options, multiple, closesAt } = req.body || {};
+    if (!question || !Array.isArray(options) || options.length < 2) {
+      return res.status(400).json({ error: "Eksik veya geçersiz alanlar" });
+    }
+    const sanitizedOptions = options.map((opt) => sanitizePollText(opt)).filter((opt) => opt);
+    if (sanitizedOptions.length < 2) {
+      return res.status(400).json({ error: "Geçerli en az iki seçenek gerekli" });
+    }
+    const poll = {
+      question: sanitizePollText(question),
+      options: sanitizedOptions.map((text) => ({ id: Math.random().toString(36).slice(2, 8), text, votes: 0 })),
+      multiple: !!multiple,
+      closesAt: normalizePollClosesAt(closesAt),
+      createdAt: new Date().toISOString(),
+      createdBy: req.user.id,
+    };
+    const docRef = await db.collection("polls").add(poll);
+    res.json({ id: docRef.id, ...poll });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Gelişmiş arama için yeni uç nokta
+app.get("/api/advanced-search", async (req, res) => {
+  try {
+    const { query, category, tags, dateFrom, dateTo, sortBy, order } = req.query || {};
+    const filters = [];
+
+    if (query) {
+      filters.push((doc) => {
+        const text = `${doc.title || ""} ${doc.content || ""}`.toLowerCase();
+        return text.includes(query.toLowerCase());
+      });
+    }
+
+    if (category) {
+      filters.push((doc) => doc.category === category);
+    }
+
+    if (tags) {
+      const tagList = tags.split(",").map((t) => t.trim().toLowerCase());
+      filters.push((doc) => tagList.every((tag) => (doc.tags || []).includes(tag)));
+    }
+
+    if (dateFrom || dateTo) {
+      const from = dateFrom ? new Date(dateFrom).getTime() : null;
+      const to = dateTo ? new Date(dateTo).getTime() : null;
+      filters.push((doc) => {
+        const createdAt = new Date(doc.createdAt).getTime();
+        return (!from || createdAt >= from) && (!to || createdAt <= to);
+      });
+    }
+
+    const snapshot = await db.collection("posts").get();
+    let results = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+    filters.forEach((filter) => {
+      results = results.filter(filter);
+    });
+
+    if (sortBy) {
+      results.sort((a, b) => {
+        const valA = a[sortBy] || 0;
+        const valB = b[sortBy] || 0;
+        return order === "asc" ? valA - valB : valB - valA;
+      });
+    }
+
+    res.json(results);
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
