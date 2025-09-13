@@ -82,6 +82,20 @@ body{
   text-decoration:none;
 }
 
+/* Dark theme navbar styles */
+.navbar-dark {
+  background-color: black;
+  color: white;
+}
+
+.navbar-dark a {
+  color: white;
+}
+
+.navbar-dark a:hover {
+  color: #ccc;
+}
+
 /* Search input */
 .mainnav .form-control{
   background:transparent;
@@ -178,4 +192,4 @@ footer{color:var(--muted); background:transparent}
 .badge.bg-secondary{ color: var(--text); }
 
 /* Minor accessibility */
-a:focus{outline:3px solid rgba(154,208,255,0.18); outline-
+a:focus{outline:3px solid rgba(154,208,255,0.18); outline-offset:-2px}
