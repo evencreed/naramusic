@@ -1098,3 +1098,45 @@ function updateNavbarTheme() {
 // Sayfa yüklendiğinde ve tema değiştiğinde çalıştır
 window.addEventListener("DOMContentLoaded", updateNavbarTheme);
 window.addEventListener("themeChange", updateNavbarTheme);
+
+// Ensure navbar-dark class persists on dark theme
+if (localStorage.getItem('theme') === 'dark') {
+  const navbar = document.querySelector('nav');
+  if (navbar && !navbar.classList.contains('navbar-dark')) {
+    navbar.classList.add('navbar-dark');
+  }
+}
+
+// Clear cache-busting issue by appending version query to CSS
+const link = document.querySelector('link[href*="styles.css"]');
+if (link) {
+  const url = new URL(link.href);
+  url.searchParams.set('v', Date.now());
+  link.href = url.toString();
+}
+
+// Dil toggle işlevi
+const languageToggle = document.querySelector("#language-toggle");
+if (languageToggle) {
+  languageToggle.addEventListener("change", (event) => {
+    const selectedLang = event.target.value;
+    localStorage.setItem("language", selectedLang);
+    updateContentLanguage(selectedLang);
+  });
+}
+
+// İçeriği seçilen dile göre güncelle
+function updateContentLanguage(lang) {
+  const contentElements = document.querySelectorAll("[data-content]");
+  contentElements.forEach((el) => {
+    const key = el.getAttribute("data-content");
+    el.textContent = translations[lang][key] || key;
+  });
+}
+
+// Sayfa yüklendiğinde dil ayarını uygula
+const savedLang = localStorage.getItem("language") || "en";
+updateContentLanguage(savedLang);
+if (languageToggle) {
+  languageToggle.value = savedLang;
+}

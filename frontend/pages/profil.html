@@ -159,7 +159,26 @@
         alert('Avatar yüklendi');
       }catch(err){ console.error(err); alert('Yükleme başarısız'); }
     });
+
+    // Dil değiştirici
+    const langToggle = document.getElementById('language-toggle');
+    langToggle.addEventListener('change', (e) => {
+      const newLang = e.target.value;
+      document.documentElement.lang = newLang;
+      localStorage.setItem('lang', newLang);
+      // Sayfa yenile
+      location.reload();
+    });
+    // Kaydedilmiş dil ayarını uygula
+    const savedLang = localStorage.getItem('lang') || 'tr';
+    langToggle.value = savedLang;
+    document.documentElement.lang = savedLang;
   </script>
+
+  <select id="language-toggle" class="position-fixed top-0 end-0 m-3 form-select form-select-sm" aria-label="Dil seçimi">
+    <option value="en">EN</option>
+    <option value="tr">TR</option>
+  </select>
 </body>
 </html>
 

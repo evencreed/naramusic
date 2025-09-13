@@ -14,6 +14,10 @@
   <main class="container mt-4">
     <div id="state" class="alert alert-info">Doğrulama yapılıyor...</div>
   </main>
+  <select id="language-toggle">
+    <option value="en">EN</option>
+    <option value="tr">TR</option>
+  </select>
   <script>
     (async ()=>{
       const BACKEND_BASE = location.hostname.includes('localhost')? 'http://localhost:4000':'https://naramusic.onrender.com';

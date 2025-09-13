@@ -179,6 +179,10 @@ async function sendVerificationEmail(toEmail, link){
     console.log("[verify] send to:", toEmail, "link:", link);
     return;
   }
+  // Debugging logs for email verification
+  console.log("[debug] sendVerificationEmail function called");
+  console.log("[debug] toEmail:", toEmail);
+  console.log("[debug] link:", link);
   try {
     const msg = {
       to: toEmail,
@@ -691,17 +695,21 @@ app.get("/api/messages/inbox", authMiddleware, async (req, res) => {
 app.post("/api/posts", authMiddleware, writeLimiter, async (req, res) => {
   try {
     const { title, content, category, mediaUrl, linkUrl, tags } = req.body;
-    const rawPoll = (req.body || {}).poll;
     const { id: authorId, username: authorName, avatarUrl: authorAvatar } = req.user;
 
     const safeContent = String(content || "");
     const slug = makeSlug(title) + "-" + Math.random().toString(36).slice(2, 7);
 
+    // Türkçe ve İngilizce çeviriler
+    const content_tr = await translateText(safeContent, "tr");
+    const content_en = await translateText(safeContent, "en");
+
     const newPost = {
       title,
       slug,
       content: safeContent,
-      contentHtml: renderMarkdown(safeContent),
+      content_tr,
+      content_en,
       category,
       authorId,
       authorName,
@@ -719,51 +727,6 @@ app.post("/api/posts", authMiddleware, writeLimiter, async (req, res) => {
       locked: false,
       reports: 0,
     };
-
-    // Optional Poll
-    if (rawPoll && typeof rawPoll === "object") {
-      // sanitize question and options
-      const question = sanitizePollText(rawPoll.question);
-      const optionsInput = Array.isArray(rawPoll.options) ? rawPoll.options : [];
-      const optionsSan = optionsInput.map((o) => sanitizePollText(o)).filter((s) => !!s);
-
-      // validations
-      if (!question || question.length < 10 || question.length > 140) {
-        return res.status(400).json({ error: "invalid poll question" });
-      }
-      if (!Array.isArray(optionsSan) || optionsSan.length < 2 || optionsSan.length > 6) {
-        return res.status(400).json({ error: "invalid poll options" });
-      }
-      // per-option length and uniqueness (case-insensitive)
-      const seen = new Set();
-      for (const opt of optionsSan) {
-        if (opt.length < 1 || opt.length > 60) {
-          return res.status(400).json({ error: "invalid poll options" });
-        }
-        const key = opt.toLowerCase();
-        if (seen.has(key)) {
-          return res.status(400).json({ error: "invalid poll options" });
-        }
-        seen.add(key);
-      }
-
-      const multiple = !!rawPoll.multiple; // default false
-      const closesAt = normalizePollClosesAt(rawPoll.closesAt);
-
-      const pollObj = {
-        question,
-        options: optionsSan.map((text) => ({
-          id: Math.random().toString(36).slice(2, 8),
-          text,
-          votes: 0,
-        })),
-        totalVotes: 0,
-        multiple,
-        closesAt: closesAt || null,
-      };
-
-      newPost.poll = pollObj;
-    }
 
     const docRef = await db.collection("posts").add(newPost);
     res.json({ id: docRef.id, ...newPost });
@@ -1752,13 +1715,15 @@ app.post("/api/messages/send", authMiddleware, writeLimiter, async (req, res) =>
     const payload = {
       threadKey: tk,
       fromUserId: me.id,
-      fromUsername: me.username || null,
+           fromUsername: me.username || null,
       toUserId: recip.id,
       toUsername: recip.username || null,
       text: cleaned,
       createdAt: now,
       read: false,
     };
+
+
 
     const ref = await db.collection("messages").add(payload);
 
