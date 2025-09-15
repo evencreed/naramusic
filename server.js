@@ -214,7 +214,7 @@ function generateEmailToken(){
 }
 
 //
-// 5) Translate Proxy (Google Translate API)
+// 5) Translate Proxy (Google Translate API) with LibreTranslate fallback
 //
 app.post("/api/translate", async (req, res) => {
   try {
@@ -225,46 +225,59 @@ app.post("/api/translate", async (req, res) => {
       return res.status(400).json({ error: "Missing text(s) or target" });
     }
 
-    const apiKey = process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
-      // Passthrough (anahtar yoksa çeviri yapılmaz)
-      if (hasSingle && !hasMany) {
-        return res.json({ translated: text });
+    const googleKey = process.env.GOOGLE_API_KEY;
+    const libreUrl = process.env.LIBRETRANSLATE_URL || "https://libretranslate.com/translate";
+    const libreKey = process.env.LIBRETRANSLATE_API_KEY || null;
+
+    async function tryGoogle(){
+      if (!googleKey) return null;
+      const url = "https://translation.googleapis.com/language/translate/v2";
+      const params = new URLSearchParams({ target, format: "text" });
+      if (hasSingle) params.append("q", text);
+      if (hasMany) { for (const t of texts) { params.append("q", t); } }
+      if (source) params.append("source", source);
+      params.append("key", googleKey);
+      const fetch = (await import("node-fetch")).default;
+      const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: params.toString() });
+      const data = await r.json();
+      if (!r.ok || data.error) throw new Error(data.error?.message || "google translate failed");
+      const arr = (data.data?.translations || []).map((x)=> x.translatedText);
+      return hasSingle && !hasMany ? { translated: arr[0] || "" } : { translations: arr };
+    }
+
+    async function tryLibre(){
+      if (!libreUrl) return null;
+      const payload = hasSingle && !hasMany
+        ? { q: text, source: source || "auto", target }
+        : { q: texts, source: source || "auto", target }; // supports array in some instances
+      const fetch = (await import("node-fetch")).default;
+      const headers = { "Content-Type": "application/json" };
+      if (libreKey) headers["Authorization"] = `Bearer ${libreKey}`;
+      const r = await fetch(libreUrl, { method: "POST", headers, body: JSON.stringify(payload) });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || data.message || "libre translate failed");
+      if (Array.isArray(data)) {
+        const arr = data.map(x=> x.translatedText || x.translated || "");
+        return hasSingle && !hasMany ? { translated: arr[0] || "" } : { translations: arr };
       }
-      return res.json({ translations: texts });
+      // single response shape: { translatedText: "..." }
+      const single = data.translatedText || data.translated || "";
+      return hasSingle && !hasMany ? { translated: single } : { translations: Array.isArray(payload.q) ? (data.translations || []) : [single] };
     }
 
-    const url = "https://translation.googleapis.com/language/translate/v2";
-    const params = new URLSearchParams({ target, format: "text" });
-    if (hasSingle) params.append("q", text);
-    if (hasMany) {
-      for (const t of texts) {
-        params.append("q", t);
-      }
-    }
-    if (source) params.append("source", source);
-    params.append("key", apiKey);
+    // Strategy: Google first if key exists, fallback to Libre; if both missing, passthrough
+    try{
+      const g = await tryGoogle();
+      if (g) return res.json(g);
+    }catch(_){ /* fall back */ }
+    try{
+      const l = await tryLibre();
+      if (l) return res.json(l);
+    }catch(_){ /* fall back */ }
 
-    const fetch = (await import("node-fetch")).default;
-    const r = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params.toString(),
-    });
-    const data = await r.json();
-
-    if (data.error) {
-      return res.status(500).json({ error: data.error.message || "translate failed" });
-    }
-
-    const translations = (data.data?.translations || []).map(
-      (x) => x.translatedText
-    );
-
-    if (hasSingle && !hasMany) {
-      return res.json({ translated: translations[0] || "" });
-    }
-    res.json({ translations });
+    // Passthrough fallback
+    if (hasSingle && !hasMany) return res.json({ translated: text });
+    return res.json({ translations: texts });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
