@@ -70,9 +70,12 @@ body{
   border-bottom:1px solid var(--card-border);
 }
 
-/* Dark theme navbar override */
-:root:not([data-theme="light"]) .mainnav {
+/* Dark theme navbar override - highest priority */
+:root:not([data-theme="light"]) .mainnav,
+:root:not([data-theme="light"]) .navbar.mainnav,
+:root:not([data-theme="light"]) .navbar-dark.mainnav {
   background: #000000 !important;
+  background-color: #000000 !important;
 }
 .navbar-brand{font-weight:800; letter-spacing:.6px}
 .mainnav .nav-link{
@@ -87,9 +90,12 @@ body{
   text-decoration:none;
 }
 
-/* Dark theme navbar styles */
-:root:not([data-theme="light"]) .navbar-dark {
+/* Dark theme navbar styles - highest priority */
+:root:not([data-theme="light"]) .navbar-dark,
+:root:not([data-theme="light"]) .navbar.navbar-dark,
+:root:not([data-theme="light"]) .mainnav.navbar-dark {
   background-color: #000000 !important;
+  background: #000000 !important;
   color: #ffffff !important;
 }
 
