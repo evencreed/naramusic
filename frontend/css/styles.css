@@ -69,6 +69,11 @@ body{
   background:var(--panel) !important; /* solid, not transparent */
   border-bottom:1px solid var(--card-border);
 }
+
+/* Dark theme navbar override */
+:root:not([data-theme="light"]) .mainnav {
+  background: #000000 !important;
+}
 .navbar-brand{font-weight:800; letter-spacing:.6px}
 .mainnav .nav-link{
   color: color-mix(in oklab, var(--text) 85%, transparent) !important;
@@ -83,17 +88,34 @@ body{
 }
 
 /* Dark theme navbar styles */
-.navbar-dark {
-  background-color: black;
-  color: white;
+:root:not([data-theme="light"]) .navbar-dark {
+  background-color: #000000 !important;
+  color: #ffffff !important;
 }
 
-.navbar-dark a {
-  color: white;
+:root:not([data-theme="light"]) .navbar-dark .navbar-brand,
+:root:not([data-theme="light"]) .navbar-dark .nav-link,
+:root:not([data-theme="light"]) .navbar-dark a,
+:root:not([data-theme="light"]) .navbar-dark .btn,
+:root:not([data-theme="light"]) .navbar-dark .form-control,
+:root:not([data-theme="light"]) .navbar-dark .form-select {
+  color: #ffffff !important;
 }
 
-.navbar-dark a:hover {
-  color: #ccc;
+:root:not([data-theme="light"]) .navbar-dark .navbar-brand:hover,
+:root:not([data-theme="light"]) .navbar-dark .nav-link:hover,
+:root:not([data-theme="light"]) .navbar-dark a:hover {
+  color: #cccccc !important;
+}
+
+:root:not([data-theme="light"]) .navbar-dark .btn-outline-light {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+:root:not([data-theme="light"]) .navbar-dark .btn-outline-light:hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
 }
 
 /* Search input */

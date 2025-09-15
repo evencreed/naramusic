@@ -1085,12 +1085,12 @@ function updateNavbarTheme() {
   const navbar = document.querySelector(".navbar");
   if (!navbar) return;
 
-  const isDarkTheme = document.body.classList.contains("dark-theme");
+  const isDarkTheme = !document.documentElement.hasAttribute('data-theme') || document.documentElement.getAttribute('data-theme') !== 'light';
   if (isDarkTheme) {
     navbar.classList.remove("navbar-light", "bg-light");
-    navbar.classList.add("navbar-dark", "bg-dark");
+    navbar.classList.add("navbar-dark");
   } else {
-    navbar.classList.remove("navbar-dark", "bg-dark");
+    navbar.classList.remove("navbar-dark");
     navbar.classList.add("navbar-light", "bg-light");
   }
 }
@@ -1115,28 +1115,4 @@ if (link) {
   link.href = url.toString();
 }
 
-// Dil toggle işlevi
-const languageToggle = document.querySelector("#language-toggle");
-if (languageToggle) {
-  languageToggle.addEventListener("change", (event) => {
-    const selectedLang = event.target.value;
-    localStorage.setItem("language", selectedLang);
-    updateContentLanguage(selectedLang);
-  });
-}
-
-// İçeriği seçilen dile göre güncelle
-function updateContentLanguage(lang) {
-  const contentElements = document.querySelectorAll("[data-content]");
-  contentElements.forEach((el) => {
-    const key = el.getAttribute("data-content");
-    el.textContent = translations[lang][key] || key;
-  });
-}
-
-// Sayfa yüklendiğinde dil ayarını uygula
-const savedLang = localStorage.getItem("language") || "en";
-updateContentLanguage(savedLang);
-if (languageToggle) {
-  languageToggle.value = savedLang;
-}
+// Dil toggle yönetimi lang.js tarafından yapılır; app.js içerisinde tekrarlanmaz

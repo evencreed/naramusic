@@ -1,7 +1,8 @@
-const languageSwitcher = document.getElementById("languageSwitcher");
+const languageSwitcher = document.getElementById("language-toggle") || document.getElementById("languageSwitcher");
 
 function setLanguage(lang){
   localStorage.setItem('lang', lang);
+  try{ document.documentElement.lang = lang; }catch(_){ }
   // Uygulama metinleri için ileride UI çevirisi eklenebilir.
   // Şimdilik dinamik post içerikleri seçili dile göre yeniden yüklenecek.
   if (document.getElementById("popularPosts")) {

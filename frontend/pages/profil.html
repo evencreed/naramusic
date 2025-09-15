@@ -85,12 +85,18 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../js/app.js"></script>
+  <script src="../js/lang.js"></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
     const root = document.documentElement; const savedTheme = localStorage.getItem('theme') || 'dark';
     function applyTheme(theme){ const nav = document.getElementById('mainNavbar'); if(theme==='light'){ root.setAttribute('data-theme','light'); nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light'); document.getElementById('themeToggle').textContent='🌙'; } else { root.removeAttribute('data-theme'); nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark'); document.getElementById('themeToggle').textContent='☀️'; } }
     applyTheme(savedTheme);
     document.getElementById('themeToggle').addEventListener('click',()=>{ const next = root.getAttribute('data-theme')==='light' ? 'dark':'light'; localStorage.setItem('theme', next); applyTheme(next); });
+
+    // Initialize auth UI
+    if (typeof updateAuthUI === 'function') {
+      updateAuthUI();
+    }
 
     // Auth check
     const user = JSON.parse(localStorage.getItem('user') || 'null');
@@ -160,25 +166,52 @@
       }catch(err){ console.error(err); alert('Yükleme başarısız'); }
     });
 
-    // Dil değiştirici
-    const langToggle = document.getElementById('language-toggle');
-    langToggle.addEventListener('change', (e) => {
-      const newLang = e.target.value;
-      document.documentElement.lang = newLang;
-      localStorage.setItem('lang', newLang);
-      // Sayfa yenile
-      location.reload();
-    });
-    // Kaydedilmiş dil ayarını uygula
-    const savedLang = localStorage.getItem('lang') || 'tr';
-    langToggle.value = savedLang;
-    document.documentElement.lang = savedLang;
+    // Dil seçimi lang.js tarafından yönetiliyor
   </script>
 
   <select id="language-toggle" class="position-fixed top-0 end-0 m-3 form-select form-select-sm" aria-label="Dil seçimi">
     <option value="en">EN</option>
     <option value="tr">TR</option>
   </select>
+
+  <!-- Login Modal -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="loginForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Giriş Yap</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
+          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary w-100">Giriş</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Register Modal -->
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="registerForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Kayıt Ol</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input name="username" class="form-control mb-2" placeholder="Kullanıcı Adı" required>
+          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
+          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success w-100">Kayıt Ol</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
 </html>
 
