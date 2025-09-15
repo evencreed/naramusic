@@ -477,91 +477,54 @@
           // Simulate API delay
           await new Promise(resolve => setTimeout(resolve, 1000));
 
-          // Mock popular albums data
+          // Mock popular albums data with real album info
           const mockAlbums = [
-            {
-              name: "Midnights",
-              artist: { name: "Taylor Swift" },
-              image: [
-                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
-              ],
-              playcount: "1250000"
-            },
-            {
-              name: "SOS",
-              artist: { name: "SZA" },
-              image: [
-                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
-              ],
-              playcount: "980000"
-            },
-            {
-              name: "Harry's House",
-              artist: { name: "Harry Styles" },
-              image: [
-                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
-              ],
-              playcount: "1100000"
-            },
-            {
-              name: "Renaissance",
-              artist: { name: "Beyoncé" },
-              image: [
-                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
-              ],
-              playcount: "850000"
-            },
-            {
-              name: "Un Verano Sin Ti",
-              artist: { name: "Bad Bunny" },
-              image: [
-                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
-              ],
-              playcount: "1200000"
-            },
-            {
-              name: "30",
-              artist: { name: "Adele" },
-              image: [
-                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
-              ],
-              playcount: "950000"
-            },
-            {
-              name: "Planet Her",
-              artist: { name: "Doja Cat" },
-              image: [
-                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
-              ],
-              playcount: "780000"
-            },
-            {
-              name: "Happier Than Ever",
-              artist: { name: "Billie Eilish" },
-              image: [
-                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
-              ],
-              playcount: "920000"
-            },
-            {
-              name: "Donda",
-              artist: { name: "Kanye West" },
-              image: [
-                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
-              ],
-              playcount: "880000"
-            },
-            {
-              name: "Future Nostalgia",
-              artist: { name: "Dua Lipa" },
-              image: [
-                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
-              ],
-              playcount: "1050000"
-            }
+            { name: "Midnights", artist: "Taylor Swift", playcount: "1250000" },
+            { name: "SOS", artist: "SZA", playcount: "980000" },
+            { name: "Harry's House", artist: "Harry Styles", playcount: "1100000" },
+            { name: "Renaissance", artist: "Beyoncé", playcount: "850000" },
+            { name: "Un Verano Sin Ti", artist: "Bad Bunny", playcount: "1200000" },
+            { name: "30", artist: "Adele", playcount: "950000" },
+            { name: "Planet Her", artist: "Doja Cat", playcount: "780000" },
+            { name: "Happier Than Ever", artist: "Billie Eilish", playcount: "920000" },
+            { name: "Donda", artist: "Kanye West", playcount: "880000" },
+            { name: "Future Nostalgia", artist: "Dua Lipa", playcount: "1050000" }
           ];
 
-          const albums = mockAlbums;
+          // Fetch real album info with cover art for each album
+          const albums = [];
+          for (const album of mockAlbums) {
+            try {
+              const response = await fetch(`${LASTFM_BASE_URL}?method=album.getinfo&api_key=${LASTFM_API_KEY}&artist=${encodeURIComponent(album.artist)}&album=${encodeURIComponent(album.name)}&format=json`);
+              const data = await response.json();
+              
+              if (data.album) {
+                albums.push({
+                  name: data.album.name || album.name,
+                  artist: { name: data.album.artist || album.artist },
+                  image: data.album.image || [{ "#text": "https://via.placeholder.com/300x300/333333/ffffff?text=No+Image" }],
+                  playcount: album.playcount
+                });
+              } else {
+                // Fallback if album not found
+                albums.push({
+                  name: album.name,
+                  artist: { name: album.artist },
+                  image: [{ "#text": "https://via.placeholder.com/300x300/333333/ffffff?text=No+Image" }],
+                  playcount: album.playcount
+                });
+              }
+            } catch (error) {
+              console.error(`Error fetching album info for ${album.name}:`, error);
+              // Fallback if API call fails
+              albums.push({
+                name: album.name,
+                artist: { name: album.artist },
+                image: [{ "#text": "https://via.placeholder.com/300x300/333333/ffffff?text=No+Image" }],
+                playcount: album.playcount
+              });
+            }
+          }
           
           if (page === 1) {
             loadingState.classList.add('d-none');
