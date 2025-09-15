@@ -568,7 +568,7 @@
               const templateIndex = ((page - 1) * 10 + i) % albumTemplates.length;
               const template = albumTemplates[templateIndex];
               newAlbums.push({
-                name: `${template.name} (Page ${page})`,
+                name: template.name,
                 artist: template.artist,
                 playcount: (parseInt(template.playcount) + (page * 10000) + (i * 1000)).toString()
               });
