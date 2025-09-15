@@ -15,7 +15,7 @@
   <meta name="robots" content="index, follow">
 
     <!-- site CSS (ekleyin) -->
-  <link rel="stylesheet" href="css/style.css?v=1">
+  <link rel="stylesheet" href="css/styles.css?v=1">
 
   <style>
     :root{
@@ -540,7 +540,7 @@
     // Load sidebar data
     async function loadSidebarData() {
       try {
-        const base = (typeof window !== 'undefined' && window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:4000';
+        const base = (typeof window !== 'undefined' && window.__API_BASE__) ? window.__API_BASE__ : (location.hostname.includes('localhost') ? 'http://localhost:4000' : 'https://naramusic.onrender.com');
         
         // Load popular posts for sidebar
         const popularRes = await fetch(`${base}/api/posts/popular?limit=3`);

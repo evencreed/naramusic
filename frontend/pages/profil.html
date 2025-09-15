@@ -165,7 +165,7 @@
             <h5 class="mb-0" data-lang="myPosts">Gönderilerim</h5>
           </div>
           <div class="card-body">
-            <div class="row g-3" id="myPosts"></div>
+        <div class="row g-3" id="myPosts"></div>
           </div>
         </div>
       </div>
@@ -282,7 +282,7 @@
     // Load my posts
     (async ()=>{
       try{
-        const base = (typeof window !== 'undefined' && window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:4000';
+        const base = (typeof window !== 'undefined' && window.__API_BASE__) ? window.__API_BASE__ : (location.hostname.includes('localhost') ? 'http://localhost:4000' : 'https://naramusic.onrender.com');
         const res = await fetch(`${base}/api/users/${encodeURIComponent(user.id)}/posts`);
         const posts = await res.json();
         const el = document.getElementById('myPosts');
@@ -305,7 +305,7 @@
     // Load sidebar data
     async function loadSidebarData() {
       try {
-        const base = (typeof window !== 'undefined' && window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:4000';
+        const base = (typeof window !== 'undefined' && window.__API_BASE__) ? window.__API_BASE__ : (location.hostname.includes('localhost') ? 'http://localhost:4000' : 'https://naramusic.onrender.com');
         
         // Load popular posts for sidebar
         const popularRes = await fetch(`${base}/api/posts/popular?limit=3`);
