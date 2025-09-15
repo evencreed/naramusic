@@ -477,44 +477,57 @@
           // Simulate API delay
           await new Promise(resolve => setTimeout(resolve, 1000));
 
-          // Mock popular albums data with real album info
-          const allMockAlbums = [
-            { name: "Midnights", artist: "Taylor Swift", playcount: "1250000" },
-            { name: "SOS", artist: "SZA", playcount: "980000" },
-            { name: "Harry's House", artist: "Harry Styles", playcount: "1100000" },
-            { name: "Renaissance", artist: "Beyoncé", playcount: "850000" },
-            { name: "Un Verano Sin Ti", artist: "Bad Bunny", playcount: "1200000" },
-            { name: "30", artist: "Adele", playcount: "950000" },
-            { name: "Planet Her", artist: "Doja Cat", playcount: "780000" },
-            { name: "Happier Than Ever", artist: "Billie Eilish", playcount: "920000" },
-            { name: "Donda", artist: "Kanye West", playcount: "880000" },
-            { name: "Future Nostalgia", artist: "Dua Lipa", playcount: "1050000" },
-            { name: "Folklore", artist: "Taylor Swift", playcount: "1150000" },
-            { name: "Positions", artist: "Ariana Grande", playcount: "890000" },
-            { name: "After Hours", artist: "The Weeknd", playcount: "1020000" },
-            { name: "Chromatica", artist: "Lady Gaga", playcount: "760000" },
-            { name: "Evermore", artist: "Taylor Swift", playcount: "940000" },
-            { name: "Justice", artist: "Justin Bieber", playcount: "870000" },
-            { name: "Certified Lover Boy", artist: "Drake", playcount: "1130000" },
-            { name: "Happier Than Ever", artist: "Billie Eilish", playcount: "920000" },
-            { name: "Planet Her", artist: "Doja Cat", playcount: "780000" },
-            { name: "Sour", artist: "Olivia Rodrigo", playcount: "1080000" },
-            { name: "Red (Taylor's Version)", artist: "Taylor Swift", playcount: "960000" },
-            { name: "Montero", artist: "Lil Nas X", playcount: "820000" },
-            { name: "Call Me If You Get Lost", artist: "Tyler, The Creator", playcount: "740000" },
-            { name: "Donda 2", artist: "Kanye West", playcount: "910000" },
-            { name: "The Melodic Blue", artist: "Baby Keem", playcount: "680000" },
-            { name: "An Evening With Silk Sonic", artist: "Silk Sonic", playcount: "790000" },
-            { name: "Happier Than Ever", artist: "Billie Eilish", playcount: "920000" },
-            { name: "Planet Her", artist: "Doja Cat", playcount: "780000" },
-            { name: "Sour", artist: "Olivia Rodrigo", playcount: "1080000" },
-            { name: "Red (Taylor's Version)", artist: "Taylor Swift", playcount: "960000" }
-          ];
+          // Generate new albums for each page
+          const generateNewAlbums = (page) => {
+            const albumTemplates = [
+              { name: "Midnights", artist: "Taylor Swift", playcount: "1250000" },
+              { name: "SOS", artist: "SZA", playcount: "980000" },
+              { name: "Harry's House", artist: "Harry Styles", playcount: "1100000" },
+              { name: "Renaissance", artist: "Beyoncé", playcount: "850000" },
+              { name: "Un Verano Sin Ti", artist: "Bad Bunny", playcount: "1200000" },
+              { name: "30", artist: "Adele", playcount: "950000" },
+              { name: "Planet Her", artist: "Doja Cat", playcount: "780000" },
+              { name: "Happier Than Ever", artist: "Billie Eilish", playcount: "920000" },
+              { name: "Donda", artist: "Kanye West", playcount: "880000" },
+              { name: "Future Nostalgia", artist: "Dua Lipa", playcount: "1050000" },
+              { name: "Folklore", artist: "Taylor Swift", playcount: "1150000" },
+              { name: "Positions", artist: "Ariana Grande", playcount: "890000" },
+              { name: "After Hours", artist: "The Weeknd", playcount: "1020000" },
+              { name: "Chromatica", artist: "Lady Gaga", playcount: "760000" },
+              { name: "Evermore", artist: "Taylor Swift", playcount: "940000" },
+              { name: "Justice", artist: "Justin Bieber", playcount: "870000" },
+              { name: "Certified Lover Boy", artist: "Drake", playcount: "1130000" },
+              { name: "Sour", artist: "Olivia Rodrigo", playcount: "1080000" },
+              { name: "Red (Taylor's Version)", artist: "Taylor Swift", playcount: "960000" },
+              { name: "Montero", artist: "Lil Nas X", playcount: "820000" },
+              { name: "Call Me If You Get Lost", artist: "Tyler, The Creator", playcount: "740000" },
+              { name: "Donda 2", artist: "Kanye West", playcount: "910000" },
+              { name: "The Melodic Blue", artist: "Baby Keem", playcount: "680000" },
+              { name: "An Evening With Silk Sonic", artist: "Silk Sonic", playcount: "790000" },
+              { name: "Invasion of Privacy", artist: "Cardi B", playcount: "850000" },
+              { name: "Sweetener", artist: "Ariana Grande", playcount: "920000" },
+              { name: "thank u, next", artist: "Ariana Grande", playcount: "980000" },
+              { name: "Lover", artist: "Taylor Swift", playcount: "1100000" },
+              { name: "reputation", artist: "Taylor Swift", playcount: "1200000" },
+              { name: "1989", artist: "Taylor Swift", playcount: "1300000" }
+            ];
 
-          // Get albums for current page
-          const startIndex = (page - 1) * 10;
-          const endIndex = startIndex + 10;
-          const mockAlbums = allMockAlbums.slice(startIndex, endIndex);
+            // Generate 10 new albums for this page
+            const newAlbums = [];
+            for (let i = 0; i < 10; i++) {
+              const template = albumTemplates[(page - 1) * 10 + i];
+              if (template) {
+                newAlbums.push({
+                  name: `${template.name} (Page ${page})`,
+                  artist: template.artist,
+                  playcount: (parseInt(template.playcount) + (page * 10000) + (i * 1000)).toString()
+                });
+              }
+            }
+            return newAlbums;
+          };
+
+          const mockAlbums = generateNewAlbums(page);
 
           // Fetch real album info with cover art for each album
           const albums = [];
@@ -564,7 +577,7 @@
 
           // Update pagination
           currentPage = page;
-          hasMore = endIndex < allMockAlbums.length; // Check if there are more albums
+          hasMore = true; // Always show more button for demo purposes
           
           if (!hasMore) {
             loadMoreBtn.style.display = 'none';
