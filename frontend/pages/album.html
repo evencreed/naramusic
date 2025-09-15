@@ -246,11 +246,45 @@
       <a href="../index.html" class="text-decoration-none">&larr; Geri</a>
     </div>
 
-    <!-- Page Header -->
-    <section class="mb-4">
-      <h1 class="h2 mb-2" data-lang="popularAlbums">Popüler Albümler</h1>
-      <p class="text-muted" data-lang="popularAlbumsDesc">En çok dinlenen ve tartışılan albümleri keşfedin</p>
-    </section>
+    <div class="row">
+      <!-- Left Sidebar - Album Search -->
+      <div class="col-lg-3 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0" data-lang="albumSearch">Albüm Ara</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <input type="text" id="albumSearchInput" class="form-control" placeholder="Albüm adı yazın..." data-placeholder-lang="searchAlbum">
+            </div>
+            <button id="searchAlbumBtn" class="btn btn-primary w-100 mb-3" data-lang="search">Ara</button>
+            
+            <!-- Search Results -->
+            <div id="searchResults" class="d-none">
+              <h6 data-lang="searchResults">Arama Sonuçları</h6>
+              <div id="searchResultsList" class="list-group">
+                <!-- Search results will be inserted here -->
+              </div>
+            </div>
+            
+            <!-- My Favorites -->
+            <div class="mt-4">
+              <h6 data-lang="myFavorites">Favori Albümlerim</h6>
+              <div id="favoritesList" class="list-group">
+                <!-- Favorites will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Content - Popular Albums -->
+      <div class="col-lg-9">
+        <!-- Page Header -->
+        <section class="mb-4">
+          <h1 class="h2 mb-2" data-lang="popularAlbums">Popüler Albümler</h1>
+          <p class="text-muted" data-lang="popularAlbumsDesc">En çok dinlenen ve tartışılan albümleri keşfedin</p>
+        </section>
 
     <!-- Loading State -->
     <div id="loadingState" class="text-center py-5">
@@ -276,6 +310,8 @@
         </button>
       </div>
     </section>
+      </div>
+    </div>
   </main>
 
   <!-- Footer -->
@@ -666,9 +702,16 @@
           <div class="card album-card h-100">
             <img src="${imageUrl}" class="album-cover" alt="${albumName}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
             <div class="album-info">
-              <h5 class="album-title">${albumName}</h5>
-              <div class="album-artist">${artistName}</div>
-              <div class="album-year">${playCount} dinlenme</div>
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h5 class="album-title">${albumName}</h5>
+                  <div class="album-artist">${artistName}</div>
+                  <div class="album-year">${playCount} dinlenme</div>
+                </div>
+                <button class="btn btn-outline-primary btn-sm add-to-favorites" data-album-id="${albumId}" data-album-name="${albumName}" data-artist-name="${artistName}" title="Favorilere Ekle">
+                  ❤️
+                </button>
+              </div>
             </div>
             <div class="comment-section">
               <div class="mb-3">
@@ -743,6 +786,128 @@
         });
       }
 
+      // Add event listeners for favorites
+      function addFavoritesEventListeners() {
+        document.addEventListener('click', function(e) {
+          if (e.target.classList.contains('add-to-favorites')) {
+            const albumId = e.target.getAttribute('data-album-id');
+            const albumName = e.target.getAttribute('data-album-name');
+            const artistName = e.target.getAttribute('data-artist-name');
+            addToFavorites(albumId, albumName, artistName);
+          }
+        });
+      }
+
+      // Add album to favorites
+      function addToFavorites(albumId, albumName, artistName) {
+        const favorites = JSON.parse(localStorage.getItem('favoriteAlbums') || '[]');
+        
+        // Check if already in favorites
+        const exists = favorites.find(fav => fav.albumId === albumId);
+        if (exists) {
+          alert('Bu albüm zaten favorilerinizde!');
+          return;
+        }
+
+        // Add to favorites
+        favorites.push({
+          albumId: albumId,
+          albumName: albumName,
+          artistName: artistName,
+          addedDate: new Date().toISOString()
+        });
+
+        localStorage.setItem('favoriteAlbums', JSON.stringify(favorites));
+        loadFavorites();
+        
+        // Update button appearance
+        const button = document.querySelector(`button[data-album-id="${albumId}"]`);
+        if (button) {
+          button.innerHTML = '❤️';
+          button.classList.remove('btn-outline-primary');
+          button.classList.add('btn-danger');
+          button.title = 'Favorilerden Çıkar';
+        }
+        
+        alert('Albüm favorilerinize eklendi!');
+      }
+
+      // Load favorites from localStorage
+      function loadFavorites() {
+        const favorites = JSON.parse(localStorage.getItem('favoriteAlbums') || '[]');
+        const favoritesList = document.getElementById('favoritesList');
+        
+        if (favorites.length === 0) {
+          favoritesList.innerHTML = '<p class="text-muted small">Henüz favori albümünüz yok.</p>';
+          return;
+        }
+
+        favoritesList.innerHTML = favorites.map(fav => `
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-bold">${fav.albumName}</div>
+              <small class="text-muted">${fav.artistName}</small>
+            </div>
+            <button class="btn btn-sm btn-outline-danger remove-favorite" data-album-id="${fav.albumId}">
+              ✕
+            </button>
+          </div>
+        `).join('');
+      }
+
+      // Search albums using Last.fm API
+      async function searchAlbums(query) {
+        if (!query.trim()) return;
+
+        try {
+          const response = await fetch(`${LASTFM_BASE_URL}?method=album.search&api_key=${LASTFM_API_KEY}&album=${encodeURIComponent(query)}&format=json`);
+          const data = await response.json();
+
+          if (data.error) {
+            throw new Error(data.message || 'Search error');
+          }
+
+          const albums = data.results?.albummatches?.album || [];
+          displaySearchResults(albums);
+        } catch (error) {
+          console.error('Search error:', error);
+          alert('Arama sırasında hata oluştu: ' + error.message);
+        }
+      }
+
+      // Display search results
+      function displaySearchResults(albums) {
+        const searchResults = document.getElementById('searchResults');
+        const searchResultsList = document.getElementById('searchResultsList');
+
+        if (albums.length === 0) {
+          searchResultsList.innerHTML = '<p class="text-muted">Sonuç bulunamadı.</p>';
+        } else {
+          searchResultsList.innerHTML = albums.slice(0, 10).map(album => {
+            const albumId = `search_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            return `
+              <div class="list-group-item">
+                <div class="d-flex align-items-center">
+                  <img src="${album.image?.[2]?.['#text'] || ''}" class="me-3" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.style.display='none'">
+                  <div class="flex-grow-1">
+                    <div class="fw-bold">${album.name}</div>
+                    <small class="text-muted">${album.artist}</small>
+                  </div>
+                  <button class="btn btn-sm btn-outline-primary add-to-favorites" 
+                          data-album-id="${albumId}" 
+                          data-album-name="${album.name}" 
+                          data-artist-name="${album.artist}">
+                    ❤️
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+
+        searchResults.classList.remove('d-none');
+      }
+
       // Load existing comments
       function loadComments(albumId) {
         const commentsKey = `comments_${albumId}`;
@@ -771,7 +936,27 @@
 
       // Initialize
       addCommentEventListeners();
+      addFavoritesEventListeners();
       loadPopularAlbums(1);
+      loadFavorites();
+
+      // Search functionality
+      document.getElementById('searchAlbumBtn').addEventListener('click', function() {
+        const query = document.getElementById('albumSearchInput').value.trim();
+        if (query) {
+          searchAlbums(query);
+        }
+      });
+
+      // Search on Enter key
+      document.getElementById('albumSearchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          const query = this.value.trim();
+          if (query) {
+            searchAlbums(query);
+          }
+        }
+      });
 
       // Load comments after a short delay to ensure DOM is ready
       setTimeout(() => {

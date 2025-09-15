@@ -69,5 +69,12 @@
   "popularAlbums": "Popüler Albümler",
   "popularAlbumsDesc": "En çok dinlenen ve tartışılan albümleri keşfedin",
   "comments": "Yorumlar",
-  "addComment": "Ekle"
+  "addComment": "Ekle",
+  "albumSearch": "Albüm Ara",
+  "searchAlbum": "Albüm adı yazın...",
+  "searchResults": "Arama Sonuçları",
+  "myFavorites": "Favori Albümlerim",
+  "search": "Ara",
+  "loadMore": "Daha Fazla Albüm Yükle",
+  "loading": "Albümler yükleniyor..."
 }

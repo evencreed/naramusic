@@ -69,5 +69,12 @@
   "popularAlbums": "Popular Albums",
   "popularAlbumsDesc": "Discover the most listened and discussed albums",
   "comments": "Comments",
-  "addComment": "Add"
+  "addComment": "Add",
+  "albumSearch": "Search Albums",
+  "searchAlbum": "Enter album name...",
+  "searchResults": "Search Results",
+  "myFavorites": "My Favorite Albums",
+  "search": "Search",
+  "loadMore": "Load More Albums",
+  "loading": "Loading albums..."
 }
