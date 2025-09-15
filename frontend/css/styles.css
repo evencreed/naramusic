@@ -70,6 +70,23 @@ body{
   border-bottom:1px solid var(--card-border);
 }
 
+/* Language toggle styling */
+#language-toggle {
+  min-width: 60px !important;
+  width: 60px !important;
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  border: 1px solid #6c757d !important;
+  border-radius: 4px !important;
+  background: var(--bs-dark) !important;
+  color: var(--bs-light) !important;
+}
+
+#language-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25) !important;
+  border-color: #6c757d !important;
+}
+
 /* Dark theme navbar override - highest priority */
 :root:not([data-theme="light"]) .mainnav,
 :root:not([data-theme="light"]) .navbar.mainnav,

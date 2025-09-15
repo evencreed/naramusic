@@ -53,5 +53,17 @@
   "noPosts": "No posts yet",
   "noComments": "No comments yet",
   "loadMore": "Load More",
-  "allRightsReserved": "All rights reserved"
+  "allRightsReserved": "All rights reserved",
+  "avatarUrl": "Avatar URL",
+  "avatarUrlPlaceholder": "https://... (photo/gif)",
+  "avatarUrlHelp": "If URL is empty, avatar will be removed.",
+  "uploadFile": "Or upload file",
+  "upload": "Upload",
+  "myPosts": "My Posts",
+  "noPostsYet": "No posts yet",
+  "createFirstPost": "Create your first post",
+  "welcomeMessage": "Welcome to Nara Müzik!",
+  "profileSettings": "Profile Settings",
+  "accountInfo": "Account Information",
+  "contactMessage": "Leave us a message; it will go to evencreed's inbox."
 }

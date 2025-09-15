@@ -53,5 +53,17 @@
   "noPosts": "Henüz gönderi yok",
   "noComments": "Henüz yorum yok",
   "loadMore": "Daha Fazla",
-  "allRightsReserved": "Tüm hakları saklıdır"
+  "allRightsReserved": "Tüm hakları saklıdır",
+  "avatarUrl": "Avatar URL",
+  "avatarUrlPlaceholder": "https://... (fotoğraf/gif)",
+  "avatarUrlHelp": "URL boş kaydedilirse avatar kaldırılır.",
+  "uploadFile": "Veya dosya yükle",
+  "upload": "Yükle",
+  "myPosts": "Gönderilerim",
+  "noPostsYet": "Henüz gönderi yok",
+  "createFirstPost": "İlk gönderinizi oluşturun",
+  "welcomeMessage": "Nara Müzik'e hoş geldiniz!",
+  "profileSettings": "Profil Ayarları",
+  "accountInfo": "Hesap Bilgileri",
+  "contactMessage": "Bize mesaj bırakın; evencreed hesabının gelen kutusuna düşecek."
 }

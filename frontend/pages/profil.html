@@ -50,8 +50,15 @@
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
     <div class="container-fluid">
-      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
-      <div class="ms-auto d-flex align-items-center gap-2" id="authButtons"></div>
+      <a class="navbar-brand" href="../index.html" data-lang="home">Nara Müzik</a>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <select id="language-toggle">
+          <option value="en">EN</option>
+          <option value="tr">TR</option>
+        </select>
+        <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
+        <div id="authButtons"></div>
+      </div>
     </div>
   </nav>
 
@@ -67,28 +74,27 @@
             </div>
           </div>
           <div class="mt-3 d-flex gap-2">
-            <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
-            <button id="logoutBtn" class="btn btn-outline-light btn-sm">Çıkış</button>
+            <button id="logoutBtn" class="btn btn-outline-light btn-sm" data-lang="logout">Çıkış</button>
           </div>
           <div class="mt-3">
-            <label class="form-label small">Avatar URL</label>
+            <label class="form-label small" data-lang="avatarUrl">Avatar URL</label>
             <div class="input-group">
-              <input id="avatarUrlInput" class="form-control form-control-sm" placeholder="https://... (fotoğraf/gif)">
-              <button id="saveAvatarBtn" class="btn btn-sm btn-primary">Kaydet</button>
+              <input id="avatarUrlInput" class="form-control form-control-sm" data-placeholder-lang="avatarUrlPlaceholder" placeholder="https://... (fotoğraf/gif)">
+              <button id="saveAvatarBtn" class="btn btn-sm btn-primary" data-lang="save">Kaydet</button>
             </div>
-            <div class="form-text">URL boş kaydedilirse avatar kaldırılır.</div>
+            <div class="form-text" data-lang="avatarUrlHelp">URL boş kaydedilirse avatar kaldırılır.</div>
           </div>
           <div class="mt-2">
-            <label class="form-label small">Veya dosya yükle</label>
+            <label class="form-label small" data-lang="uploadFile">Veya dosya yükle</label>
             <form id="avatarUploadForm" class="d-flex gap-2">
               <input id="avatarFile" type="file" accept="image/*" class="form-control form-control-sm">
-              <button class="btn btn-sm btn-outline-light" type="submit">Yükle</button>
+              <button class="btn btn-sm btn-outline-light" type="submit" data-lang="upload">Yükle</button>
             </form>
           </div>
         </div>
       </div>
       <div class="col-lg-8">
-        <h5 class="mb-2">Gönderilerim</h5>
+        <h5 class="mb-2" data-lang="myPosts">Gönderilerim</h5>
         <div class="row g-3" id="myPosts"></div>
       </div>
     </div>
@@ -96,7 +102,7 @@
 
   <footer class="text-center py-4 mt-5">
     <div class="container">
-      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — <span data-lang="allRightsReserved">Tüm hakları saklıdır.</span></small>
     </div>
   </footer>
 
@@ -186,25 +192,20 @@
     // Dil seçimi lang.js tarafından yönetiliyor
   </script>
 
-  <select id="language-toggle" class="position-fixed top-0 end-0 m-3 form-select form-select-sm" aria-label="Dil seçimi">
-    <option value="en">EN</option>
-    <option value="tr">TR</option>
-  </select>
-
   <!-- Login Modal -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <form id="loginForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Giriş Yap</h5>
+          <h5 class="modal-title" data-lang="login">Giriş Yap</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
-          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+          <input name="email" type="email" class="form-control mb-2" data-placeholder-lang="email" placeholder="Email" required>
+          <input name="password" type="password" class="form-control" data-placeholder-lang="password" placeholder="Parola" required>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">Giriş</button>
+          <button type="submit" class="btn btn-primary w-100" data-lang="login">Giriş</button>
         </div>
       </form>
     </div>
@@ -215,16 +216,16 @@
     <div class="modal-dialog">
       <form id="registerForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Kayıt Ol</h5>
+          <h5 class="modal-title" data-lang="register">Kayıt Ol</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input name="username" class="form-control mb-2" placeholder="Kullanıcı Adı" required>
-          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
-          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+          <input name="username" class="form-control mb-2" data-placeholder-lang="username" placeholder="Kullanıcı Adı" required>
+          <input name="email" type="email" class="form-control mb-2" data-placeholder-lang="email" placeholder="Email" required>
+          <input name="password" type="password" class="form-control" data-placeholder-lang="password" placeholder="Parola" required>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success w-100">Kayıt Ol</button>
+          <button type="submit" class="btn btn-success w-100" data-lang="register">Kayıt Ol</button>
         </div>
       </form>
     </div>
