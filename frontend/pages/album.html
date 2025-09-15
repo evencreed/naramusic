@@ -659,6 +659,9 @@
         const artistName = album.artist?.name || 'Bilinmeyen Sanatçı';
         const playCount = album.playcount || '0';
         
+        // Create unique album ID
+        const albumId = `album_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
         col.innerHTML = `
           <div class="card album-card h-100">
             <img src="${imageUrl}" class="album-cover" alt="${albumName}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
@@ -670,14 +673,14 @@
             <div class="comment-section">
               <div class="mb-3">
                 <h6 class="mb-2" data-lang="comments">Yorumlar</h6>
-                <div class="comments-list" id="comments-${album.name.replace(/[^a-zA-Z0-9]/g, '')}">
+                <div class="comments-list" id="comments-${albumId}">
                   <!-- Comments will be loaded here -->
                 </div>
               </div>
               <div class="comment-form">
                 <div class="input-group">
                   <input type="text" class="form-control comment-input" placeholder="Yorumunuzu yazın..." data-placeholder-lang="writeComment">
-                  <button class="btn btn-primary add-comment-btn" type="button" data-album-id="${album.name.replace(/[^a-zA-Z0-9]/g, '')}" data-album-name="${albumName}" data-artist-name="${artistName}" data-lang="addComment">Ekle</button>
+                  <button class="btn btn-primary add-comment-btn" type="button" data-album-id="${albumId}" data-album-name="${albumName}" data-artist-name="${artistName}" data-lang="addComment">Ekle</button>
                 </div>
               </div>
             </div>
@@ -691,6 +694,8 @@
       function addComment(albumId, albumName, artistName) {
         const input = document.querySelector(`#comments-${albumId}`).parentElement.querySelector('.comment-input');
         const commentText = input.value.trim();
+        
+        console.log('Adding comment for album:', albumId, 'Text:', commentText);
         
         if (!commentText) return;
         
