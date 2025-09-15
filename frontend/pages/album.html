@@ -474,15 +474,94 @@
             errorBox.classList.add('d-none');
           }
 
-          // Get popular albums from Last.fm
-          const response = await fetch(`${LASTFM_BASE_URL}?method=chart.gettopalbums&api_key=${LASTFM_API_KEY}&format=json&page=${page}&limit=10`);
-          const data = await response.json();
+          // Simulate API delay
+          await new Promise(resolve => setTimeout(resolve, 1000));
 
-          if (data.error) {
-            throw new Error(data.message || 'Last.fm API error');
-          }
+          // Mock popular albums data
+          const mockAlbums = [
+            {
+              name: "Midnights",
+              artist: { name: "Taylor Swift" },
+              image: [
+                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
+              ],
+              playcount: "1250000"
+            },
+            {
+              name: "SOS",
+              artist: { name: "SZA" },
+              image: [
+                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
+              ],
+              playcount: "980000"
+            },
+            {
+              name: "Harry's House",
+              artist: { name: "Harry Styles" },
+              image: [
+                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
+              ],
+              playcount: "1100000"
+            },
+            {
+              name: "Renaissance",
+              artist: { name: "Beyoncé" },
+              image: [
+                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
+              ],
+              playcount: "850000"
+            },
+            {
+              name: "Un Verano Sin Ti",
+              artist: { name: "Bad Bunny" },
+              image: [
+                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
+              ],
+              playcount: "1200000"
+            },
+            {
+              name: "30",
+              artist: { name: "Adele" },
+              image: [
+                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
+              ],
+              playcount: "950000"
+            },
+            {
+              name: "Planet Her",
+              artist: { name: "Doja Cat" },
+              image: [
+                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
+              ],
+              playcount: "780000"
+            },
+            {
+              name: "Happier Than Ever",
+              artist: { name: "Billie Eilish" },
+              image: [
+                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
+              ],
+              playcount: "920000"
+            },
+            {
+              name: "Donda",
+              artist: { name: "Kanye West" },
+              image: [
+                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
+              ],
+              playcount: "880000"
+            },
+            {
+              name: "Future Nostalgia",
+              artist: { name: "Dua Lipa" },
+              image: [
+                { "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" }
+              ],
+              playcount: "1050000"
+            }
+          ];
 
-          const albums = data.albums?.album || [];
+          const albums = mockAlbums;
           
           if (page === 1) {
             loadingState.classList.add('d-none');
