@@ -65,5 +65,9 @@
   "welcomeMessage": "Welcome to Nara Müzik!",
   "profileSettings": "Profile Settings",
   "accountInfo": "Account Information",
-  "contactMessage": "Leave us a message; it will go to evencreed's inbox."
+  "contactMessage": "Leave us a message; it will go to evencreed's inbox.",
+  "popularAlbums": "Popular Albums",
+  "popularAlbumsDesc": "Discover the most listened and discussed albums",
+  "comments": "Comments",
+  "addComment": "Add"
 }
