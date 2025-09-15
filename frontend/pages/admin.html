@@ -19,14 +19,18 @@
   <!-- Navbar (lightweight; shares IDs with index for consistency) -->
   <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
     <div class="container-fluid">
-      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
+      <a class="navbar-brand" href="../index.html" data-lang="home">Nara Müzik</a>
       <div class="ms-auto d-flex align-items-center gap-2">
+        <select id="language-toggle">
+          <option value="en">EN</option>
+          <option value="tr">TR</option>
+        </select>
         <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
-        <a href="submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink">Kaydedilenler</a>
-        <a href="mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink">Mod</a>
+        <a href="submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink" data-lang="saved">Kaydedilenler</a>
+        <a href="mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink" data-lang="mod">Mod</a>
         <div id="authButtons" class="d-flex gap-1">
-          <button class="btn btn-outline-light btn-sm" onclick="location.href='../index.html#login'">Giriş</button>
-          <button class="btn btn-outline-light btn-sm" onclick="location.href='../index.html#register'">Kayıt</button>
+          <button class="btn btn-outline-light btn-sm" onclick="location.href='../index.html#login'" data-lang="login">Giriş</button>
+          <button class="btn btn-outline-light btn-sm" onclick="location.href='../index.html#register'" data-lang="register">Kayıt</button>
         </div>
       </div>
     </div>

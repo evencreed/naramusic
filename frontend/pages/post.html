@@ -31,14 +31,14 @@
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
     <div class="container-fluid">
-      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
+      <a class="navbar-brand" href="../index.html" data-lang="home">Nara Müzik</a>
       <div class="ms-auto d-flex align-items-center gap-2">
+        <select id="language-toggle">
+          <option value="en">EN</option>
+          <option value="tr">TR</option>
+        </select>
         <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
         <div id="authButtons" class="d-flex gap-1"></div>
-        <select id="language-toggle" class="form-select form-select-sm">
-          <option value="en">EN</option>
-          <option value="tr" selected>TR</option>
-        </select>
       </div>
     </div>
   </nav>
@@ -46,8 +46,8 @@
     <article class="card p-3 mb-4">
       <div class="d-flex gap-2 mb-2" id="postActions">
         <button class="btn btn-sm btn-outline-light" id="likePostBtn">👍 <span id="likeCount">0</span></button>
-        <button class="btn btn-sm btn-outline-warning d-none" id="editPostBtn">Düzenle</button>
-        <button class="btn btn-sm btn-outline-danger d-none" id="deletePostBtn">Sil</button>
+        <button class="btn btn-sm btn-outline-warning d-none" id="editPostBtn" data-lang="edit">Düzenle</button>
+        <button class="btn btn-sm btn-outline-danger d-none" id="deletePostBtn" data-lang="delete">Sil</button>
         <button class="btn btn-sm btn-outline-secondary" id="reportPostBtn">Raporla</button>
       </div>
       <h4 id="pTitle">Gönderi <span id="pBadges" class="ms-2"></span></h4>

@@ -52,36 +52,36 @@
     <div class="container-fluid">
       <div class="d-flex align-items-center">
         <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">☰</button>
-        <a class="navbar-brand me-3" href="../index.html">Nara Müzik</a>
+        <a class="navbar-brand me-3" href="../index.html" data-lang="home">Nara Müzik</a>
 
         <!-- desktop links -->
         <div class="d-none d-lg-flex align-items-center gap-2">
-          <a class="nav-link px-2" href="yenimuzik.html">Yeni Müzik</a>
-          <a class="nav-link px-2" href="endustri.html">Endüstri Haberleri</a>
-          <a class="nav-link px-2" href="degerlendirme.html">Değerlendirme</a>
-          <a class="nav-link px-2" href="album.html">Albüm İnceleme</a>
-          <a class="nav-link px-2" href="roportaj.html">Röportajlar</a>
-          <a class="nav-link px-2" href="etkinlik.html">Etkinlikler</a>
-          <a class="nav-link px-2" href="dizifilm.html">Dizi & Filmler</a>
+          <a class="nav-link px-2" href="yenimuzik.html" data-lang="newMusic">Yeni Müzik</a>
+          <a class="nav-link px-2" href="endustri.html" data-lang="industry">Endüstri Haberleri</a>
+          <a class="nav-link px-2" href="degerlendirme.html" data-lang="review">Değerlendirme</a>
+          <a class="nav-link px-2" href="album.html" data-lang="album">Albüm İnceleme</a>
+          <a class="nav-link px-2" href="roportaj.html" data-lang="interview">Röportajlar</a>
+          <a class="nav-link px-2" href="etkinlik.html" data-lang="event">Etkinlikler</a>
+          <a class="nav-link px-2" href="dizifilm.html" data-lang="series">Dizi & Filmler</a>
         </div>
       </div>
 
       <div class="d-flex ms-auto align-items-center gap-2">
         <div class="d-none d-md-block">
-          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
+          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" data-placeholder-lang="search" placeholder="Ara...">
         </div>
 
-        <select id="language-toggle" class="form-select form-select-sm bg-dark text-light border-light d-none d-md-block" style="width:110px">
+        <select id="language-toggle">
           <option value="en">EN</option>
           <option value="tr">TR</option>
         </select>
 
         <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
-        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">Yeni Gönderi</button>
+        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal" data-lang="newPost">Yeni Gönderi</button>
 
         <div id="authButtons" class="d-flex gap-1">
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal" data-lang="login">Giriş</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal" data-lang="register">Kayıt</button>
         </div>
         <div class="dropdown">
           <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">🔔 Bildirimler</button>
