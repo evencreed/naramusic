@@ -692,7 +692,7 @@
 
       // Add comment function
       function addComment(albumId, albumName, artistName) {
-        const input = document.querySelector(`#comments-${albumId}`).parentElement.querySelector('.comment-input');
+        const input = document.querySelector(`button[data-album-id="${albumId}"]`).parentElement.querySelector('.comment-input');
         const commentText = input.value.trim();
         
         console.log('Adding comment for album:', albumId, 'Text:', commentText);
