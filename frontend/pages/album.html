@@ -475,7 +475,7 @@
           }
 
           // Get popular albums from Last.fm
-          const response = await fetch(`${LASTFM_BASE_URL}?method=chart.getTopAlbums&api_key=${LASTFM_API_KEY}&format=json&page=${page}&limit=10`);
+          const response = await fetch(`${LASTFM_BASE_URL}?method=chart.gettopalbums&api_key=${LASTFM_API_KEY}&format=json&page=${page}&limit=10`);
           const data = await response.json();
 
           if (data.error) {
