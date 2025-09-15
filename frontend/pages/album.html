@@ -583,7 +583,7 @@
               <div class="comment-form">
                 <div class="input-group">
                   <input type="text" class="form-control comment-input" placeholder="Yorumunuzu yazın..." data-placeholder-lang="writeComment">
-                  <button class="btn btn-primary" type="button" onclick="addComment('${album.name.replace(/[^a-zA-Z0-9]/g, '')}', '${albumName}', '${artistName}')" data-lang="addComment">Ekle</button>
+                  <button class="btn btn-primary add-comment-btn" type="button" data-album-id="${album.name.replace(/[^a-zA-Z0-9]/g, '')}" data-album-name="${albumName}" data-artist-name="${artistName}" data-lang="addComment">Ekle</button>
                 </div>
               </div>
             </div>
@@ -593,8 +593,8 @@
         albumsGrid.appendChild(col);
       }
 
-      // Add comment function (global scope for onclick)
-      window.addComment = function(albumId, albumName, artistName) {
+      // Add comment function
+      function addComment(albumId, albumName, artistName) {
         const input = document.querySelector(`#comments-${albumId}`).parentElement.querySelector('.comment-input');
         const commentText = input.value.trim();
         
@@ -630,7 +630,19 @@
           date: new Date().toISOString()
         });
         localStorage.setItem(commentsKey, JSON.stringify(existingComments));
-      };
+      }
+
+      // Add event listeners for comment buttons
+      function addCommentEventListeners() {
+        document.addEventListener('click', function(e) {
+          if (e.target.classList.contains('add-comment-btn')) {
+            const albumId = e.target.getAttribute('data-album-id');
+            const albumName = e.target.getAttribute('data-album-name');
+            const artistName = e.target.getAttribute('data-artist-name');
+            addComment(albumId, albumName, artistName);
+          }
+        });
+      }
 
       // Load existing comments
       function loadComments(albumId) {
@@ -659,6 +671,7 @@
       });
 
       // Initialize
+      addCommentEventListeners();
       loadPopularAlbums(1);
 
       // Load comments after a short delay to ensure DOM is ready
