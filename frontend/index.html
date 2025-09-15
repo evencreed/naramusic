@@ -115,6 +115,24 @@
       .topbar{display:none}
       .hero .carousel-item{height:220px}
     }
+    
+    /* Dark theme navbar styles */
+    :root:not([data-theme="light"]) .mainnav {
+      background: #000000 !important;
+    }
+    :root:not([data-theme="light"]) .mainnav .navbar-brand,
+    :root:not([data-theme="light"]) .mainnav .nav-link,
+    :root:not([data-theme="light"]) .mainnav a,
+    :root:not([data-theme="light"]) .mainnav .btn,
+    :root:not([data-theme="light"]) .mainnav .form-control,
+    :root:not([data-theme="light"]) .mainnav .form-select {
+      color: #ffffff !important;
+    }
+    :root:not([data-theme="light"]) .mainnav .navbar-brand:hover,
+    :root:not([data-theme="light"]) .mainnav .nav-link:hover,
+    :root:not([data-theme="light"]) .mainnav a:hover {
+      color: #cccccc !important;
+    }
   </style>
 </head>
 <body>

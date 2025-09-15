@@ -11,7 +11,7 @@
     :root[data-theme="light"]{ --bg:#f8fafc; --text:#0f172a; --panel:#ffffff; --muted:#5b6778; --accent:#2563eb; --accent-contrast:#ffffff; --border: rgba(15,23,42,0.08); --elev-1: linear-gradient(180deg, rgba(2,6,23,0.02), rgba(2,6,23,0.01)); --input-bg:#f1f5f9; }
     html,body{height:100%}
     body{ background:var(--bg); color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; padding-top:72px; }
-    .mainnav{ position:fixed; top:0; left:0; right:0; z-index:1039; border-bottom:1px solid var(--border); background:transparent; }
+    .mainnav{ position:fixed; top:0; left:0; right:0; z-index:1039; border-bottom:1px solid var(--border); }
     .card{ background:var(--elev-1); border:1px solid var(--border) }
     :root[data-theme="light"] .text-light{ color: var(--text) !important }
     :root[data-theme="light"] .bg-dark{ background-color: var(--input-bg) !important }
@@ -28,6 +28,23 @@
     :root:not([data-theme="light"]) .text-muted { color:#cbd5e1 !important; }
     :root:not([data-theme="light"]) .form-control,
     :root:not([data-theme="light"]) .form-select { color:#ffffff !important; background-color:#0f1113 !important; border-color: rgba(255,255,255,0.12) !important; }
+    /* Dark theme navbar styles */
+    :root:not([data-theme="light"]) .mainnav {
+      background: #000000 !important;
+    }
+    :root:not([data-theme="light"]) .mainnav .navbar-brand,
+    :root:not([data-theme="light"]) .mainnav .nav-link,
+    :root:not([data-theme="light"]) .mainnav a,
+    :root:not([data-theme="light"]) .mainnav .btn,
+    :root:not([data-theme="light"]) .mainnav .form-control,
+    :root:not([data-theme="light"]) .mainnav .form-select {
+      color: #ffffff !important;
+    }
+    :root:not([data-theme="light"]) .mainnav .navbar-brand:hover,
+    :root:not([data-theme="light"]) .mainnav .nav-link:hover,
+    :root:not([data-theme="light"]) .mainnav a:hover {
+      color: #cccccc !important;
+    }
   </style>
 </head>
 <body>
