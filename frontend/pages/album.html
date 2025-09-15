@@ -509,20 +509,69 @@
               { name: "thank u, next", artist: "Ariana Grande", playcount: "980000" },
               { name: "Lover", artist: "Taylor Swift", playcount: "1100000" },
               { name: "reputation", artist: "Taylor Swift", playcount: "1200000" },
-              { name: "1989", artist: "Taylor Swift", playcount: "1300000" }
+              { name: "1989", artist: "Taylor Swift", playcount: "1300000" },
+              { name: "Speak Now", artist: "Taylor Swift", playcount: "1000000" },
+              { name: "Fearless", artist: "Taylor Swift", playcount: "950000" },
+              { name: "Debut", artist: "Taylor Swift", playcount: "900000" },
+              { name: "Good 4 U", artist: "Olivia Rodrigo", playcount: "850000" },
+              { name: "Drivers License", artist: "Olivia Rodrigo", playcount: "800000" },
+              { name: "Levitating", artist: "Dua Lipa", playcount: "750000" },
+              { name: "Physical", artist: "Dua Lipa", playcount: "700000" },
+              { name: "Blinding Lights", artist: "The Weeknd", playcount: "1200000" },
+              { name: "Starboy", artist: "The Weeknd", playcount: "1100000" },
+              { name: "Watermelon Sugar", artist: "Harry Styles", playcount: "1000000" },
+              { name: "As It Was", artist: "Harry Styles", playcount: "950000" },
+              { name: "Industry Baby", artist: "Lil Nas X", playcount: "900000" },
+              { name: "Old Town Road", artist: "Lil Nas X", playcount: "850000" },
+              { name: "Bad Guy", artist: "Billie Eilish", playcount: "800000" },
+              { name: "Lovely", artist: "Billie Eilish", playcount: "750000" },
+              { name: "WAP", artist: "Cardi B", playcount: "700000" },
+              { name: "Bodak Yellow", artist: "Cardi B", playcount: "650000" },
+              { name: "God's Plan", artist: "Drake", playcount: "1200000" },
+              { name: "In My Feelings", artist: "Drake", playcount: "1100000" },
+              { name: "One Dance", artist: "Drake", playcount: "1000000" },
+              { name: "Hotline Bling", artist: "Drake", playcount: "950000" },
+              { name: "Shape of You", artist: "Ed Sheeran", playcount: "1300000" },
+              { name: "Perfect", artist: "Ed Sheeran", playcount: "1200000" },
+              { name: "Thinking Out Loud", artist: "Ed Sheeran", playcount: "1100000" },
+              { name: "Photograph", artist: "Ed Sheeran", playcount: "1000000" },
+              { name: "Despacito", artist: "Luis Fonsi", playcount: "1500000" },
+              { name: "Mi Gente", artist: "J Balvin", playcount: "1000000" },
+              { name: "Con Calma", artist: "Daddy Yankee", playcount: "900000" },
+              { name: "Taki Taki", artist: "DJ Snake", playcount: "800000" },
+              { name: "Senorita", artist: "Shawn Mendes", playcount: "1200000" },
+              { name: "Stitches", artist: "Shawn Mendes", playcount: "1000000" },
+              { name: "There's Nothing Holdin' Me Back", artist: "Shawn Mendes", playcount: "900000" },
+              { name: "Treat You Better", artist: "Shawn Mendes", playcount: "800000" },
+              { name: "Closer", artist: "The Chainsmokers", playcount: "1100000" },
+              { name: "Something Just Like This", artist: "The Chainsmokers", playcount: "1000000" },
+              { name: "Don't Let Me Down", artist: "The Chainsmokers", playcount: "900000" },
+              { name: "Roses", artist: "The Chainsmokers", playcount: "800000" },
+              { name: "Havana", artist: "Camila Cabello", playcount: "1000000" },
+              { name: "Señorita", artist: "Camila Cabello", playcount: "1200000" },
+              { name: "Never Be the Same", artist: "Camila Cabello", playcount: "900000" },
+              { name: "Crying in the Club", artist: "Camila Cabello", playcount: "800000" },
+              { name: "Shake It Off", artist: "Taylor Swift", playcount: "1200000" },
+              { name: "Blank Space", artist: "Taylor Swift", playcount: "1100000" },
+              { name: "Look What You Made Me Do", artist: "Taylor Swift", playcount: "1000000" },
+              { name: "We Are Never Ever Getting Back Together", artist: "Taylor Swift", playcount: "900000" },
+              { name: "I Knew You Were Trouble", artist: "Taylor Swift", playcount: "800000" },
+              { name: "22", artist: "Taylor Swift", playcount: "700000" },
+              { name: "Love Story", artist: "Taylor Swift", playcount: "1300000" },
+              { name: "You Belong With Me", artist: "Taylor Swift", playcount: "1200000" },
+              { name: "Teardrops on My Guitar", artist: "Taylor Swift", playcount: "1100000" }
             ];
 
             // Generate 10 new albums for this page
             const newAlbums = [];
             for (let i = 0; i < 10; i++) {
-              const template = albumTemplates[(page - 1) * 10 + i];
-              if (template) {
-                newAlbums.push({
-                  name: `${template.name} (Page ${page})`,
-                  artist: template.artist,
-                  playcount: (parseInt(template.playcount) + (page * 10000) + (i * 1000)).toString()
-                });
-              }
+              const templateIndex = ((page - 1) * 10 + i) % albumTemplates.length;
+              const template = albumTemplates[templateIndex];
+              newAlbums.push({
+                name: `${template.name} (Page ${page})`,
+                artist: template.artist,
+                playcount: (parseInt(template.playcount) + (page * 10000) + (i * 1000)).toString()
+              });
             }
             return newAlbums;
           };
