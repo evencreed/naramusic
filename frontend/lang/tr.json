@@ -76,5 +76,8 @@
   "myFavorites": "Favori Albümlerim",
   "search": "Ara",
   "loadMore": "Daha Fazla Albüm Yükle",
-  "loading": "Albümler yükleniyor..."
+  "loading": "Albümler yükleniyor...",
+  "loadingFavorites": "Favori albümleriniz yükleniyor...",
+  "noFavorites": "Henüz favori albümünüz yok.",
+  "addFavorites": "Albüm inceleme sayfasından favori albümlerinizi ekleyebilirsiniz."
 }

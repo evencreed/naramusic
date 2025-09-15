@@ -76,5 +76,8 @@
   "myFavorites": "My Favorite Albums",
   "search": "Search",
   "loadMore": "Load More Albums",
-  "loading": "Loading albums..."
+  "loading": "Loading albums...",
+  "loadingFavorites": "Loading your favorite albums...",
+  "noFavorites": "You don't have any favorite albums yet.",
+  "addFavorites": "You can add your favorite albums from the album review page."
 }
