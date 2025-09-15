@@ -158,19 +158,19 @@
 
         <!-- desktop links -->
         <div class="d-none d-lg-flex align-items-center gap-2">
-          <a class="nav-link px-2" href="pages/yenimuzik.html">Yeni Müzik</a>
-          <a class="nav-link px-2" href="pages/endustri.html">Endüstri Haberleri</a>
-          <a class="nav-link px-2" href="pages/degerlendirme.html">Değerlendirme</a>
-          <a class="nav-link px-2" href="pages/album.html">Albüm İnceleme</a>
-          <a class="nav-link px-2" href="pages/roportaj.html">Röportajlar</a>
-          <a class="nav-link px-2" href="pages/etkinlik.html">Etkinlikler</a>
-          <a class="nav-link px-2" href="pages/dizifilm.html">Dizi & Filmler</a>
+          <a class="nav-link px-2" href="pages/yenimuzik.html" data-lang="newMusic">Yeni Müzik</a>
+          <a class="nav-link px-2" href="pages/endustri.html" data-lang="industry">Endüstri Haberleri</a>
+          <a class="nav-link px-2" href="pages/degerlendirme.html" data-lang="review">Değerlendirme</a>
+          <a class="nav-link px-2" href="pages/album.html" data-lang="album">Albüm İnceleme</a>
+          <a class="nav-link px-2" href="pages/roportaj.html" data-lang="interview">Röportajlar</a>
+          <a class="nav-link px-2" href="pages/etkinlik.html" data-lang="event">Etkinlikler</a>
+          <a class="nav-link px-2" href="pages/dizifilm.html" data-lang="series">Dizi & Filmler</a>
         </div>
       </div>
 
       <div class="d-flex ms-auto align-items-center gap-2">
         <div class="d-none d-md-block">
-          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
+          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" data-placeholder-lang="search" placeholder="Ara...">
         </div>
 
         <select id="language-toggle">
@@ -179,20 +179,20 @@
         </select>
 
         <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
-        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">Yeni Gönderi</button>
+        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal" data-lang="newPost">Yeni Gönderi</button>
 
         <div id="authButtons" class="d-flex gap-1">
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal" data-lang="login">Giriş</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal" data-lang="register">Kayıt</button>
         </div>
         <div class="dropdown">
-          <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">🔔 Bildirimler</button>
+          <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" data-lang="notifications">🔔 Bildirimler</button>
           <ul class="dropdown-menu dropdown-menu-end" style="min-width: 320px; max-height: 360px; overflow:auto" aria-labelledby="notifDropdownBtn" id="notifMenu">
             <li class="px-3 py-2 text-muted small">Oturum açın veya bildiriminiz yok.</li>
           </ul>
         </div>
-        <a href="pages/submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink">Kaydedilenler</a>
-        <a href="pages/mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink">Mod</a>
+        <a href="pages/submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink" data-lang="saved">Kaydedilenler</a>
+        <a href="pages/mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink" data-lang="mod">Mod</a>
       </div>
     </div>
   </nav>
