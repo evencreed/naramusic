@@ -3,7 +3,7 @@ class TranslationService {
   constructor() {
     this.apiBase = window.location.hostname.includes('localhost') 
       ? 'http://localhost:4000' 
-      : 'https://naramusic.onrender.com';
+      : window.location.origin; // Use same origin for edge function
     this.cache = new Map();
     this.isTranslating = false;
   }

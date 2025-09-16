@@ -1,0 +1,35 @@
+{
+  "functions": {
+    "frontend/pages/**/*.html": {
+      "runtime": "edge"
+    }
+  },
+  "regions": ["iad1", "lhr1", "fra1", "nrt1", "syd1"],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://naramusic.onrender.com/api/$1" },
+    { "source": "/(.*)", "destination": "/frontend/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        }
+      ]
+    }
+  ]
+}
