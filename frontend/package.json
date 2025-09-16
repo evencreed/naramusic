@@ -1,0 +1,14 @@
+{
+  "name": "naramusic-frontend",
+  "version": "1.0.0",
+  "description": "Nara Music Frontend",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Static site - no build needed'",
+    "start": "echo 'Static site - serve with any static server'"
+  },
+  "keywords": ["music", "blog", "frontend"],
+  "author": "",
+  "license": "ISC"
+}
+

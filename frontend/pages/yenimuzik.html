@@ -441,7 +441,17 @@
 
         // Load recent comments for sidebar
         const commentsRes = await fetch(`${base}/api/comments/recent?limit=3`);
-        const recentComments = await commentsRes.json();
+        let recentComments = [];
+        if (commentsRes.ok) {
+          try {
+            recentComments = await commentsRes.json();
+          } catch (error) {
+            console.error('Error parsing comments JSON:', error);
+            recentComments = [];
+          }
+        } else {
+          console.warn('Comments API not available:', commentsRes.status);
+        }
         
         const sidebarComments = document.getElementById('sidebarRecentComments');
         if (recentComments.length > 0) {

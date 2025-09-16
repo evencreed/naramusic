@@ -4,7 +4,11 @@ let translations = {};
 // Dil dosyalarını yükle
 async function loadTranslations(lang) {
   try {
-    const response = await fetch(`lang/${lang}.json`);
+    // Determine the correct path based on current location
+    const isInPages = window.location.pathname.includes('/pages/');
+    const langPath = isInPages ? `../lang/${lang}.json` : `lang/${lang}.json`;
+    
+    const response = await fetch(langPath);
     if (response.ok) {
       translations = await response.json();
       return true;

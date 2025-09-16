@@ -164,6 +164,30 @@
 
       <aside class="col-lg-4 sidebar">
         <div class="widget">
+          <h6>🔍 Popüler</h6>
+          <div class="small-list" id="sidebarPopularPosts">
+            <div class="text-center py-3">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Yükleniyor...</span>
+              </div>
+              <div class="small text-muted mt-2">Popüler gönderiler yükleniyor...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widget">
+          <h6>🧾 Son Yorumlar</h6>
+          <div class="small-list" id="sidebarRecentComments">
+            <div class="text-center py-3">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Yükleniyor...</span>
+              </div>
+              <div class="small text-muted mt-2">Son yorumlar yükleniyor...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widget">
           <h6>🗂 Kategoriler</h6>
           <div class="d-flex flex-wrap gap-2">
             <a href="yenimuzik.html" class="badge bg-secondary text-light">Yeni Müzik</a>
@@ -176,29 +200,9 @@
           </div>
         </div>
 
-        <div class="widget">
-          <h6>🔍 Popüler</h6>
-          <div class="small-list">
-            <div class="item">
-              <img src="https://images.unsplash.com/photo-1517519014922-8fc1b4f9b42b?q=80&w=400&auto=format&fit=crop" alt="">
-              <div>
-                <div class="fw-semibold">Haftanın Şarkısı</div>
-                <div class="meta">1.2K okuma</div>
-              </div>
-            </div>
-            <div class="item">
-              <img src="https://images.unsplash.com/photo-1504457046656-3df3d3c03d91?q=80&w=400&auto=format&fit=crop" alt="">
-              <div>
-                <div class="fw-semibold">Trend Liste</div>
-                <div class="meta">980 okuma</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div class="widget text-center">
-          <h6>Topluluğa Katıl</h6>
-          <p class="small text-muted mb-0">Gönderi paylaşmak için üye olun.</p>
+          <h6>Topluluk</h6>
+          <p class="small text-muted mb-0">Üyeler katılıp gönderi paylaşabilir. Giriş/Kayıt ile başlayın.</p>
           <div class="mt-2">
             <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#registerModal">Üye Ol</button>
           </div>
@@ -307,6 +311,60 @@
       bootstrap.Modal.getInstance(document.getElementById('createPostModal')).hide();
       alert('Gönderi oluşturma simülasyonu.');
     });
+
+    // Load sidebar data
+    async function loadSidebarData() {
+      try {
+        const base = (typeof window !== 'undefined' && window.__API_BASE__) ? window.__API_BASE__ : (location.hostname.includes('localhost') ? 'http://localhost:4000' : 'https://naramusic.onrender.com');
+        
+        // Load popular posts for sidebar
+        const popularRes = await fetch(`${base}/api/posts/popular?limit=3`);
+        const popularPosts = await popularRes.json();
+        
+        const sidebarPopular = document.getElementById('sidebarPopularPosts');
+        if (popularPosts.length > 0) {
+          sidebarPopular.innerHTML = popularPosts.map(post => `
+            <div class="item">
+              <img src="${post.imageUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400&auto=format&fit=crop'}" alt="${post.title}" style="width: 50px; height: 50px; object-fit: cover;">
+              <div>
+                <div class="fw-semibold">${post.title}</div>
+                <div class="meta">${post.views || 0} okuma</div>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          sidebarPopular.innerHTML = '<div class="text-muted small">Henüz popüler gönderi yok.</div>';
+        }
+
+        // Load recent comments for sidebar
+        const commentsRes = await fetch(`${base}/api/comments/recent?limit=3`);
+        const recentComments = await commentsRes.json();
+        
+        const sidebarComments = document.getElementById('sidebarRecentComments');
+        if (recentComments.length > 0) {
+          sidebarComments.innerHTML = recentComments.map(comment => `
+            <div class="item">
+              <div>
+                <div class="fw-semibold">${comment.author || 'Anonim'}</div>
+                <div class="meta">"${comment.content.substring(0, 50)}${comment.content.length > 50 ? '...' : ''}" • ${new Date(comment.createdAt).toLocaleDateString('tr-TR')}</div>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          sidebarComments.innerHTML = '<div class="text-muted small">Henüz yorum yok.</div>';
+        }
+
+      } catch (error) {
+        console.error('Sidebar data loading error:', error);
+        
+        // Show error state
+        document.getElementById('sidebarPopularPosts').innerHTML = '<div class="text-muted small">Veri yüklenemedi.</div>';
+        document.getElementById('sidebarRecentComments').innerHTML = '<div class="text-muted small">Veri yüklenemedi.</div>';
+      }
+    }
+
+    // Load sidebar data on page load
+    loadSidebarData();
   </script>
 </body>
 </html>
