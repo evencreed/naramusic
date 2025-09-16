@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NaramÃ¼zik</title>
+  <title>Naramüzik</title>
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <meta name="description" content="Nara MÃ¼zik â€” mÃ¼zik haberleri, incelemeler ve topluluk tartÄ±ÅŸmalarÄ±.">
-  <meta property="og:title" content="Nara MÃ¼zik">
-  <meta property="og:description" content="MÃ¼zik topluluÄŸu: Yeni parÃ§alar, rÃ¶portajlar, etkinlikler.">
+  <meta name="description" content="Nara Müzik — müzik haberleri, incelemeler ve topluluk tartışmaları.">
+  <meta property="og:title" content="Nara Müzik">
+  <meta property="og:description" content="Müzik topluluğu: Yeni parçalar, röportajlar, etkinlikler.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://example.com/og-image.jpg">
   <meta name="robots" content="index, follow">
@@ -140,7 +140,7 @@
   <!-- Optional thin topbar -->
   <div class="topbar d-none d-lg-block">
     <div class="container">
-        <div class="me-auto small text-muted" data-translate>Nara MÃ¼zik â€” MÃ¼zik tartÄ±ÅŸma topluluÄŸu</div>
+        <div class="me-auto small text-muted" data-translate>Nara Müzik — Müzik tartışma topluluğu</div>
       <div class="d-flex gap-3">
         <a href="#about" class="text-muted">About</a>
         <a href="pages/contact.html" class="text-muted">Contact</a>
@@ -154,15 +154,15 @@
     <div class="container-fluid">
       <div class="d-flex align-items-center">
         <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">â˜°</button>
-        <a class="navbar-brand me-3" href="index.html">Nara MÃ¼zik</a>
+        <a class="navbar-brand me-3" href="index.html">Nara Müzik</a>
 
         <!-- desktop links -->
         <div class="d-none d-lg-flex align-items-center gap-2">
-          <a class="nav-link px-2" href="pages/yenimuzik.html" data-lang="newMusic">Yeni MÃ¼zik</a>
-          <a class="nav-link px-2" href="pages/endustri.html" data-lang="industry">EndÃ¼stri Haberleri</a>
-          <a class="nav-link px-2" href="pages/degerlendirme.html" data-lang="review">DeÄŸerlendirme</a>
-          <a class="nav-link px-2" href="pages/album.html" data-lang="album">AlbÃ¼m Ä°nceleme</a>
-          <a class="nav-link px-2" href="pages/roportaj.html" data-lang="interview">RÃ¶portajlar</a>
+          <a class="nav-link px-2" href="pages/yenimuzik.html" data-lang="newMusic">Yeni Müzik</a>
+          <a class="nav-link px-2" href="pages/endustri.html" data-lang="industry">Endüstri Haberleri</a>
+          <a class="nav-link px-2" href="pages/degerlendirme.html" data-lang="review">Değerlendirme</a>
+          <a class="nav-link px-2" href="pages/album.html" data-lang="album">Albüm İnceleme</a>
+          <a class="nav-link px-2" href="pages/roportaj.html" data-lang="interview">Röportajlar</a>
           <a class="nav-link px-2" href="pages/etkinlik.html" data-lang="event">Etkinlikler</a>
           <a class="nav-link px-2" href="pages/dizifilm.html" data-lang="series">Dizi & Filmler</a>
         </div>
@@ -182,8 +182,8 @@
         <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal" data-lang="newPost">Yeni GÃ¶nderi</button>
 
         <div id="authButtons" class="d-flex gap-1">
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal" data-lang="login">GiriÅŸ</button>
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal" data-lang="register">KayÄ±t</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal" data-lang="login">Giriş</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal" data-lang="register">Kayıt</button>
         </div>
         <div class="dropdown">
           <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" data-lang="notifications">ðŸ”” Bildirimler</button>
@@ -245,7 +245,7 @@
       <!-- LEFT: posts -->
       <div class="col-lg-8 content-left">
         <section>
-          <h5 class="mb-3">ðŸ“° En PopÃ¼ler</h5>
+          <h5 class="mb-3">📰 En Popüler</h5>
 
           <div class="row g-3 mb-4" id="popularPosts"></div>
         </section>
@@ -274,7 +274,7 @@
         </div>
 
         <div class="widget">
-          <h6>ðŸ§¾ Son Yorumlar</h6>
+          <h6>💬 Son Yorumlar</h6>
           <div class="small-list" id="sidebarRecentComments">
             <div class="text-center py-3">
               <div class="spinner-border spinner-border-sm text-primary" role="status">
@@ -286,13 +286,13 @@
         </div>
 
         <div class="widget">
-          <h6>ðŸ—‚ Kategoriler</h6>
+          <h6>📂 Kategoriler</h6>
           <div class="d-flex flex-wrap gap-2">
-            <a href="pages/yenimuzik.html" class="badge bg-secondary text-light">Yeni MÃ¼zik</a>
-            <a href="pages/endustri.html" class="badge bg-secondary text-light">EndÃ¼stri</a>
-            <a href="pages/degerlendirme.html" class="badge bg-secondary text-light">DeÄŸerlendirme</a>
-            <a href="pages/album.html" class="badge bg-secondary text-light">AlbÃ¼m</a>
-            <a href="pages/roportaj.html" class="badge bg-secondary text-light">RÃ¶portaj</a>
+            <a href="pages/yenimuzik.html" class="badge bg-secondary text-light">Yeni Müzik</a>
+            <a href="pages/endustri.html" class="badge bg-secondary text-light">Endüstri</a>
+            <a href="pages/degerlendirme.html" class="badge bg-secondary text-light">Değerlendirme</a>
+            <a href="pages/album.html" class="badge bg-secondary text-light">Albüm</a>
+            <a href="pages/roportaj.html" class="badge bg-secondary text-light">Röportaj</a>
             <a href="pages/etkinlik.html" class="badge bg-secondary text-light">Etkinlik</a>
             <a href="pages/dizifilm.html" class="badge bg-secondary text-light">Dizi&amp;Film</a>
           </div>
@@ -300,7 +300,7 @@
 
         <div class="widget text-center">
           <h6>Topluluk</h6>
-          <p class="small text-muted mb-0">Ãœyeler katÄ±lÄ±p gÃ¶nderi paylaÅŸabilir. GiriÅŸ/KayÄ±t ile baÅŸlayÄ±n.</p>
+          <p class="small text-muted mb-0">Üyeler katılıp gönderi paylaşabilir. Giriş/Kayıt ile başlayın.</p>
           <div class="mt-2">
             <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#registerModal">Ãœye Ol</button>
           </div>
@@ -312,15 +312,15 @@
   <!-- Footer -->
   <footer class="text-center py-4 mt-5">
     <div class="container">
-      <small class="text-muted">Â© <span id="year"></span> MyForum â€” TÃ¼m haklarÄ± saklÄ±dÄ±r.</small>
+      <small class="text-muted">© <span id="year"></span> MyForum — Tüm hakları saklıdır.</small>
     </div>
   </footer>
 
   <!-- About section -->
   <section id="about" class="py-5 border-top" style="border-color: var(--border) !important;">
     <div class="container">
-      <h5 class="mb-2">HakkÄ±nda</h5>
-      <p class="text-muted mb-0">Nara MÃ¼zik, topluluk odaklÄ± bir mÃ¼zik platformudur. Ãœyeler yeni parÃ§alarÄ±, rÃ¶portajlarÄ± ve etkinlikleri paylaÅŸÄ±r; biz de keÅŸfi kolaylaÅŸtÄ±ran sade bir arayÃ¼z sunarÄ±z.</p>
+      <h5 class="mb-2">Hakkında</h5>
+      <p class="text-muted mb-0">Nara Müzik, topluluk odaklı bir müzik platformudur. Üyeler yeni parçaları, röportajları ve etkinlikleri paylaşır; biz de keşfi kolaylaştıran sade bir arayüz sunarız.</p>
     </div>
   </section>
 
