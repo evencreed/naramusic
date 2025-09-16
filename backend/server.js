@@ -83,7 +83,18 @@ if (process.env.SENDGRID_API_KEY) {
 // 2) Express setup
 //
 const app = express();
-app.use(cors());
+// CORS configuration
+app.use(cors({
+  origin: [
+    'https://naramusic.vercel.app',
+    'https://naramusic.onrender.com',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(bodyParser.json());
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
