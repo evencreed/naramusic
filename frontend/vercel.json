@@ -1,4 +1,5 @@
 {
+  "buildCommand": "npm install",
   "outputDirectory": ".",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://naramusic.onrender.com/api/$1" },
