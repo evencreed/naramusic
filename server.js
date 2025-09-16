@@ -2053,6 +2053,101 @@ app.get("/api/comments/recent", async (req, res) => {
   }
 });
 
+// Translation API endpoints using MyMemory (Free)
+app.post("/api/translate", async (req, res) => {
+  try {
+    const { text, source = "en", target = "tr" } = req.body;
+    
+    if (!text) {
+      return res.status(400).json({ error: "Text is required" });
+    }
+
+    // MyMemory API call (Free, no API key required)
+    const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${source}|${target}`);
+    
+    if (!response.ok) {
+      throw new Error(`MyMemory API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.responseStatus !== 200) {
+      throw new Error(`Translation failed: ${data.responseDetails}`);
+    }
+    
+    res.json({
+      originalText: text,
+      translatedText: data.responseData.translatedText,
+      source: source,
+      target: target,
+      provider: "MyMemory"
+    });
+  } catch (err) {
+    console.error('Translation error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get supported languages (MyMemory supported languages)
+app.get("/api/translate/languages", async (req, res) => {
+  try {
+    // MyMemory supports these languages
+    const languages = [
+      { code: "en", name: "English" },
+      { code: "tr", name: "Turkish" },
+      { code: "es", name: "Spanish" },
+      { code: "fr", name: "French" },
+      { code: "de", name: "German" },
+      { code: "it", name: "Italian" },
+      { code: "pt", name: "Portuguese" },
+      { code: "ru", name: "Russian" },
+      { code: "ja", name: "Japanese" },
+      { code: "ko", name: "Korean" },
+      { code: "zh", name: "Chinese" },
+      { code: "ar", name: "Arabic" },
+      { code: "hi", name: "Hindi" },
+      { code: "nl", name: "Dutch" },
+      { code: "sv", name: "Swedish" },
+      { code: "da", name: "Danish" },
+      { code: "no", name: "Norwegian" },
+      { code: "fi", name: "Finnish" },
+      { code: "pl", name: "Polish" },
+      { code: "cs", name: "Czech" },
+      { code: "hu", name: "Hungarian" },
+      { code: "ro", name: "Romanian" },
+      { code: "bg", name: "Bulgarian" },
+      { code: "hr", name: "Croatian" },
+      { code: "sk", name: "Slovak" },
+      { code: "sl", name: "Slovenian" },
+      { code: "et", name: "Estonian" },
+      { code: "lv", name: "Latvian" },
+      { code: "lt", name: "Lithuanian" },
+      { code: "el", name: "Greek" },
+      { code: "he", name: "Hebrew" },
+      { code: "th", name: "Thai" },
+      { code: "vi", name: "Vietnamese" },
+      { code: "id", name: "Indonesian" },
+      { code: "ms", name: "Malay" },
+      { code: "tl", name: "Filipino" },
+      { code: "uk", name: "Ukrainian" },
+      { code: "be", name: "Belarusian" },
+      { code: "mk", name: "Macedonian" },
+      { code: "sq", name: "Albanian" },
+      { code: "mt", name: "Maltese" },
+      { code: "is", name: "Icelandic" },
+      { code: "ga", name: "Irish" },
+      { code: "cy", name: "Welsh" },
+      { code: "eu", name: "Basque" },
+      { code: "ca", name: "Catalan" },
+      { code: "gl", name: "Galician" }
+    ];
+    res.json(languages);
+  } catch (err) {
+    console.error('Languages fetch error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 //
 // 9) Start server
 //
