@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Yönetim Paneli — Nara Müzik</title>
+  <title>YÃ¶netim Paneli â€” Nara MÃ¼zik</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
   <style>
@@ -19,18 +19,18 @@
   <!-- Navbar (lightweight; shares IDs with index for consistency) -->
   <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
     <div class="container-fluid">
-      <a class="navbar-brand" href="../index.html" data-lang="home">Nara Müzik</a>
+      <a class="navbar-brand" href="../index.html" data-lang="home">Nara MÃ¼zik</a>
       <div class="ms-auto d-flex align-items-center gap-2">
         <select id="language-toggle">
           <option value="en">EN</option>
           <option value="tr">TR</option>
         </select>
-        <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
+        <button id="themeToggle" class="btn btn-outline-light btn-sm">â˜€ï¸</button>
         <a href="submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink" data-lang="saved">Kaydedilenler</a>
         <a href="mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink" data-lang="mod">Mod</a>
         <div id="authButtons" class="d-flex gap-1">
-          <button class="btn btn-outline-light btn-sm" onclick="location.href='../index.html#login'" data-lang="login">Giriş</button>
-          <button class="btn btn-outline-light btn-sm" onclick="location.href='../index.html#register'" data-lang="register">Kayıt</button>
+          <button class="btn btn-outline-light btn-sm" onclick="location.href='../index.html#login'" data-lang="login">GiriÅŸ</button>
+          <button class="btn btn-outline-light btn-sm" onclick="location.href='../index.html#register'" data-lang="register">KayÄ±t</button>
         </div>
       </div>
     </div>
@@ -43,7 +43,7 @@
   <!-- Templates -->
   <template id="dashboardTpl">
     <section class="mb-3">
-      <h4 class="mb-0">Yönetim Paneli</h4>
+      <h4 class="mb-0">YÃ¶netim Paneli</h4>
       <div class="text-muted-small" id="generatedLine"></div>
     </section>
 
@@ -51,26 +51,26 @@
     <section class="row g-3 mb-4">
       <div class="col-6 col-lg-3">
         <div class="card kpi-card h-100 p-3">
-          <div class="label">Toplam Kullanıcılar</div>
-          <div class="kpi" id="totalUsers">–</div>
+          <div class="label">Toplam KullanÄ±cÄ±lar</div>
+          <div class="kpi" id="totalUsers">â€“</div>
         </div>
       </div>
       <div class="col-6 col-lg-3">
         <div class="card kpi-card h-100 p-3">
-          <div class="label">Toplam Gönderiler</div>
-          <div class="kpi" id="totalPosts">–</div>
+          <div class="label">Toplam GÃ¶nderiler</div>
+          <div class="kpi" id="totalPosts">â€“</div>
         </div>
       </div>
       <div class="col-6 col-lg-3">
         <div class="card kpi-card h-100 p-3">
           <div class="label">Toplam Yorumlar</div>
-          <div class="kpi" id="totalComments">–</div>
+          <div class="kpi" id="totalComments">â€“</div>
         </div>
       </div>
       <div class="col-6 col-lg-3">
         <div class="card kpi-card h-100 p-3">
-          <div class="label">Açık / Çözülen Raporlar</div>
-          <div class="kpi"><span id="openReports">–</span> / <span id="resolvedReports">–</span></div>
+          <div class="label">AÃ§Ä±k / Ã‡Ã¶zÃ¼len Raporlar</div>
+          <div class="kpi"><span id="openReports">â€“</span> / <span id="resolvedReports">â€“</span></div>
         </div>
       </div>
     </section>
@@ -78,7 +78,7 @@
     <!-- Filters -->
     <section class="card mb-4">
       <div class="card-body d-flex flex-wrap align-items-center gap-2">
-        <label for="rangeDays" class="me-2 mb-0">Aralık (gün):</label>
+        <label for="rangeDays" class="me-2 mb-0">AralÄ±k (gÃ¼n):</label>
         <select id="rangeDays" class="form-select form-select-sm" style="width:120px">
           <option value="7">7</option>
           <option value="14">14</option>
@@ -94,23 +94,23 @@
     <section class="row g-3 mb-4">
       <div class="col-lg-5">
         <div class="card h-100">
-          <div class="card-header">📊 Kategori Dağılımı</div>
+          <div class="card-header">ðŸ“Š Kategori DaÄŸÄ±lÄ±mÄ±</div>
           <div class="list-group list-group-flush" id="perCategory">
-            <div class="list-group-item text-muted">Yükleniyor…</div>
+            <div class="list-group-item text-muted">YÃ¼kleniyorâ€¦</div>
           </div>
         </div>
       </div>
       <div class="col-lg-7">
         <div class="card mb-3">
-          <div class="card-header">📈 Günlük Gönderiler (son N gün)</div>
+          <div class="card-header">ðŸ“ˆ GÃ¼nlÃ¼k GÃ¶nderiler (son N gÃ¼n)</div>
           <div class="list-group list-group-flush" id="postsSeries">
-            <div class="list-group-item text-muted">Yükleniyor…</div>
+            <div class="list-group-item text-muted">YÃ¼kleniyorâ€¦</div>
           </div>
         </div>
         <div class="card">
-          <div class="card-header">👥 Günlük Kayıtlar (son N gün)</div>
+          <div class="card-header">ðŸ‘¥ GÃ¼nlÃ¼k KayÄ±tlar (son N gÃ¼n)</div>
           <div class="list-group list-group-flush" id="usersSeries">
-            <div class="list-group-item text-muted">Yükleniyor…</div>
+            <div class="list-group-item text-muted">YÃ¼kleniyorâ€¦</div>
           </div>
         </div>
       </div>
@@ -118,20 +118,20 @@
 
     <!-- Top posts -->
     <section class="card mb-4">
-      <div class="card-header">🔥 En Çok Görüntülenen Gönderiler</div>
+      <div class="card-header">ðŸ”¥ En Ã‡ok GÃ¶rÃ¼ntÃ¼lenen GÃ¶nderiler</div>
       <div class="table-responsive">
         <table class="table table-sm table-hover align-middle mb-0">
           <thead>
             <tr>
-              <th>Başlık</th>
+              <th>BaÅŸlÄ±k</th>
               <th>Kategori</th>
-              <th>Görüntülenme</th>
-              <th>Beğeni</th>
+              <th>GÃ¶rÃ¼ntÃ¼lenme</th>
+              <th>BeÄŸeni</th>
               <th>Tarih</th>
             </tr>
           </thead>
           <tbody id="topPosts">
-            <tr><td colspan="5" class="text-muted">Yükleniyor…</td></tr>
+            <tr><td colspan="5" class="text-muted">YÃ¼kleniyorâ€¦</td></tr>
           </tbody>
         </table>
       </div>
@@ -139,20 +139,20 @@
 
     <!-- Recent posts -->
     <section class="card mb-5">
-      <div class="card-header">🆕 Son Gönderiler</div>
+      <div class="card-header">ðŸ†• Son GÃ¶nderiler</div>
       <div class="table-responsive">
         <table class="table table-sm table-hover align-middle mb-0">
           <thead>
             <tr>
-              <th>Başlık</th>
+              <th>BaÅŸlÄ±k</th>
               <th>Kategori</th>
-              <th>Beğeni</th>
-              <th>Görüntülenme</th>
+              <th>BeÄŸeni</th>
+              <th>GÃ¶rÃ¼ntÃ¼lenme</th>
               <th>Tarih</th>
             </tr>
           </thead>
           <tbody id="recentPosts">
-            <tr><td colspan="5" class="text-muted">Yükleniyor…</td></tr>
+            <tr><td colspan="5" class="text-muted">YÃ¼kleniyorâ€¦</td></tr>
           </tbody>
         </table>
       </div>
@@ -162,6 +162,89 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../js/app.js"></script>
+    <!-- Language files -->
+  <script>
+    // Load Turkish translations directly
+    window.translations = {
+      "home": "Ana Sayfa",
+      "about": "HakkÄ±nda",
+      "contact": "Ä°letiÅŸim",
+      "welcome": "Bloguma HoÅŸgeldin",
+      "subtitle": "MÃ¼zik, sanat ve kÃ¼ltÃ¼r Ã¼zerine",
+      "login": "GiriÅŸ",
+      "register": "KayÄ±t",
+      "logout": "Ã‡Ä±kÄ±ÅŸ",
+      "profile": "Profil",
+      "newPost": "Yeni GÃ¶nderi",
+      "search": "Ara...",
+      "notifications": "Bildirimler",
+      "saved": "Kaydedilenler",
+      "mod": "Mod",
+      "submit": "GÃ¶nder",
+      "title": "BaÅŸlÄ±k",
+      "content": "Ä°Ã§erik",
+      "category": "Kategori",
+      "mediaUrl": "FotoÄŸraf/GIF URL (opsiyonel)",
+      "linkUrl": "Harici Link (opsiyonel)",
+      "share": "PaylaÅŸ",
+      "popular": "En PopÃ¼ler",
+      "latest": "En Son Eklenenler",
+      "comments": "Yorumlar",
+      "like": "BeÄŸen",
+      "bookmark": "Kaydet",
+      "report": "Raporla",
+      "edit": "DÃ¼zenle",
+      "delete": "Sil",
+      "pin": "Sabitle",
+      "lock": "Kilitle",
+      "newMusic": "Yeni MÃ¼zik",
+      "industry": "EndÃ¼stri Haberleri",
+      "review": "DeÄŸerlendirme",
+      "album": "AlbÃ¼m Ä°nceleme",
+      "interview": "RÃ¶portajlar",
+      "event": "Etkinlikler",
+      "series": "Dizi & Filmler",
+      "loading": "YÃ¼kleniyor...",
+      "error": "Hata",
+      "success": "BaÅŸarÄ±lÄ±",
+      "cancel": "Ä°ptal",
+      "save": "Kaydet",
+      "close": "Kapat",
+      "send": "GÃ¶nder",
+      "name": "AdÄ±nÄ±z",
+      "email": "Email",
+      "password": "Parola",
+      "username": "KullanÄ±cÄ± AdÄ±",
+      "message": "MesajÄ±nÄ±z",
+      "writeComment": "Yorum yaz...",
+      "noPosts": "HenÃ¼z gÃ¶nderi yok",
+      "noComments": "HenÃ¼z yorum yok",
+      "loadMore": "Daha Fazla",
+      "allRightsReserved": "TÃ¼m haklarÄ± saklÄ±dÄ±r",
+      "avatarUrl": "Avatar URL",
+      "avatarUrlPlaceholder": "https://... (fotoÄŸraf/gif)",
+      "avatarUrlHelp": "URL boÅŸ kaydedilirse avatar kaldÄ±rÄ±lÄ±r.",
+      "uploadFile": "Veya dosya yÃ¼kle",
+      "upload": "YÃ¼kle",
+      "myPosts": "GÃ¶nderilerim",
+      "noPostsYet": "HenÃ¼z gÃ¶nderi yok",
+      "createFirstPost": "Ä°lk gÃ¶nderinizi oluÅŸturun",
+      "welcomeMessage": "Nara MÃ¼zik'e hoÅŸ geldiniz!",
+      "profileSettings": "Profil AyarlarÄ±",
+      "accountInfo": "Hesap Bilgileri",
+      "contactMessage": "Bize mesaj bÄ±rakÄ±n; evencreed hesabÄ±nÄ±n gelen kutusuna dÃ¼ÅŸecek.",
+      "popularAlbums": "PopÃ¼ler AlbÃ¼mler",
+      "popularAlbumsDesc": "En Ã§ok dinlenen ve tartÄ±ÅŸÄ±lan albÃ¼mleri keÅŸfedin",
+      "addComment": "Ekle",
+      "albumSearch": "AlbÃ¼m Ara",
+      "searchAlbum": "AlbÃ¼m adÄ± yazÄ±n...",
+      "searchResults": "Arama SonuÃ§larÄ±",
+      "myFavorites": "Favori AlbÃ¼mlerim",
+      "loadingFavorites": "Favori albÃ¼mleriniz yÃ¼kleniyor...",
+      "noFavorites": "HenÃ¼z favori albÃ¼mÃ¼nÃ¼z yok.",
+      "addFavorites": "AlbÃ¼m inceleme sayfasÄ±ndan favori albÃ¼mlerinizi ekleyebilirsiniz."
+    };
+  </script>
   <script src="../js/lang.js"></script>
   <script>
     (function(){
@@ -172,12 +255,12 @@
         function applyTheme(theme){
           if(theme === 'light'){
             root.setAttribute('data-theme','light');
-            if (themeToggle) themeToggle.textContent = '🌙';
+            if (themeToggle) themeToggle.textContent = 'ðŸŒ™';
             const nav = document.getElementById('mainNavbar');
             if (nav){ nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light'); }
           } else {
             root.removeAttribute('data-theme');
-            if (themeToggle) themeToggle.textContent = '☀️';
+            if (themeToggle) themeToggle.textContent = 'â˜€ï¸';
             const nav = document.getElementById('mainNavbar');
             if (nav){ nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark'); }
           }
@@ -205,9 +288,9 @@
           <div class="d-flex align-items-center justify-content-center" style="min-height:60vh">
             <div class="card shadow-sm" style="max-width:520px">
               <div class="card-body">
-                <h5 class="card-title mb-2">Erişim Engellendi</h5>
-                <p class="card-text">Yalnızca admin erişebilir.</p>
-                <a class="btn btn-primary" href="../index.html#login">Giriş Yap</a>
+                <h5 class="card-title mb-2">EriÅŸim Engellendi</h5>
+                <p class="card-text">YalnÄ±zca admin eriÅŸebilir.</p>
+                <a class="btn btn-primary" href="../index.html#login">GiriÅŸ Yap</a>
               </div>
             </div>
           </div>
@@ -232,7 +315,7 @@
         const rd = parseInt(rangeSelect.value || '7', 10) || 7;
         const url = new URL(`${BACKEND_BASE}/api/admin/analytics`);
         url.searchParams.set('rangeDays', String(rd));
-        setLoading(true, 'Yükleniyor…');
+        setLoading(true, 'YÃ¼kleniyorâ€¦');
         try{
           const r = await fetch(url.toString(), { headers: { 'Authorization': `Bearer ${token}` }});
           if (!r.ok){
@@ -241,7 +324,7 @@
           }
           const data = await r.json();
           populateDashboard(data);
-          setLoading(false, 'Tamamlandı');
+          setLoading(false, 'TamamlandÄ±');
         }catch(e){
           console.error(e);
           setLoading(false, 'Hata: ' + (e.message || 'Bilinmeyen'));
@@ -255,7 +338,7 @@
       }
 
       function safeNumber(x){ const n = Number(x||0); return isFinite(n)? n: 0; }
-      function safeDateStr(iso){ const t = new Date(iso||0); return isNaN(t.getTime())? '—' : t.toLocaleDateString('tr-TR'); }
+      function safeDateStr(iso){ const t = new Date(iso||0); return isNaN(t.getTime())? 'â€”' : t.toLocaleDateString('tr-TR'); }
 
       function populateDashboard(d){
         // KPIs
@@ -265,7 +348,7 @@
         byId('totalComments').textContent = safeNumber(totals.comments);
         byId('openReports').textContent = safeNumber(totals.reportsOpen);
         byId('resolvedReports').textContent = safeNumber(totals.reportsResolved);
-        if (generatedLine){ generatedLine.textContent = `Aralık: son ${d.rangeDays || 7} gün • Üretim zamanı: ${safeDateTime(d.generatedAt)}`; }
+        if (generatedLine){ generatedLine.textContent = `AralÄ±k: son ${d.rangeDays || 7} gÃ¼n â€¢ Ãœretim zamanÄ±: ${safeDateTime(d.generatedAt)}`; }
 
         // Per-category
         const pc = d.perCategory || {};
@@ -295,7 +378,7 @@
         el.innerHTML = arr.map(x=>{
           const count = Number(x.count||0);
           const blocks = Math.max(0, Math.round((count/max) * WIDTH));
-          const bar = '█'.repeat(blocks);
+          const bar = 'â–ˆ'.repeat(blocks);
           const label = `${x.date}: ${count.toString().padStart(3,' ')}`;
           return `<div class="list-group-item d-flex justify-content-between align-items-center">
             <span class="spark">${label}</span>
@@ -341,7 +424,7 @@
 
       function byId(id){ return document.getElementById(id); }
       function safeJson(r){ return r.json().catch(()=>({error:'Unknown'})); }
-      function safeDateTime(iso){ const d = new Date(iso||0); return isNaN(d.getTime())? '—' : d.toLocaleString('tr-TR'); }
+      function safeDateTime(iso){ const d = new Date(iso||0); return isNaN(d.getTime())? 'â€”' : d.toLocaleString('tr-TR'); }
       function escapeHtml(s){
         const div = document.createElement('div');
         div.textContent = String(s);

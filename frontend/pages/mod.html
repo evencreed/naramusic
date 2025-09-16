@@ -1,49 +1,49 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Moderasyon — Nara Müzik</title>
+  <title>Moderasyon â€” Nara MÃ¼zik</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
     <div class="container-fluid">
-      <a class="navbar-brand" href="../index.html" data-lang="home">Nara Müzik</a>
+      <a class="navbar-brand" href="../index.html" data-lang="home">Nara MÃ¼zik</a>
       <div class="ms-auto d-flex align-items-center gap-2">
         <select id="language-toggle">
           <option value="en">EN</option>
           <option value="tr">TR</option>
         </select>
-        <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
+        <button id="themeToggle" class="btn btn-outline-light btn-sm">â˜€ï¸</button>
       </div>
     </div>
   </nav>
   <main class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">🚨 Raporlar</h5>
-      <a href="#" id="manageUsersLink" class="btn btn-sm btn-outline-warning">Kullanıcı Rollerini Yönet</a>
+      <h5 class="mb-0">ðŸš¨ Raporlar</h5>
+      <a href="#" id="manageUsersLink" class="btn btn-sm btn-outline-warning">KullanÄ±cÄ± Rollerini YÃ¶net</a>
     </div>
     <div class="d-flex align-items-center gap-2 mb-2">
       <select id="reportTypeFilter" class="form-select form-select-sm" style="width:160px">
-        <option value="">Tümü</option>
+        <option value="">TÃ¼mÃ¼</option>
         <option value="post">post</option>
         <option value="comment">comment</option>
       </select>
       <select id="reportLockPinFilter" class="form-select form-select-sm" style="width:200px">
         <option value="">Hepsi</option>
-        <option value="pinned">Sadece sabit gönderiler</option>
-        <option value="locked">Sadece kilitli gönderiler</option>
+        <option value="pinned">Sadece sabit gÃ¶nderiler</option>
+        <option value="locked">Sadece kilitli gÃ¶nderiler</option>
       </select>
     </div>
     <div id="reports" class="list-group mb-4"></div>
     <div class="card">
       <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
-        <span>👥 Kullanıcılar</span>
+        <span>ðŸ‘¥ KullanÄ±cÄ±lar</span>
         <div class="d-flex align-items-center gap-2">
           <select id="roleFilter" class="form-select form-select-sm" style="width:140px">
-            <option value="">Tümü</option>
+            <option value="">TÃ¼mÃ¼</option>
             <option value="user">user</option>
             <option value="moderator">moderator</option>
             <option value="admin">admin</option>
@@ -57,6 +57,89 @@
     <div id="state" class="mt-3 text-muted small"></div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Language files -->
+  <script>
+    // Load Turkish translations directly
+    window.translations = {
+      "home": "Ana Sayfa",
+      "about": "HakkÄ±nda",
+      "contact": "Ä°letiÅŸim",
+      "welcome": "Bloguma HoÅŸgeldin",
+      "subtitle": "MÃ¼zik, sanat ve kÃ¼ltÃ¼r Ã¼zerine",
+      "login": "GiriÅŸ",
+      "register": "KayÄ±t",
+      "logout": "Ã‡Ä±kÄ±ÅŸ",
+      "profile": "Profil",
+      "newPost": "Yeni GÃ¶nderi",
+      "search": "Ara...",
+      "notifications": "Bildirimler",
+      "saved": "Kaydedilenler",
+      "mod": "Mod",
+      "submit": "GÃ¶nder",
+      "title": "BaÅŸlÄ±k",
+      "content": "Ä°Ã§erik",
+      "category": "Kategori",
+      "mediaUrl": "FotoÄŸraf/GIF URL (opsiyonel)",
+      "linkUrl": "Harici Link (opsiyonel)",
+      "share": "PaylaÅŸ",
+      "popular": "En PopÃ¼ler",
+      "latest": "En Son Eklenenler",
+      "comments": "Yorumlar",
+      "like": "BeÄŸen",
+      "bookmark": "Kaydet",
+      "report": "Raporla",
+      "edit": "DÃ¼zenle",
+      "delete": "Sil",
+      "pin": "Sabitle",
+      "lock": "Kilitle",
+      "newMusic": "Yeni MÃ¼zik",
+      "industry": "EndÃ¼stri Haberleri",
+      "review": "DeÄŸerlendirme",
+      "album": "AlbÃ¼m Ä°nceleme",
+      "interview": "RÃ¶portajlar",
+      "event": "Etkinlikler",
+      "series": "Dizi & Filmler",
+      "loading": "YÃ¼kleniyor...",
+      "error": "Hata",
+      "success": "BaÅŸarÄ±lÄ±",
+      "cancel": "Ä°ptal",
+      "save": "Kaydet",
+      "close": "Kapat",
+      "send": "GÃ¶nder",
+      "name": "AdÄ±nÄ±z",
+      "email": "Email",
+      "password": "Parola",
+      "username": "KullanÄ±cÄ± AdÄ±",
+      "message": "MesajÄ±nÄ±z",
+      "writeComment": "Yorum yaz...",
+      "noPosts": "HenÃ¼z gÃ¶nderi yok",
+      "noComments": "HenÃ¼z yorum yok",
+      "loadMore": "Daha Fazla",
+      "allRightsReserved": "TÃ¼m haklarÄ± saklÄ±dÄ±r",
+      "avatarUrl": "Avatar URL",
+      "avatarUrlPlaceholder": "https://... (fotoÄŸraf/gif)",
+      "avatarUrlHelp": "URL boÅŸ kaydedilirse avatar kaldÄ±rÄ±lÄ±r.",
+      "uploadFile": "Veya dosya yÃ¼kle",
+      "upload": "YÃ¼kle",
+      "myPosts": "GÃ¶nderilerim",
+      "noPostsYet": "HenÃ¼z gÃ¶nderi yok",
+      "createFirstPost": "Ä°lk gÃ¶nderinizi oluÅŸturun",
+      "welcomeMessage": "Nara MÃ¼zik'e hoÅŸ geldiniz!",
+      "profileSettings": "Profil AyarlarÄ±",
+      "accountInfo": "Hesap Bilgileri",
+      "contactMessage": "Bize mesaj bÄ±rakÄ±n; evencreed hesabÄ±nÄ±n gelen kutusuna dÃ¼ÅŸecek.",
+      "popularAlbums": "PopÃ¼ler AlbÃ¼mler",
+      "popularAlbumsDesc": "En Ã§ok dinlenen ve tartÄ±ÅŸÄ±lan albÃ¼mleri keÅŸfedin",
+      "addComment": "Ekle",
+      "albumSearch": "AlbÃ¼m Ara",
+      "searchAlbum": "AlbÃ¼m adÄ± yazÄ±n...",
+      "searchResults": "Arama SonuÃ§larÄ±",
+      "myFavorites": "Favori AlbÃ¼mlerim",
+      "loadingFavorites": "Favori albÃ¼mleriniz yÃ¼kleniyor...",
+      "noFavorites": "HenÃ¼z favori albÃ¼mÃ¼nÃ¼z yok.",
+      "addFavorites": "AlbÃ¼m inceleme sayfasÄ±ndan favori albÃ¼mlerinizi ekleyebilirsiniz."
+    };
+  </script>
   <script src="../js/lang.js"></script>
   <script>
     (async ()=>{
@@ -64,7 +147,7 @@
       const token = localStorage.getItem('token');
       const user = JSON.parse(localStorage.getItem('user')||'null');
       const state = document.getElementById('state');
-      if (!user){ state.textContent='Giriş yapın.'; return; }
+      if (!user){ state.textContent='GiriÅŸ yapÄ±n.'; return; }
       try{
         const r = await fetch(`${base}/api/mod/reports`, { headers:{ 'Authorization': `Bearer ${token}` }});
         const items = await r.json();
@@ -84,21 +167,21 @@
               return true;
             });
           }
-          if (!data.length){ el.innerHTML = '<div class="list-group-item text-muted">Rapor bulunamadı.</div>'; return; }
+          if (!data.length){ el.innerHTML = '<div class="list-group-item text-muted">Rapor bulunamadÄ±.</div>'; return; }
           el.innerHTML = data.map(x=>`
             <div class="list-group-item">
               <div class="d-flex w-100 justify-content-between align-items-center">
                 <div>
-                  <h6 class="mb-1 d-inline">${x.type==='comment'?'Yorum':'Gönderi'} raporu</h6>
-                  ${x.status==='resolved'?'<span class="badge bg-success ms-2">Çözüldü</span>':''}
-                  ${x.seen && x.status!=='resolved'?'<span class="badge bg-secondary ms-1">Görüldü</span>':''}
+                  <h6 class="mb-1 d-inline">${x.type==='comment'?'Yorum':'GÃ¶nderi'} raporu</h6>
+                  ${x.status==='resolved'?'<span class="badge bg-success ms-2">Ã‡Ã¶zÃ¼ldÃ¼</span>':''}
+                  ${x.seen && x.status!=='resolved'?'<span class="badge bg-secondary ms-1">GÃ¶rÃ¼ldÃ¼</span>':''}
                 </div>
                 <small>${new Date(x.createdAt).toLocaleString()}</small>
               </div>
               <p class="mb-1">Neden: ${x.reason||'-'}</p>
               <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-secondary mark-seen" data-id="${x.id}" ${x.seen?'disabled':''}>Görüldü</button>
-                <button class="btn btn-sm btn-outline-success mark-res" data-id="${x.id}" ${x.status==='resolved'?'disabled':''}>Çözüldü</button>
+                <button class="btn btn-sm btn-outline-secondary mark-seen" data-id="${x.id}" ${x.seen?'disabled':''}>GÃ¶rÃ¼ldÃ¼</button>
+                <button class="btn btn-sm btn-outline-success mark-res" data-id="${x.id}" ${x.status==='resolved'?'disabled':''}>Ã‡Ã¶zÃ¼ldÃ¼</button>
               </div>
               <small class="text-muted">ID: ${x.id}</small>
             </div>
@@ -112,14 +195,14 @@
           const resBtn = e.target.closest('.mark-res');
           if (seenBtn){
             const id = seenBtn.getAttribute('data-id');
-            try{ await fetch(`${base}/api/mod/reports/${id}/seen`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` }}); seenBtn.disabled = true; }catch(_){ alert('Güncellenemedi'); }
+            try{ await fetch(`${base}/api/mod/reports/${id}/seen`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` }}); seenBtn.disabled = true; }catch(_){ alert('GÃ¼ncellenemedi'); }
           }
           if (resBtn){
             const id = resBtn.getAttribute('data-id');
-            try{ await fetch(`${base}/api/mod/reports/${id}/resolve`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` }}); resBtn.disabled = true; }catch(_){ alert('Güncellenemedi'); }
+            try{ await fetch(`${base}/api/mod/reports/${id}/resolve`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` }}); resBtn.disabled = true; }catch(_){ alert('GÃ¼ncellenemedi'); }
           }
         });
-      }catch(err){ state.textContent='Yüklenemedi.'; }
+      }catch(err){ state.textContent='YÃ¼klenemedi.'; }
 
       // Superadmin user list and role assignment
       const usersWrap = document.getElementById('users');
@@ -137,7 +220,7 @@
           <div class="list-group-item d-flex justify-content-between align-items-center">
             <div>
               <div class="fw-semibold">${u.username||'-'} <span class="text-muted">(${u.email||''})</span></div>
-              <div class="small text-muted">${new Date(u.createdAt||Date.now()).toLocaleString()} • <span class="badge bg-dark">${u.role||'user'}</span></div>
+              <div class="small text-muted">${new Date(u.createdAt||Date.now()).toLocaleString()} â€¢ <span class="badge bg-dark">${u.role||'user'}</span></div>
             </div>
             <div class="d-flex align-items-center gap-2">
               <select class="form-select form-select-sm role-select" data-id="${u.id}">
@@ -149,15 +232,15 @@
               <button class="btn btn-sm btn-primary apply-role" data-id="${u.id}">Uygula</button>
             </div>
           </div>
-        `).join('') + (items.length>pageSize? `<div class="list-group-item text-center"><button id="prevPage" class="btn btn-sm btn-outline-secondary me-2" ${page===0?'disabled':''}>Önceki</button><button id="nextPage" class="btn btn-sm btn-outline-secondary" ${(start+pageSize)>=items.length?'disabled':''}>Sonraki</button></div>` : '');
+        `).join('') + (items.length>pageSize? `<div class="list-group-item text-center"><button id="prevPage" class="btn btn-sm btn-outline-secondary me-2" ${page===0?'disabled':''}>Ã–nceki</button><button id="nextPage" class="btn btn-sm btn-outline-secondary" ${(start+pageSize)>=items.length?'disabled':''}>Sonraki</button></div>` : '');
       }
       async function loadUsers(){
         try{
           const r = await fetch(`${base}/api/admin/users`, { headers:{ 'Authorization': `Bearer ${token}` }});
           const items = await r.json();
           if (Array.isArray(items)){ allUsers = items; page = 0; renderUsers(); }
-          else { usersWrap.innerHTML = '<div class="list-group-item text-danger">Kullanıcılar yüklenemedi</div>'; }
-        }catch(_){ usersWrap.innerHTML = '<div class="list-group-item text-danger">Kullanıcılar yüklenemedi</div>'; }
+          else { usersWrap.innerHTML = '<div class="list-group-item text-danger">KullanÄ±cÄ±lar yÃ¼klenemedi</div>'; }
+        }catch(_){ usersWrap.innerHTML = '<div class="list-group-item text-danger">KullanÄ±cÄ±lar yÃ¼klenemedi</div>'; }
       }
       await loadUsers();
       searchInput.addEventListener('input', ()=>{ clearTimeout(window.__us_f1); window.__us_f1 = setTimeout(()=>{ page=0; renderUsers(); }, 200); });
@@ -178,7 +261,7 @@
           const r = await fetch(`${base}/api/admin/users/${id}/role`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ role: selectEl.value }) });
           const d = await r.json();
           if (d.error){ alert(d.error); } else { await loadUsers(); }
-        }catch(_){ alert('Güncellenemedi'); }
+        }catch(_){ alert('GÃ¼ncellenemedi'); }
       });
     })();
   </script>
@@ -188,5 +271,6 @@
   </select>
 </body>
 </html>
+
 
 

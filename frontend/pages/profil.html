@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Profil — Nara Müzik</title>
+  <title>Profil â€” Nara MÃ¼zik</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
   <style>
@@ -50,13 +50,13 @@
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
     <div class="container-fluid">
-      <a class="navbar-brand" href="../index.html" data-lang="home">Nara Müzik</a>
+      <a class="navbar-brand" href="../index.html" data-lang="home">Nara MÃ¼zik</a>
       <div class="ms-auto d-flex align-items-center gap-2">
         <select id="language-toggle">
           <option value="en">EN</option>
           <option value="tr">TR</option>
         </select>
-        <button id="themeToggle" class="btn btn-outline-light btn-sm">☀️</button>
+        <button id="themeToggle" class="btn btn-outline-light btn-sm">â˜€ï¸</button>
         <div id="authButtons"></div>
       </div>
     </div>
@@ -67,47 +67,47 @@
       <!-- Sidebar -->
       <aside class="col-lg-4 sidebar">
         <div class="widget">
-          <h6>🔍 Popüler</h6>
+          <h6>ðŸ” PopÃ¼ler</h6>
           <div class="small-list" id="sidebarPopularPosts">
             <div class="text-center py-3">
               <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">Yükleniyor...</span>
+                <span class="visually-hidden">YÃ¼kleniyor...</span>
               </div>
-              <div class="small text-muted mt-2">Popüler gönderiler yükleniyor...</div>
+              <div class="small text-muted mt-2">PopÃ¼ler gÃ¶nderiler yÃ¼kleniyor...</div>
             </div>
           </div>
         </div>
 
         <div class="widget">
-          <h6>🧾 Son Yorumlar</h6>
+          <h6>ðŸ§¾ Son Yorumlar</h6>
           <div class="small-list" id="sidebarRecentComments">
             <div class="text-center py-3">
               <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">Yükleniyor...</span>
+                <span class="visually-hidden">YÃ¼kleniyor...</span>
               </div>
-              <div class="small text-muted mt-2">Son yorumlar yükleniyor...</div>
+              <div class="small text-muted mt-2">Son yorumlar yÃ¼kleniyor...</div>
             </div>
           </div>
         </div>
 
         <div class="widget">
-          <h6>🗂 Kategoriler</h6>
+          <h6>ðŸ—‚ Kategoriler</h6>
           <div class="d-flex flex-wrap gap-2">
-            <a href="yenimuzik.html" class="badge bg-secondary text-light">Yeni Müzik</a>
-            <a href="endustri.html" class="badge bg-secondary text-light">Endüstri</a>
-            <a href="degerlendirme.html" class="badge bg-secondary text-light">Değerlendirme</a>
-            <a href="album.html" class="badge bg-secondary text-light">Albüm</a>
-            <a href="roportaj.html" class="badge bg-secondary text-light">Röportaj</a>
+            <a href="yenimuzik.html" class="badge bg-secondary text-light">Yeni MÃ¼zik</a>
+            <a href="endustri.html" class="badge bg-secondary text-light">EndÃ¼stri</a>
+            <a href="degerlendirme.html" class="badge bg-secondary text-light">DeÄŸerlendirme</a>
+            <a href="album.html" class="badge bg-secondary text-light">AlbÃ¼m</a>
+            <a href="roportaj.html" class="badge bg-secondary text-light">RÃ¶portaj</a>
             <a href="etkinlik.html" class="badge bg-secondary text-light">Etkinlik</a>
             <a href="dizifilm.html" class="badge bg-secondary text-light">Dizi&amp;Film</a>
           </div>
         </div>
 
         <div class="widget text-center">
-          <h6>Topluluğa Katıl</h6>
-          <p class="small text-muted mb-0">Gönderi paylaşmak için üye olun.</p>
+          <h6>TopluluÄŸa KatÄ±l</h6>
+          <p class="small text-muted mb-0">GÃ¶nderi paylaÅŸmak iÃ§in Ã¼ye olun.</p>
           <div class="mt-2">
-            <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#registerModal">Üye Ol</button>
+            <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#registerModal">Ãœye Ol</button>
           </div>
         </div>
       </aside>
@@ -117,26 +117,26 @@
           <div class="d-flex align-items-center gap-3">
             <img id="profAvatar" class="rounded-circle" style="width:64px;height:64px; object-fit:cover" src="" alt="avatar">
             <div>
-              <h5 id="profUsername" class="mb-1">Kullanıcı <span id="profRole" class="badge bg-dark ms-2 d-none"></span></h5>
+              <h5 id="profUsername" class="mb-1">KullanÄ±cÄ± <span id="profRole" class="badge bg-dark ms-2 d-none"></span></h5>
               <div id="profEmail" class="text-muted small"></div>
             </div>
           </div>
           <div class="mt-3 d-flex gap-2">
-            <button id="logoutBtn" class="btn btn-outline-light btn-sm" data-lang="logout">Çıkış</button>
+            <button id="logoutBtn" class="btn btn-outline-light btn-sm" data-lang="logout">Ã‡Ä±kÄ±ÅŸ</button>
           </div>
           <div class="mt-3">
             <label class="form-label small" data-lang="avatarUrl">Avatar URL</label>
             <div class="input-group">
-              <input id="avatarUrlInput" class="form-control form-control-sm" data-placeholder-lang="avatarUrlPlaceholder" placeholder="https://... (fotoğraf/gif)">
+              <input id="avatarUrlInput" class="form-control form-control-sm" data-placeholder-lang="avatarUrlPlaceholder" placeholder="https://... (fotoÄŸraf/gif)">
               <button id="saveAvatarBtn" class="btn btn-sm btn-primary" data-lang="save">Kaydet</button>
             </div>
-            <div class="form-text" data-lang="avatarUrlHelp">URL boş kaydedilirse avatar kaldırılır.</div>
+            <div class="form-text" data-lang="avatarUrlHelp">URL boÅŸ kaydedilirse avatar kaldÄ±rÄ±lÄ±r.</div>
           </div>
           <div class="mt-2">
-            <label class="form-label small" data-lang="uploadFile">Veya dosya yükle</label>
+            <label class="form-label small" data-lang="uploadFile">Veya dosya yÃ¼kle</label>
             <form id="avatarUploadForm" class="d-flex gap-2">
               <input id="avatarFile" type="file" accept="image/*" class="form-control form-control-sm">
-              <button class="btn btn-sm btn-outline-light" type="submit" data-lang="upload">Yükle</button>
+              <button class="btn btn-sm btn-outline-light" type="submit" data-lang="upload">YÃ¼kle</button>
             </form>
           </div>
         </div>
@@ -145,15 +145,15 @@
         <!-- Favorites Section -->
         <div class="card mb-4">
           <div class="card-header">
-            <h5 class="mb-0" data-lang="myFavorites">Favori Albümlerim</h5>
+            <h5 class="mb-0" data-lang="myFavorites">Favori AlbÃ¼mlerim</h5>
           </div>
           <div class="card-body">
             <div id="favoritesContainer">
               <div class="text-center py-3">
                 <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Yükleniyor...</span>
+                  <span class="visually-hidden">YÃ¼kleniyor...</span>
                 </div>
-                <p class="mt-2 text-muted" data-lang="loadingFavorites">Favori albümleriniz yükleniyor...</p>
+                <p class="mt-2 text-muted" data-lang="loadingFavorites">Favori albÃ¼mleriniz yÃ¼kleniyor...</p>
               </div>
             </div>
           </div>
@@ -162,7 +162,7 @@
         <!-- My Posts Section -->
         <div class="card">
           <div class="card-header">
-            <h5 class="mb-0" data-lang="myPosts">Gönderilerim</h5>
+            <h5 class="mb-0" data-lang="myPosts">GÃ¶nderilerim</h5>
           </div>
           <div class="card-body">
         <div class="row g-3" id="myPosts"></div>
@@ -174,17 +174,100 @@
 
   <footer class="text-center py-4 mt-5">
     <div class="container">
-      <small class="text-muted">© <span id="year"></span> Nara Müzik — <span data-lang="allRightsReserved">Tüm hakları saklıdır.</span></small>
+      <small class="text-muted">Â© <span id="year"></span> Nara MÃ¼zik â€” <span data-lang="allRightsReserved">TÃ¼m haklarÄ± saklÄ±dÄ±r.</span></small>
     </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../js/app.js"></script>
+    <!-- Language files -->
+  <script>
+    // Load Turkish translations directly
+    window.translations = {
+      "home": "Ana Sayfa",
+      "about": "HakkÄ±nda",
+      "contact": "Ä°letiÅŸim",
+      "welcome": "Bloguma HoÅŸgeldin",
+      "subtitle": "MÃ¼zik, sanat ve kÃ¼ltÃ¼r Ã¼zerine",
+      "login": "GiriÅŸ",
+      "register": "KayÄ±t",
+      "logout": "Ã‡Ä±kÄ±ÅŸ",
+      "profile": "Profil",
+      "newPost": "Yeni GÃ¶nderi",
+      "search": "Ara...",
+      "notifications": "Bildirimler",
+      "saved": "Kaydedilenler",
+      "mod": "Mod",
+      "submit": "GÃ¶nder",
+      "title": "BaÅŸlÄ±k",
+      "content": "Ä°Ã§erik",
+      "category": "Kategori",
+      "mediaUrl": "FotoÄŸraf/GIF URL (opsiyonel)",
+      "linkUrl": "Harici Link (opsiyonel)",
+      "share": "PaylaÅŸ",
+      "popular": "En PopÃ¼ler",
+      "latest": "En Son Eklenenler",
+      "comments": "Yorumlar",
+      "like": "BeÄŸen",
+      "bookmark": "Kaydet",
+      "report": "Raporla",
+      "edit": "DÃ¼zenle",
+      "delete": "Sil",
+      "pin": "Sabitle",
+      "lock": "Kilitle",
+      "newMusic": "Yeni MÃ¼zik",
+      "industry": "EndÃ¼stri Haberleri",
+      "review": "DeÄŸerlendirme",
+      "album": "AlbÃ¼m Ä°nceleme",
+      "interview": "RÃ¶portajlar",
+      "event": "Etkinlikler",
+      "series": "Dizi & Filmler",
+      "loading": "YÃ¼kleniyor...",
+      "error": "Hata",
+      "success": "BaÅŸarÄ±lÄ±",
+      "cancel": "Ä°ptal",
+      "save": "Kaydet",
+      "close": "Kapat",
+      "send": "GÃ¶nder",
+      "name": "AdÄ±nÄ±z",
+      "email": "Email",
+      "password": "Parola",
+      "username": "KullanÄ±cÄ± AdÄ±",
+      "message": "MesajÄ±nÄ±z",
+      "writeComment": "Yorum yaz...",
+      "noPosts": "HenÃ¼z gÃ¶nderi yok",
+      "noComments": "HenÃ¼z yorum yok",
+      "loadMore": "Daha Fazla",
+      "allRightsReserved": "TÃ¼m haklarÄ± saklÄ±dÄ±r",
+      "avatarUrl": "Avatar URL",
+      "avatarUrlPlaceholder": "https://... (fotoÄŸraf/gif)",
+      "avatarUrlHelp": "URL boÅŸ kaydedilirse avatar kaldÄ±rÄ±lÄ±r.",
+      "uploadFile": "Veya dosya yÃ¼kle",
+      "upload": "YÃ¼kle",
+      "myPosts": "GÃ¶nderilerim",
+      "noPostsYet": "HenÃ¼z gÃ¶nderi yok",
+      "createFirstPost": "Ä°lk gÃ¶nderinizi oluÅŸturun",
+      "welcomeMessage": "Nara MÃ¼zik'e hoÅŸ geldiniz!",
+      "profileSettings": "Profil AyarlarÄ±",
+      "accountInfo": "Hesap Bilgileri",
+      "contactMessage": "Bize mesaj bÄ±rakÄ±n; evencreed hesabÄ±nÄ±n gelen kutusuna dÃ¼ÅŸecek.",
+      "popularAlbums": "PopÃ¼ler AlbÃ¼mler",
+      "popularAlbumsDesc": "En Ã§ok dinlenen ve tartÄ±ÅŸÄ±lan albÃ¼mleri keÅŸfedin",
+      "addComment": "Ekle",
+      "albumSearch": "AlbÃ¼m Ara",
+      "searchAlbum": "AlbÃ¼m adÄ± yazÄ±n...",
+      "searchResults": "Arama SonuÃ§larÄ±",
+      "myFavorites": "Favori AlbÃ¼mlerim",
+      "loadingFavorites": "Favori albÃ¼mleriniz yÃ¼kleniyor...",
+      "noFavorites": "HenÃ¼z favori albÃ¼mÃ¼nÃ¼z yok.",
+      "addFavorites": "AlbÃ¼m inceleme sayfasÄ±ndan favori albÃ¼mlerinizi ekleyebilirsiniz."
+    };
+  </script>
   <script src="../js/lang.js"></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
     const root = document.documentElement; const savedTheme = localStorage.getItem('theme') || 'dark';
-    function applyTheme(theme){ const nav = document.getElementById('mainNavbar'); if(theme==='light'){ root.setAttribute('data-theme','light'); nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light'); document.getElementById('themeToggle').textContent='🌙'; } else { root.removeAttribute('data-theme'); nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark'); document.getElementById('themeToggle').textContent='☀️'; } }
+    function applyTheme(theme){ const nav = document.getElementById('mainNavbar'); if(theme==='light'){ root.setAttribute('data-theme','light'); nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light'); document.getElementById('themeToggle').textContent='ðŸŒ™'; } else { root.removeAttribute('data-theme'); nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark'); document.getElementById('themeToggle').textContent='â˜€ï¸'; } }
     applyTheme(savedTheme);
     document.getElementById('themeToggle').addEventListener('click',()=>{ const next = root.getAttribute('data-theme')==='light' ? 'dark':'light'; localStorage.setItem('theme', next); applyTheme(next); });
 
@@ -218,9 +301,9 @@
       if (favorites.length === 0) {
         container.innerHTML = `
           <div class="text-center py-4">
-            <div class="text-muted mb-2">🎵</div>
-            <p class="text-muted mb-0" data-lang="noFavorites">Henüz favori albümünüz yok.</p>
-            <small class="text-muted" data-lang="addFavorites">Albüm inceleme sayfasından favori albümlerinizi ekleyebilirsiniz.</small>
+            <div class="text-muted mb-2">ðŸŽµ</div>
+            <p class="text-muted mb-0" data-lang="noFavorites">HenÃ¼z favori albÃ¼mÃ¼nÃ¼z yok.</p>
+            <small class="text-muted" data-lang="addFavorites">AlbÃ¼m inceleme sayfasÄ±ndan favori albÃ¼mlerinizi ekleyebilirsiniz.</small>
           </div>
         `;
         return;
@@ -250,8 +333,8 @@
                       </div>
                       <button class="btn btn-sm btn-outline-danger remove-favorite" 
                               data-album-id="${fav.albumId}" 
-                              title="Favorilerden Çıkar">
-                        ✕
+                              title="Favorilerden Ã‡Ä±kar">
+                        âœ•
                       </button>
                     </div>
                   </div>
@@ -286,12 +369,12 @@
         const res = await fetch(`${base}/api/users/${encodeURIComponent(user.id)}/posts`);
         const posts = await res.json();
         const el = document.getElementById('myPosts');
-        if(!posts.length){ el.innerHTML = '<p>Henüz gönderiniz yok.</p>'; return; }
+        if(!posts.length){ el.innerHTML = '<p>HenÃ¼z gÃ¶nderiniz yok.</p>'; return; }
         el.innerHTML = posts.map(p=>`
           <div class="col-12">
             <article class="card p-3">
               <h6 class="mb-1">${p.title}</h6>
-              <div class="meta mb-2 text-muted small">${new Date(p.createdAt).toLocaleString()} • ${p.category}</div>
+              <div class="meta mb-2 text-muted small">${new Date(p.createdAt).toLocaleString()} â€¢ ${p.category}</div>
               <p class="mb-0 text-truncate">${p.content}</p>
             </article>
           </div>
@@ -323,7 +406,7 @@
             </div>
           `).join('');
         } else {
-          sidebarPopular.innerHTML = '<div class="text-muted small">Henüz popüler gönderi yok.</div>';
+          sidebarPopular.innerHTML = '<div class="text-muted small">HenÃ¼z popÃ¼ler gÃ¶nderi yok.</div>';
         }
 
         // Load recent comments for sidebar
@@ -336,27 +419,27 @@
             <div class="item">
               <div>
                 <div class="fw-semibold">${comment.author || 'Anonim'}</div>
-                <div class="meta">"${comment.content.substring(0, 50)}${comment.content.length > 50 ? '...' : ''}" • ${new Date(comment.createdAt).toLocaleDateString('tr-TR')}</div>
+                <div class="meta">"${comment.content.substring(0, 50)}${comment.content.length > 50 ? '...' : ''}" â€¢ ${new Date(comment.createdAt).toLocaleDateString('tr-TR')}</div>
               </div>
             </div>
           `).join('');
         } else {
-          sidebarComments.innerHTML = '<div class="text-muted small">Henüz yorum yok.</div>';
+          sidebarComments.innerHTML = '<div class="text-muted small">HenÃ¼z yorum yok.</div>';
         }
 
       } catch (error) {
         console.error('Sidebar data loading error:', error);
         
         // Show error state
-        document.getElementById('sidebarPopularPosts').innerHTML = '<div class="text-muted small">Veri yüklenemedi.</div>';
-        document.getElementById('sidebarRecentComments').innerHTML = '<div class="text-muted small">Veri yüklenemedi.</div>';
+        document.getElementById('sidebarPopularPosts').innerHTML = '<div class="text-muted small">Veri yÃ¼klenemedi.</div>';
+        document.getElementById('sidebarRecentComments').innerHTML = '<div class="text-muted small">Veri yÃ¼klenemedi.</div>';
       }
     }
 
     // Load sidebar data on page load
     loadSidebarData();
 
-    // Avatar güncelle
+    // Avatar gÃ¼ncelle
     document.getElementById('saveAvatarBtn').addEventListener('click', async ()=>{
       const url = document.getElementById('avatarUrlInput').value.trim();
       try{
@@ -366,15 +449,15 @@
         if(data.error){ alert(data.error); return; }
         localStorage.setItem('user', JSON.stringify(data.user));
         document.getElementById('profAvatar').src = data.user.avatarUrl || ('https://ui-avatars.com/api/?name='+encodeURIComponent(data.user.username||'U')+'&background=0D8ABC&color=fff');
-        alert('Avatar güncellendi');
-      }catch(err){ console.error(err); alert('Avatar güncellenemedi'); }
+        alert('Avatar gÃ¼ncellendi');
+      }catch(err){ console.error(err); alert('Avatar gÃ¼ncellenemedi'); }
     });
 
-    // Dosya yükle
+    // Dosya yÃ¼kle
     document.getElementById('avatarUploadForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
       const file = document.getElementById('avatarFile').files[0];
-      if(!file){ alert('Dosya seçin'); return; }
+      if(!file){ alert('Dosya seÃ§in'); return; }
       const token = localStorage.getItem('token');
       const fd = new FormData(); fd.append('avatar', file);
       try{
@@ -383,11 +466,11 @@
         if(data.error){ alert(data.error); return; }
         document.getElementById('profAvatar').src = data.avatarUrl;
         const u = JSON.parse(localStorage.getItem('user')||'{}'); u.avatarUrl = data.avatarUrl; localStorage.setItem('user', JSON.stringify(u));
-        alert('Avatar yüklendi');
-      }catch(err){ console.error(err); alert('Yükleme başarısız'); }
+        alert('Avatar yÃ¼klendi');
+      }catch(err){ console.error(err); alert('YÃ¼kleme baÅŸarÄ±sÄ±z'); }
     });
 
-    // Dil seçimi lang.js tarafından yönetiliyor
+    // Dil seÃ§imi lang.js tarafÄ±ndan yÃ¶netiliyor
   </script>
 
   <!-- Login Modal -->
@@ -395,7 +478,7 @@
     <div class="modal-dialog">
       <form id="loginForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" data-lang="login">Giriş Yap</h5>
+          <h5 class="modal-title" data-lang="login">GiriÅŸ Yap</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -403,7 +486,7 @@
           <input name="password" type="password" class="form-control" data-placeholder-lang="password" placeholder="Parola" required>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100" data-lang="login">Giriş</button>
+          <button type="submit" class="btn btn-primary w-100" data-lang="login">GiriÅŸ</button>
         </div>
       </form>
     </div>
@@ -414,21 +497,22 @@
     <div class="modal-dialog">
       <form id="registerForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" data-lang="register">Kayıt Ol</h5>
+          <h5 class="modal-title" data-lang="register">KayÄ±t Ol</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input name="username" class="form-control mb-2" data-placeholder-lang="username" placeholder="Kullanıcı Adı" required>
+          <input name="username" class="form-control mb-2" data-placeholder-lang="username" placeholder="KullanÄ±cÄ± AdÄ±" required>
           <input name="email" type="email" class="form-control mb-2" data-placeholder-lang="email" placeholder="Email" required>
           <input name="password" type="password" class="form-control" data-placeholder-lang="password" placeholder="Parola" required>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success w-100" data-lang="register">Kayıt Ol</button>
+          <button type="submit" class="btn btn-success w-100" data-lang="register">KayÄ±t Ol</button>
         </div>
       </form>
     </div>
   </div>
 </body>
 </html>
+
 
 
