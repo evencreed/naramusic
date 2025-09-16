@@ -140,7 +140,7 @@
   <!-- Optional thin topbar -->
   <div class="topbar d-none d-lg-block">
     <div class="container">
-      <div class="me-auto small text-muted">Nara MÃ¼zik â€” MÃ¼zik tartÄ±ÅŸma topluluÄŸu</div>
+        <div class="me-auto small text-muted" data-translate>Nara MÃ¼zik â€” MÃ¼zik tartÄ±ÅŸma topluluÄŸu</div>
       <div class="d-flex gap-3">
         <a href="#about" class="text-muted">About</a>
         <a href="pages/contact.html" class="text-muted">Contact</a>
@@ -586,6 +586,7 @@
   </script>
   <script src="js/app.js?v=1"></script>
   <script src="js/lang.js?v=1"></script>
+  <script src="js/translation.js?v=1"></script>
 
   <script>
     (function(){
@@ -673,6 +674,21 @@
 
     // Load sidebar data on page load
     loadSidebarData();
+
+    // Language toggle functionality
+    const languageToggle = document.getElementById('language-toggle');
+    if (languageToggle) {
+      languageToggle.addEventListener('change', async (e) => {
+        const selectedLang = e.target.value;
+        if (selectedLang === 'tr') {
+          // Reset to original Turkish content
+          location.reload();
+        } else if (selectedLang === 'en') {
+          // Translate to English
+          await window.translationService.translatePage('en');
+        }
+      });
+    }
 
     // app.js will render popular and latest via API
 
