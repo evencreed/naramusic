@@ -2012,6 +2012,47 @@ app.get("/api/advanced-search", async (req, res) => {
   }
 });
 
+// Comments API endpoints
+app.get("/api/comments/recent", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 3;
+    
+    // Get recent comments from posts
+    const postsSnapshot = await db
+      .collection("posts")
+      .orderBy("createdAt", "desc")
+      .limit(50)
+      .get();
+    
+    const comments = [];
+    
+    for (const postDoc of postsSnapshot.docs) {
+      const postData = postDoc.data();
+      if (postData.comments && Array.isArray(postData.comments)) {
+        postData.comments.forEach(comment => {
+          comments.push({
+            id: comment.id || Math.random().toString(36).substr(2, 9),
+            postId: postDoc.id,
+            postTitle: postData.title,
+            author: comment.author || comment.authorName || 'Anonim',
+            content: comment.content || comment.text || '',
+            createdAt: comment.createdAt || comment.timestamp || new Date().toISOString()
+          });
+        });
+      }
+    }
+    
+    // Sort by creation date and limit
+    comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const recentComments = comments.slice(0, limit);
+    
+    res.json(recentComments);
+  } catch (err) {
+    console.error('Error fetching recent comments:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 //
 // 9) Start server
 //
