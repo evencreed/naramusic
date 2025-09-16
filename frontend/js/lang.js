@@ -4,6 +4,13 @@ let translations = {};
 // Dil dosyalarını yükle
 async function loadTranslations(lang) {
   try {
+    // First check if translations are already loaded in window object
+    if (window.translations && Object.keys(window.translations).length > 0) {
+      translations = window.translations;
+      console.log('Using pre-loaded translations');
+      return true;
+    }
+    
     // Determine the correct path based on current location
     const currentPath = window.location.pathname;
     let langPath;
