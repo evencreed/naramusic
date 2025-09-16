@@ -1,10 +1,4 @@
 {
-  "functions": {
-    "frontend/pages/**/*.html": {
-      "runtime": "edge"
-    }
-  },
-  "regions": ["iad1", "lhr1", "fra1", "nrt1", "syd1"],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://naramusic.onrender.com/api/$1" },
     { "source": "/(.*)", "destination": "/frontend/$1" }
