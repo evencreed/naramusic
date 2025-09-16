@@ -1,7 +1,8 @@
 {
+  "outputDirectory": ".",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://naramusic.onrender.com/api/$1" },
-    { "source": "/(.*)", "destination": "/frontend/$1" }
+    { "source": "/(.*)", "destination": "/$1" }
   ],
   "headers": [
     {
