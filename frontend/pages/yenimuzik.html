@@ -420,59 +420,102 @@
       try {
         const base = (typeof window !== 'undefined' && window.__API_BASE__) ? window.__API_BASE__ : (location.hostname.includes('localhost') ? 'http://localhost:4000' : 'https://naramusic.onrender.com');
         
-        // Load popular posts for sidebar
-        const popularRes = await fetch(`${base}/api/posts/popular?limit=3`);
-        const popularPosts = await popularRes.json();
+        console.log('Loading sidebar data from:', base);
         
-        const sidebarPopular = document.getElementById('sidebarPopularPosts');
-        if (popularPosts.length > 0) {
-          sidebarPopular.innerHTML = popularPosts.map(post => `
-            <div class="item">
-              <img src="${post.imageUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400&auto=format&fit=crop'}" alt="${post.title}" style="width: 50px; height: 50px; object-fit: cover;">
-              <div>
-                <div class="fw-semibold">${post.title}</div>
-                <div class="meta">${post.views || 0} okuma</div>
-              </div>
-            </div>
-          `).join('');
-        } else {
-          sidebarPopular.innerHTML = '<div class="text-muted small">Henüz popüler gönderi yok.</div>';
+        // Load popular posts for sidebar
+        try {
+          const popularRes = await fetch(`${base}/api/posts/popular?limit=3`);
+          let popularPosts = [];
+          
+          if (popularRes.ok) {
+            try {
+              popularPosts = await popularRes.json();
+              console.log('Popular posts loaded:', popularPosts.length);
+            } catch (error) {
+              console.error('Error parsing popular posts JSON:', error);
+              popularPosts = [];
+            }
+          } else {
+            console.warn('Popular posts API not available:', popularRes.status);
+          }
+          
+          const sidebarPopular = document.getElementById('sidebarPopularPosts');
+          if (sidebarPopular) {
+            if (popularPosts.length > 0) {
+              sidebarPopular.innerHTML = popularPosts.map(post => `
+                <div class="item">
+                  <img src="${post.imageUrl || post.mediaUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400&auto=format&fit=crop'}" alt="${post.title}" style="width: 50px; height: 50px; object-fit: cover;">
+                  <div>
+                    <div class="fw-semibold">${post.title}</div>
+                    <div class="meta">${post.views || 0} okuma</div>
+                  </div>
+                </div>
+              `).join('');
+            } else {
+              sidebarPopular.innerHTML = '<div class="text-muted small">Henüz popüler gönderi yok.</div>';
+            }
+          }
+        } catch (error) {
+          console.error('Error loading popular posts:', error);
+          const sidebarPopular = document.getElementById('sidebarPopularPosts');
+          if (sidebarPopular) {
+            sidebarPopular.innerHTML = '<div class="text-muted small">Popüler gönderiler yüklenemedi.</div>';
+          }
         }
 
         // Load recent comments for sidebar
-        const commentsRes = await fetch(`${base}/api/comments/recent?limit=3`);
-        let recentComments = [];
-        if (commentsRes.ok) {
-          try {
-            recentComments = await commentsRes.json();
-          } catch (error) {
-            console.error('Error parsing comments JSON:', error);
-            recentComments = [];
+        try {
+          const commentsRes = await fetch(`${base}/api/comments/recent?limit=3`);
+          let recentComments = [];
+          
+          if (commentsRes.ok) {
+            try {
+              recentComments = await commentsRes.json();
+              console.log('Recent comments loaded:', recentComments.length);
+            } catch (error) {
+              console.error('Error parsing comments JSON:', error);
+              recentComments = [];
+            }
+          } else {
+            console.warn('Comments API not available:', commentsRes.status);
           }
-        } else {
-          console.warn('Comments API not available:', commentsRes.status);
-        }
-        
-        const sidebarComments = document.getElementById('sidebarRecentComments');
-        if (recentComments.length > 0) {
-          sidebarComments.innerHTML = recentComments.map(comment => `
-            <div class="item">
-              <div>
-                <div class="fw-semibold">${comment.author || 'Anonim'}</div>
-                <div class="meta">"${comment.content.substring(0, 50)}${comment.content.length > 50 ? '...' : ''}" • ${new Date(comment.createdAt).toLocaleDateString('tr-TR')}</div>
-              </div>
-            </div>
-          `).join('');
-        } else {
-          sidebarComments.innerHTML = '<div class="text-muted small">Henüz yorum yok.</div>';
+          
+          const sidebarComments = document.getElementById('sidebarRecentComments');
+          if (sidebarComments) {
+            if (recentComments.length > 0) {
+              sidebarComments.innerHTML = recentComments.map(comment => `
+                <div class="item">
+                  <div>
+                    <div class="fw-semibold">${comment.author || 'Anonim'}</div>
+                    <div class="meta">"${comment.content.substring(0, 50)}${comment.content.length > 50 ? '...' : ''}" • ${new Date(comment.createdAt).toLocaleDateString('tr-TR')}</div>
+                  </div>
+                </div>
+              `).join('');
+            } else {
+              sidebarComments.innerHTML = '<div class="text-muted small">Henüz yorum yok.</div>';
+            }
+          }
+        } catch (error) {
+          console.error('Error loading recent comments:', error);
+          const sidebarComments = document.getElementById('sidebarRecentComments');
+          if (sidebarComments) {
+            sidebarComments.innerHTML = '<div class="text-muted small">Yorumlar yüklenemedi.</div>';
+          }
         }
 
       } catch (error) {
         console.error('Sidebar data loading error:', error);
         
         // Show error state
-        document.getElementById('sidebarPopularPosts').innerHTML = '<div class="text-muted small">Veri yüklenemedi.</div>';
-        document.getElementById('sidebarRecentComments').innerHTML = '<div class="text-muted small">Veri yüklenemedi.</div>';
+        const sidebarPopular = document.getElementById('sidebarPopularPosts');
+        const sidebarComments = document.getElementById('sidebarRecentComments');
+        
+        if (sidebarPopular) {
+          sidebarPopular.innerHTML = '<div class="text-muted small">Veri yüklenemedi.</div>';
+        }
+        if (sidebarComments) {
+          sidebarComments.innerHTML = '<div class="text-muted small">Veri yüklenemedi.</div>';
+        }
       }
     }
 

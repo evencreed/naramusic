@@ -5,13 +5,41 @@ let translations = {};
 async function loadTranslations(lang) {
   try {
     // Determine the correct path based on current location
-    const isInPages = window.location.pathname.includes('/pages/');
-    const langPath = isInPages ? `../lang/${lang}.json` : `lang/${lang}.json`;
+    const currentPath = window.location.pathname;
+    let langPath;
     
+    if (currentPath.includes('/pages/')) {
+      // We're in pages directory
+      langPath = `../lang/${lang}.json`;
+    } else if (currentPath === '/' || currentPath === '/index.html') {
+      // We're in root
+      langPath = `lang/${lang}.json`;
+    } else {
+      // Try both paths as fallback
+      langPath = `lang/${lang}.json`;
+    }
+    
+    console.log('Loading translations from:', langPath);
     const response = await fetch(langPath);
+    
     if (response.ok) {
       translations = await response.json();
+      console.log('Translations loaded successfully');
       return true;
+    } else {
+      console.warn('Failed to load translations from:', langPath, 'Status:', response.status);
+      
+      // Try alternative path if first attempt failed
+      if (langPath.startsWith('../')) {
+        const altPath = langPath.replace('../', '');
+        console.log('Trying alternative path:', altPath);
+        const altResponse = await fetch(altPath);
+        if (altResponse.ok) {
+          translations = await altResponse.json();
+          console.log('Translations loaded from alternative path');
+          return true;
+        }
+      }
     }
   } catch (error) {
     console.error('Error loading translations:', error);
