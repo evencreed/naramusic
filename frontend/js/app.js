@@ -4,6 +4,9 @@ const BACKEND_BASE = isLocalHost
   ? "http://localhost:4000"
   : "https://naramusic.onrender.com";
 
+// Alternative backend URL for fallback
+const BACKEND_ALTERNATIVE = "https://naramusic-backup.onrender.com";
+
 // Global state
 let CURRENT_LANG = localStorage.getItem("lang") || "tr";
 let CURRENT_USER = JSON.parse(localStorage.getItem("user") || "null");
@@ -103,30 +106,65 @@ function updateAuthUI() {
 }
 
 
-// API functions
-async function apiRequest(endpoint, options = {}) {
-  const url = `${BACKEND_BASE}${endpoint}`;
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(AUTH_TOKEN && { 'Authorization': `Bearer ${AUTH_TOKEN}` })
-    },
-    ...options
-  };
+// API functions with retry mechanism and fallback
+async function apiRequest(endpoint, options = {}, retries = 3) {
+  const urls = [BACKEND_BASE, BACKEND_ALTERNATIVE];
   
-  try {
-    const response = await fetch(url, config);
-    const data = await response.json();
+  for (let urlIndex = 0; urlIndex < urls.length; urlIndex++) {
+    const baseUrl = urls[urlIndex];
+    const url = `${baseUrl}${endpoint}`;
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(AUTH_TOKEN && { 'Authorization': `Bearer ${AUTH_TOKEN}` })
+      },
+      ...options
+    };
     
-    if (!response.ok) {
-      throw new Error(data.message || 'API isteği başarısız');
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log(`Trying ${baseUrl}${endpoint} (attempt ${attempt}/${retries})`);
+        const response = await fetch(url, config);
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log(`Success with ${baseUrl}`);
+        return data;
+        
+      } catch (error) {
+        console.error(`API Error (${baseUrl}, attempt ${attempt}/${retries}):`, error);
+        
+        // Check if it's a network error that might be retryable
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          if (attempt < retries) {
+            console.log(`Retrying ${baseUrl} in ${attempt * 1000}ms...`);
+            await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+            continue;
+          }
+        }
+        
+        // If this is the last attempt for this URL, try next URL
+        if (attempt === retries) {
+          if (urlIndex < urls.length - 1) {
+            console.log(`Switching to alternative backend: ${urls[urlIndex + 1]}`);
+            break; // Try next URL
+          } else {
+            // This was the last URL, show error
+            if (error.message.includes('HTTP2_PROTOCOL_ERROR') || error.message.includes('Failed to fetch')) {
+              showAlert('Sunucu geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra tekrar deneyin.', 'warning');
+            } else {
+              showAlert('Sunucuya bağlanırken hata oluştu. Lütfen sayfayı yenileyin.', 'danger');
+            }
+          }
+        }
+        
+        throw error;
+      }
     }
-    
-    return data;
-  } catch (error) {
-    console.error('API Error:', error);
-    showAlert('Sunucuya bağlanırken hata oluştu. Lütfen sayfayı yenileyin.', 'danger');
-    throw error;
   }
 }
 
