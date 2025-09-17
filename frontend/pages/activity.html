@@ -1,30 +1,27 @@
 ﻿<!doctype html>
-<html lang="tr">
+<html lang="tr" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Aktivite Akışı — Nara Müzik</title>
-
-  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Site CSS -->
-  <link rel="stylesheet" href="../css/styles.css">
-
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css?v=3">
   <style>
     .activity-section { margin-bottom: 2rem; }
     .activity-item { 
       padding: 1rem; 
-      border-bottom: 1px solid var(--border); 
+      border-bottom: 1px solid var(--border-primary); 
       transition: background-color 0.2s ease;
     }
-    .activity-item:hover { background-color: var(--glass); }
-    .activity-time { font-size: 0.85rem; color: var(--muted); }
+    .activity-item:hover { background-color: var(--bg-hover); }
+    .activity-time { font-size: 0.85rem; color: var(--text-muted); }
     .notification-badge { 
       position: absolute; 
       top: -5px; 
       right: -5px; 
-      background: var(--accent); 
-      color: var(--accent-contrast); 
+      background: var(--accent-primary); 
+      color: white; 
       border-radius: 50%; 
       width: 20px; 
       height: 20px; 
@@ -36,11 +33,28 @@
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-dark mainnav" id="mainNavbar">
+  <!-- Topbar -->
+  <div class="topbar d-none d-lg-block">
+    <div class="container">
+      <div class="me-auto small text-muted">Nara Müzik — Müzik tartışma topluluğu</div>
+      <div class="d-flex gap-3">
+        <a href="#about" class="text-muted">Hakkında</a>
+        <a href="contact.html" class="text-muted">İletişim</a>
+        <a href="submit.html" class="text-muted">Gönder</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
     <div class="container-fluid">
       <div class="d-flex align-items-center">
-        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">☰</button>
+        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">
+          <i class="fas fa-bars"></i>
+        </button>
         <a class="navbar-brand me-3" href="../index.html">Nara Müzik</a>
+
+        <!-- Desktop links -->
         <div class="d-none d-lg-flex align-items-center gap-2">
           <a class="nav-link px-2" href="yenimuzik.html">Yeni Müzik</a>
           <a class="nav-link px-2" href="endustri.html">Endüstri Haberleri</a>
@@ -51,16 +65,30 @@
           <a class="nav-link px-2" href="dizifilm.html">Dizi & Filmler</a>
         </div>
       </div>
+
       <div class="d-flex ms-auto align-items-center gap-2">
+        <!-- Search -->
         <div class="d-none d-md-block">
-          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
+          <input id="globalSearch" class="form-control form-control-sm" style="width:220px" placeholder="Ara...">
         </div>
-        <select id="language-toggle">
+
+        <!-- Language Toggle -->
+        <select id="language-toggle" class="form-select form-select-sm" style="width: auto;">
           <option value="en">EN</option>
-          <option value="tr">TR</option>
+          <option value="tr" selected>TR</option>
         </select>
-        <button id="themeToggle" class="btn btn-outline-light btn-sm">🌙</button>
-        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">Yeni Gönderi</button>
+
+        <!-- Theme Toggle -->
+        <button id="themeToggle" class="btn btn-outline-light btn-sm">
+          <i class="fas fa-moon"></i>
+        </button>
+
+        <!-- New Post Button -->
+        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">
+          <i class="fas fa-plus me-1"></i>Yeni Gönderi
+        </button>
+
+        <!-- Auth Buttons -->
         <div id="authButtons" class="d-flex gap-1">
           <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
           <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
@@ -68,6 +96,29 @@
       </div>
     </div>
   </nav>
+
+  <!-- Mobile Sidebar -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="sideMenu">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Menü</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+      <nav class="nav flex-column">
+        <a class="nav-link" href="yenimuzik.html">Yeni Müzik</a>
+        <a class="nav-link" href="endustri.html">Endüstri Haberleri</a>
+        <a class="nav-link" href="degerlendirme.html">Değerlendirme</a>
+        <a class="nav-link" href="album.html">Albüm İnceleme</a>
+        <a class="nav-link" href="roportaj.html">Röportajlar</a>
+        <a class="nav-link" href="etkinlik.html">Etkinlikler</a>
+        <a class="nav-link" href="dizifilm.html">Dizi & Filmler</a>
+        <hr>
+        <a class="nav-link" href="profil.html" id="savedLink" style="display: none;">Profil</a>
+        <a class="nav-link" href="messages.html" id="modLink" style="display: none;">Mesajlar</a>
+        <a class="nav-link" href="admin.html" id="modLink" style="display: none;">Yönetim</a>
+      </nav>
+    </div>
+  </div>
 
   <main class="container mt-4" id="activityMain">
     <div class="d-flex align-items-center justify-content-center" style="min-height:50vh">
@@ -78,7 +129,7 @@
           <div class="d-flex justify-content-center gap-2">
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş Yap</button>
             <a class="btn btn-outline-light" href="../index.html">Ana sayfa</a>
-      </div>
+          </div>
         </div>
       </div>
     </div>
@@ -107,8 +158,8 @@
           <h5 class="mb-3">Kaydedilen Gönderiler</h5>
           <div id="bookmarksList">
             <!-- Bookmarks will be loaded here -->
-      </div>
-    </div>
+          </div>
+        </div>
 
         <!-- My Posts -->
         <div class="activity-section">
@@ -116,31 +167,31 @@
           <div id="myPostsList">
             <!-- User's posts will be loaded here -->
           </div>
-     </div>
+        </div>
 
         <!-- Latest Posts -->
         <div class="activity-section">
           <h5 class="mb-3">Son Gönderiler</h5>
           <div id="latestPostsList">
             <!-- Latest posts will be loaded here -->
-       </div>
-     </div>
-   </div>
+          </div>
+        </div>
+      </div>
 
       <div class="col-lg-4">
         <div class="card">
           <div class="card-header">
             <h6 class="mb-0">Hızlı Erişim</h6>
-     </div>
-       <div class="card-body">
+          </div>
+          <div class="card-body">
             <div class="d-grid gap-2">
               <a href="profil.html" class="btn btn-outline-primary">Profilim</a>
               <a href="messages.html" class="btn btn-outline-secondary">Mesajlar</a>
               <a href="playlists.html" class="btn btn-outline-info">Çalma Listelerim</a>
               <a href="analitik.html" class="btn btn-outline-warning">Analitiklerim</a>
-       </div>
-     </div>
-   </div>
+            </div>
+          </div>
+        </div>
 
         <div class="card mt-3">
           <div class="card-header">
@@ -160,16 +211,64 @@
                 <div class="h5 mb-0" id="totalLikes">0</div>
                 <small class="text-muted">Beğeni</small>
               </div>
-       </div>
-     </div>
-       </div>
-     </div>
-   </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </template>
 
-  <footer class="text-center py-4 mt-5">
+  <!-- Footer -->
+  <footer class="footer py-5 mt-5">
     <div class="container">
-      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
+      <div class="row">
+        <div class="col-lg-4 mb-4">
+          <h5 class="mb-3">Nara Müzik</h5>
+          <p class="text-muted">Müzik tutkunları için özel olarak tasarlanmış topluluk platformu. Yeni müzikler, röportajlar ve etkinlikler.</p>
+          <div class="d-flex gap-3">
+            <a href="#" class="text-muted"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-muted"><i class="fab fa-facebook"></i></a>
+            <a href="#" class="text-muted"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="text-muted"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-2 mb-4">
+          <h6 class="mb-3">Kategoriler</h6>
+          <ul class="list-unstyled">
+            <li><a href="yenimuzik.html" class="text-muted">Yeni Müzik</a></li>
+            <li><a href="endustri.html" class="text-muted">Endüstri</a></li>
+            <li><a href="degerlendirme.html" class="text-muted">Değerlendirme</a></li>
+            <li><a href="album.html" class="text-muted">Albümler</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-2 mb-4">
+          <h6 class="mb-3">Topluluk</h6>
+          <ul class="list-unstyled">
+            <li><a href="roportaj.html" class="text-muted">Röportajlar</a></li>
+            <li><a href="etkinlik.html" class="text-muted">Etkinlikler</a></li>
+            <li><a href="dizifilm.html" class="text-muted">Dizi & Film</a></li>
+            <li><a href="contact.html" class="text-muted">İletişim</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-4 mb-4">
+          <h6 class="mb-3">Bülten</h6>
+          <p class="text-muted small">Yeni gönderiler ve etkinlikler hakkında bilgi almak için e-posta adresinizi girin.</p>
+          <div class="input-group">
+            <input type="email" class="form-control" placeholder="E-posta adresiniz">
+            <button class="btn btn-primary" type="button">Abone Ol</button>
+          </div>
+        </div>
+      </div>
+      <hr class="my-4">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <small class="text-muted">© <span id="year"></span> Nara Müzik. Tüm hakları saklıdır.</small>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <a href="#" class="text-muted small me-3">Gizlilik Politikası</a>
+          <a href="#" class="text-muted small">Kullanım Şartları</a>
+        </div>
+      </div>
     </div>
   </footer>
 
@@ -243,28 +342,28 @@
   <script src="../js/lang.js"></script>
   <script>
   (async function(){
-      'use strict';
-      document.getElementById('year').textContent = new Date().getFullYear();
+    'use strict';
+    document.getElementById('year').textContent = new Date().getFullYear();
 
     // Theme toggle
-      const themeToggle = document.getElementById('themeToggle');
-      const root = document.documentElement;
-      function applyTheme(theme){
-        const nav = document.getElementById('mainNavbar');
-        if(theme === 'light'){
-          root.setAttribute('data-theme','light');
-        themeToggle.textContent = '🌙';
+    const themeToggle = document.getElementById('themeToggle');
+    const root = document.documentElement;
+    function applyTheme(theme){
+      const nav = document.getElementById('mainNavbar');
+      if(theme === 'light'){
+        root.setAttribute('data-theme','light');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
         nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light');
-        } else {
-          root.removeAttribute('data-theme');
-        themeToggle.textContent = '☀️';
+      } else {
+        root.removeAttribute('data-theme');
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
         nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark');
       }
-      }
-      const savedTheme = localStorage.getItem('theme') || 'dark';
-      applyTheme(savedTheme);
-      themeToggle.addEventListener('click', () => {
-        const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    }
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(savedTheme);
+    themeToggle.addEventListener('click', () => {
+      const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
       localStorage.setItem('theme', next); applyTheme(next);
     });
 
@@ -278,7 +377,7 @@
     }
 
     // Load activity template
-      const main = document.getElementById('activityMain');
+    const main = document.getElementById('activityMain');
     const template = document.getElementById('activityTpl');
     main.innerHTML = template.innerHTML;
     
@@ -305,7 +404,7 @@
             <strong>Yeni Yorum</strong>
             <p class="mb-1">"Taylor Swift Röportajı" gönderinize yorum yapıldı</p>
             <small class="activity-time">5 saat önce</small>
-                </div>
+          </div>
         </div>
       </div>
       <div class="list-group-item activity-item">
@@ -314,15 +413,15 @@
             <strong>Takip Bildirimi</strong>
             <p class="mb-1">@muziksever sizi takip etmeye başladı</p>
             <small class="activity-time">1 gün önce</small>
-              </div>
-            </div>
           </div>
-        `;
+        </div>
+      </div>
+    `;
     
     // Mock bookmarks
     document.getElementById('bookmarksList').innerHTML = `
       <div class="card mb-2">
-              <div class="card-body">
+        <div class="card-body">
           <h6 class="card-title">En İyi Rock Albümleri 2024</h6>
           <p class="card-text text-muted small">Bu yıl çıkan en iyi rock albümlerini inceliyoruz...</p>
           <small class="text-muted">3 gün önce kaydedildi</small>
@@ -341,11 +440,11 @@
             <div>
               <span class="badge bg-primary me-1">12 beğeni</span>
               <span class="badge bg-secondary">5 yorum</span>
-                </div>
-              </div>
             </div>
           </div>
-        `;
+        </div>
+      </div>
+    `;
     
     // Mock latest posts
     document.getElementById('latestPostsList').innerHTML = `
@@ -355,10 +454,10 @@
           <p class="card-text text-muted small">Bu hafta çıkan dikkat çeken albümler...</p>
           <small class="text-muted">1 saat önce • @muziksever</small>
         </div>
-              </div>
+      </div>
     `;
     
-    })();
+  })();
   </script>
 </body>
 </html>

@@ -19,7 +19,7 @@
   <meta name="keywords" content="müzik, müzik forumu, müzik haberleri, müzik analizi, müzik topluluğu, yeni müzik, albüm inceleme">
 
   <!-- Site CSS -->
-  <link rel="stylesheet" href="css/styles.css?v=2">
+  <link rel="stylesheet" href="css/styles.css?v=3">
 </head>
 <body>
 
@@ -57,602 +57,439 @@
       </div>
 
       <div class="d-flex ms-auto align-items-center gap-2">
+        <!-- Search -->
         <div class="d-none d-md-block">
-          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
+          <input id="globalSearch" class="form-control form-control-sm" style="width:220px" placeholder="Ara...">
         </div>
 
+        <!-- Language Toggle -->
         <select id="language-toggle" class="form-select form-select-sm" style="width: auto;">
           <option value="en">EN</option>
           <option value="tr" selected>TR</option>
         </select>
 
+        <!-- Theme Toggle -->
         <button id="themeToggle" class="btn btn-outline-light btn-sm">
           <i class="fas fa-moon"></i>
         </button>
-        
+
+        <!-- New Post Button -->
         <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">
           <i class="fas fa-plus me-1"></i>Yeni Gönderi
         </button>
 
+        <!-- Auth Buttons -->
         <div id="authButtons" class="d-flex gap-1">
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">
-            <i class="fas fa-sign-in-alt me-1"></i>Giriş
-          </button>
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">
-            <i class="fas fa-user-plus me-1"></i>Kayıt
-          </button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
         </div>
-        
-        <div class="dropdown">
-          <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-bell me-1"></i>Bildirimler
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end" style="min-width: 320px; max-height: 360px; overflow:auto" aria-labelledby="notifDropdownBtn" id="notifMenu">
-            <li class="px-3 py-2 text-muted small">Oturum açın veya bildiriminiz yok.</li>
-          </ul>
-        </div>
-        
-        <a href="pages/submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink">
-          <i class="fas fa-bookmark me-1"></i>Kaydedilenler
-        </a>
-        <a href="pages/mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink">
-          <i class="fas fa-shield-alt me-1"></i>Mod
-        </a>
       </div>
     </div>
   </nav>
 
-  <!-- Offcanvas sidebar for small screens -->
+  <!-- Mobile Sidebar -->
   <div class="offcanvas offcanvas-start" tabindex="-1" id="sideMenu">
     <div class="offcanvas-header">
-      <h5 class="offcanvas-title">Kategoriler</h5>
+      <h5 class="offcanvas-title">Menü</h5>
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body">
-      <ul class="list-unstyled mb-0">
-        <li><a href="pages/yenimuzik.html" class="d-block py-2 text-decoration-none">Yeni Müzik</a></li>
-        <li><a href="pages/endustri.html" class="d-block py-2 text-decoration-none">Endüstri Haberleri</a></li>
-        <li><a href="pages/degerlendirme.html" class="d-block py-2 text-decoration-none">Değerlendirme</a></li>
-        <li><a href="pages/album.html" class="d-block py-2 text-decoration-none">Albüm İnceleme</a></li>
-        <li><a href="pages/roportaj.html" class="d-block py-2 text-decoration-none">Röportajlar</a></li>
-        <li><a href="pages/etkinlik.html" class="d-block py-2 text-decoration-none">Etkinlikler</a></li>
-        <li><a href="pages/dizifilm.html" class="d-block py-2 text-decoration-none">Dizi ve Filmler</a></li>
-      </ul>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="pages/yenimuzik.html">Yeni Müzik</a>
+        <a class="nav-link" href="pages/endustri.html">Endüstri Haberleri</a>
+        <a class="nav-link" href="pages/degerlendirme.html">Değerlendirme</a>
+        <a class="nav-link" href="pages/album.html">Albüm İnceleme</a>
+        <a class="nav-link" href="pages/roportaj.html">Röportajlar</a>
+        <a class="nav-link" href="pages/etkinlik.html">Etkinlikler</a>
+        <a class="nav-link" href="pages/dizifilm.html">Dizi & Filmler</a>
+        <hr>
+        <a class="nav-link" href="pages/profil.html" id="savedLink" style="display: none;">Profil</a>
+        <a class="nav-link" href="pages/messages.html" id="modLink" style="display: none;">Mesajlar</a>
+        <a class="nav-link" href="pages/admin.html" id="modLink" style="display: none;">Yönetim</a>
+      </nav>
     </div>
   </div>
 
-  <!-- HERO (carousel) -->
-  <section class="hero container mt-4">
-    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
-      <div class="carousel-inner rounded">
-        <div class="carousel-item active" id="heroPinnedSlide">
-          <img id="heroPinnedImg" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1600&auto=format&fit=crop" class="d-block w-100" alt="hero1">
-          <div class="carousel-caption text-start">
-            <h3 id="heroPinnedTitle">Öne Çıkan</h3>
-            <p id="heroPinnedExcerpt" class="d-none d-md-block">Toplulukta sabitlenmiş gönderi burada vurgulanır.</p>
-            <a id="heroPinnedLink" href="#" class="btn btn-sm btn-outline-light">İncele</a>
+  <!-- Hero Section -->
+  <section class="hero-section py-5">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-6">
+          <h1 class="display-4 fw-bold mb-4">Müzik Dünyasının Kalbi</h1>
+          <p class="lead mb-4">Yeni çıkan albümler, röportajlar, etkinlikler ve müzik analizleri. Müzik tutkunları için özel olarak tasarlanmış topluluk platformu.</p>
+          <div class="d-flex gap-3 flex-wrap">
+            <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#createPostModal">
+              <i class="fas fa-plus me-2"></i>Gönderi Oluştur
+            </button>
+            <a href="#latestPosts" class="btn btn-outline-primary btn-lg">
+              <i class="fas fa-music me-2"></i>Keşfet
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="hero-image">
+            <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop" 
+                 alt="Müzik Topluluğu" class="img-fluid rounded shadow-lg">
           </div>
         </div>
       </div>
-
-      <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-      </button>
     </div>
   </section>
 
-  <!-- Main 2-column layout -->
-  <main class="container mt-4">
-    <div class="row g-4">
-      <!-- LEFT: posts -->
-      <div class="col-lg-8 content-left">
-        <section>
-          <h5 class="mb-3">
-            <i class="fas fa-fire me-2"></i>En Popüler
-          </h5>
-          <div class="row g-3 mb-4" id="popularPosts">
-            <div class="col-12 text-center py-4">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Yükleniyor...</span>
+  <!-- Featured Post -->
+  <section class="featured-post py-5" id="heroPinnedSlide">
+    <div class="container">
+      <div class="card border-0 shadow-lg">
+        <div class="row g-0">
+          <div class="col-md-4">
+            <img id="heroPinnedImg" src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=400&auto=format&fit=crop" 
+                 class="img-fluid h-100 object-cover" alt="Öne Çıkan Gönderi">
+          </div>
+          <div class="col-md-8">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <span class="badge bg-primary me-2">Öne Çıkan</span>
+                <small class="text-muted">Bugün</small>
               </div>
-              <div class="small text-muted mt-2">Popüler gönderiler yükleniyor...</div>
+              <h2 id="heroPinnedTitle" class="card-title h3 mb-3">Yeni Müzik Keşfet</h2>
+              <p id="heroPinnedExcerpt" class="card-text text-muted mb-4">En yeni çıkan albümler ve single'lar hakkında detaylı incelemeler ve tartışmalar.</p>
+              <a id="heroPinnedLink" href="#" class="btn btn-primary">
+                <i class="fas fa-arrow-right me-2"></i>Devamını Oku
+              </a>
             </div>
           </div>
-        </section>
-
-        <section>
-          <h5 class="mb-3">
-            <i class="fas fa-clock me-2"></i>En Son Eklenenler
-          </h5>
-          <div class="row g-3" id="latestPosts">
-            <div class="col-12 text-center py-4">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Yükleniyor...</span>
-              </div>
-              <div class="small text-muted mt-2">Son gönderiler yükleniyor...</div>
-            </div>
-          </div>
-          <div class="text-center mt-3">
-            <button id="loadMoreLatest" class="btn btn-outline-light btn-sm">
-              <i class="fas fa-plus me-1"></i>Daha Fazla
-            </button>
-          </div>
-        </section>
+        </div>
       </div>
+    </div>
+  </section>
 
-      <!-- RIGHT: sidebar -->
-      <aside class="col-lg-4 sidebar">
-        <div class="widget">
-          <h6>
-            <i class="fas fa-chart-line me-2"></i>Popüler
-          </h6>
-          <div class="small-list" id="sidebarPopularPosts">
-            <div class="text-center py-3">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">Yükleniyor...</span>
+  <!-- Main Content -->
+  <main class="main-content py-5">
+    <div class="container">
+      <div class="row">
+        <!-- Left Column - Posts -->
+        <div class="col-lg-8">
+          <!-- Latest Posts -->
+          <section id="latestPosts" class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h2 class="h3 mb-0">Son Gönderiler</h2>
+              <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="sortFilter" id="sortLatest" checked>
+                <label class="btn btn-outline-primary" for="sortLatest">En Yeni</label>
+                <input type="radio" class="btn-check" name="sortFilter" id="sortPopular">
+                <label class="btn btn-outline-primary" for="sortPopular">Popüler</label>
+                <input type="radio" class="btn-check" name="sortFilter" id="sortTrending">
+                <label class="btn btn-outline-primary" for="sortTrending">Trend</label>
               </div>
-              <div class="small text-muted mt-2">Popüler gönderiler yükleniyor...</div>
             </div>
-          </div>
+            <div id="latestPostsList" class="row g-4">
+              <!-- Posts will be loaded here -->
+            </div>
+            <div class="text-center mt-4">
+              <button id="loadMoreLatest" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-plus me-2"></i>Daha Fazla Yükle
+              </button>
+            </div>
+          </section>
         </div>
 
-        <div class="widget">
-          <h6>
-            <i class="fas fa-comments me-2"></i>Son Yorumlar
-          </h6>
-          <div class="small-list" id="sidebarRecentComments">
-            <div class="text-center py-3">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">Yükleniyor...</span>
+        <!-- Right Column - Sidebar -->
+        <div class="col-lg-4">
+          <!-- Popular Posts -->
+          <section class="mb-5">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">
+                  <i class="fas fa-fire me-2 text-danger"></i>Popüler Gönderiler
+                </h5>
               </div>
-              <div class="small text-muted mt-2">Son yorumlar yükleniyor...</div>
+              <div class="card-body" id="popularPosts">
+                <!-- Popular posts will be loaded here -->
+              </div>
             </div>
-          </div>
-        </div>
+          </section>
 
-        <div class="widget">
-          <h6>
-            <i class="fas fa-folder me-2"></i>Kategoriler
-          </h6>
-          <div class="d-flex flex-wrap gap-2">
-            <a href="pages/yenimuzik.html" class="badge bg-secondary text-light">Yeni Müzik</a>
-            <a href="pages/endustri.html" class="badge bg-secondary text-light">Endüstri</a>
-            <a href="pages/degerlendirme.html" class="badge bg-secondary text-light">Değerlendirme</a>
-            <a href="pages/album.html" class="badge bg-secondary text-light">Albüm</a>
-            <a href="pages/roportaj.html" class="badge bg-secondary text-light">Röportaj</a>
-            <a href="pages/etkinlik.html" class="badge bg-secondary text-light">Etkinlik</a>
-            <a href="pages/dizifilm.html" class="badge bg-secondary text-light">Dizi&Film</a>
-          </div>
-        </div>
+          <!-- Categories -->
+          <section class="mb-5">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">
+                  <i class="fas fa-tags me-2 text-primary"></i>Kategoriler
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="d-grid gap-2">
+                  <a href="pages/yenimuzik.html" class="btn btn-outline-primary btn-sm text-start">
+                    <i class="fas fa-music me-2"></i>Yeni Müzik
+                  </a>
+                  <a href="pages/endustri.html" class="btn btn-outline-primary btn-sm text-start">
+                    <i class="fas fa-industry me-2"></i>Endüstri Haberleri
+                  </a>
+                  <a href="pages/degerlendirme.html" class="btn btn-outline-primary btn-sm text-start">
+                    <i class="fas fa-star me-2"></i>Değerlendirme
+                  </a>
+                  <a href="pages/album.html" class="btn btn-outline-primary btn-sm text-start">
+                    <i class="fas fa-compact-disc me-2"></i>Albüm İnceleme
+                  </a>
+                  <a href="pages/roportaj.html" class="btn btn-outline-primary btn-sm text-start">
+                    <i class="fas fa-microphone me-2"></i>Röportajlar
+                  </a>
+                  <a href="pages/etkinlik.html" class="btn btn-outline-primary btn-sm text-start">
+                    <i class="fas fa-calendar me-2"></i>Etkinlikler
+                  </a>
+                  <a href="pages/dizifilm.html" class="btn btn-outline-primary btn-sm text-start">
+                    <i class="fas fa-tv me-2"></i>Dizi & Filmler
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
 
-        <div class="widget text-center">
-          <h6>
-            <i class="fas fa-users me-2"></i>Topluluk
-          </h6>
-          <p class="small text-muted mb-0">Üyeler katılıp gönderi paylaşabilir. Giriş/Kayıt ile başlayın.</p>
-          <div class="mt-2">
-            <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#registerModal">
-              <i class="fas fa-user-plus me-1"></i>Üye Ol
-            </button>
-          </div>
+          <!-- Quick Stats -->
+          <section class="mb-5">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">
+                  <i class="fas fa-chart-bar me-2 text-success"></i>İstatistikler
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="row text-center">
+                  <div class="col-4">
+                    <div class="h4 mb-0 text-primary" id="totalPosts">0</div>
+                    <small class="text-muted">Gönderi</small>
+                  </div>
+                  <div class="col-4">
+                    <div class="h4 mb-0 text-success" id="totalUsers">0</div>
+                    <small class="text-muted">Kullanıcı</small>
+                  </div>
+                  <div class="col-4">
+                    <div class="h4 mb-0 text-warning" id="totalComments">0</div>
+                    <small class="text-muted">Yorum</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-      </aside>
+      </div>
     </div>
   </main>
 
   <!-- Footer -->
-  <footer class="text-center py-4 mt-5">
+  <footer class="footer py-5 mt-5">
     <div class="container">
-      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
+      <div class="row">
+        <div class="col-lg-4 mb-4">
+          <h5 class="mb-3">Nara Müzik</h5>
+          <p class="text-muted">Müzik tutkunları için özel olarak tasarlanmış topluluk platformu. Yeni müzikler, röportajlar ve etkinlikler.</p>
+          <div class="d-flex gap-3">
+            <a href="#" class="text-muted"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-muted"><i class="fab fa-facebook"></i></a>
+            <a href="#" class="text-muted"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="text-muted"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-2 mb-4">
+          <h6 class="mb-3">Kategoriler</h6>
+          <ul class="list-unstyled">
+            <li><a href="pages/yenimuzik.html" class="text-muted">Yeni Müzik</a></li>
+            <li><a href="pages/endustri.html" class="text-muted">Endüstri</a></li>
+            <li><a href="pages/degerlendirme.html" class="text-muted">Değerlendirme</a></li>
+            <li><a href="pages/album.html" class="text-muted">Albümler</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-2 mb-4">
+          <h6 class="mb-3">Topluluk</h6>
+          <ul class="list-unstyled">
+            <li><a href="pages/roportaj.html" class="text-muted">Röportajlar</a></li>
+            <li><a href="pages/etkinlik.html" class="text-muted">Etkinlikler</a></li>
+            <li><a href="pages/dizifilm.html" class="text-muted">Dizi & Film</a></li>
+            <li><a href="pages/contact.html" class="text-muted">İletişim</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-4 mb-4">
+          <h6 class="mb-3">Bülten</h6>
+          <p class="text-muted small">Yeni gönderiler ve etkinlikler hakkında bilgi almak için e-posta adresinizi girin.</p>
+          <div class="input-group">
+            <input type="email" class="form-control" placeholder="E-posta adresiniz">
+            <button class="btn btn-primary" type="button">Abone Ol</button>
+          </div>
+        </div>
+      </div>
+      <hr class="my-4">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <small class="text-muted">© <span id="year"></span> Nara Müzik. Tüm hakları saklıdır.</small>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <a href="#" class="text-muted small me-3">Gizlilik Politikası</a>
+          <a href="#" class="text-muted small">Kullanım Şartları</a>
+        </div>
+      </div>
     </div>
   </footer>
 
-  <!-- About section -->
-  <section id="about" class="py-5 border-top" style="border-color: var(--border) !important;">
-    <div class="container">
-      <h5 class="mb-2">Hakkında</h5>
-      <p class="text-muted mb-0">Nara Müzik, topluluk odaklı bir müzik platformudur. Üyeler yeni parçaları, röportajları ve etkinlikleri paylaşır; biz de keşfi kolaylaştıran sade bir arayüz sunarız.</p>
-    </div>
-  </section>
-
-  <!-- Modals (Login / Register / Create Post) -->
+  <!-- Modals -->
+  <!-- Login Modal -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <form id="loginForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
-            <i class="fas fa-sign-in-alt me-2"></i>Giriş Yap
-          </h5>
+          <h5 class="modal-title">Giriş Yap</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
-          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+          <div class="mb-3">
+            <label for="loginEmail" class="form-label">E-posta</label>
+            <input type="email" class="form-control" id="loginEmail" name="email" required>
+          </div>
+          <div class="mb-3">
+            <label for="loginPassword" class="form-label">Parola</label>
+            <input type="password" class="form-control" id="loginPassword" name="password" required>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="rememberMe">
+            <label class="form-check-label" for="rememberMe">Beni hatırla</label>
+          </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">
-            <i class="fas fa-sign-in-alt me-1"></i>Giriş
-          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="submit" class="btn btn-primary">Giriş Yap</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- Register Modal -->
   <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <form id="registerForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
-            <i class="fas fa-user-plus me-2"></i>Kayıt Ol
-          </h5>
+          <h5 class="modal-title">Kayıt Ol</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input name="username" class="form-control mb-2" placeholder="Kullanıcı Adı" required>
-          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
-          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+          <div class="mb-3">
+            <label for="registerUsername" class="form-label">Kullanıcı Adı</label>
+            <input type="text" class="form-control" id="registerUsername" name="username" required>
+          </div>
+          <div class="mb-3">
+            <label for="registerEmail" class="form-label">E-posta</label>
+            <input type="email" class="form-control" id="registerEmail" name="email" required>
+          </div>
+          <div class="mb-3">
+            <label for="registerPassword" class="form-label">Parola</label>
+            <input type="password" class="form-control" id="registerPassword" name="password" required>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+            <label class="form-check-label" for="agreeTerms">
+              <a href="#" class="text-primary">Kullanım şartlarını</a> kabul ediyorum
+            </label>
+          </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success w-100">
-            <i class="fas fa-user-plus me-1"></i>Kayıt Ol
-          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="submit" class="btn btn-success">Kayıt Ol</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- Create Post Modal -->
   <div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <form id="newPostForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
-            <i class="fas fa-plus me-2"></i>Yeni Gönderi Oluştur
-          </h5>
+          <h5 class="modal-title">Yeni Gönderi Oluştur</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input id="postTitle" name="title" class="form-control mb-2" placeholder="Başlık" required>
-          <select id="postCategory" name="category" class="form-select mb-2">
-            <option value="yenimuzik">Yeni Müzik</option>
-            <option value="endustri">Endüstri Haberleri</option>
-            <option value="degerlendirme">Değerlendirme</option>
-          </select>
-          
-          <!-- Markdown Editor Toolbar -->
-          <div class="btn-toolbar mb-2" role="toolbar" aria-label="Editor toolbar">
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="bold" title="Kalın (Ctrl+B)"><strong>B</strong></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="italic" title="İtalik (Ctrl+I)"><em>I</em></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="strike" title="Üstü çizili">S</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="h2" title="Başlık H2">H2</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="h3" title="Başlık H3">H3</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="quote" title="Alıntı">"</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="ul" title="Madde işaretli liste">• List</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="ol" title="Numaralı liste">1. List</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="task" title="Görev listesi">[ ]</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="link" title="Bağlantı (Ctrl+K)">Link</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="image" title="Resim">🖼️</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="code" title="Kod satırı"><code>{}</code></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="codeblock" title="Kod bloğu">```</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="table" title="Tablo">⊞</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="hr" title="Yatay çizgi">—</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="emoji" title="Emoji">😊</button>
-            </div>
+          <div class="mb-3">
+            <label for="postTitle" class="form-label">Başlık</label>
+            <input type="text" class="form-control" id="postTitle" name="title" required>
           </div>
-          
-          <!-- Emoji Picker -->
-          <div id="emojiPicker" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:300px;">
-            <div class="card-body py-2">
-              <input type="text" class="form-control form-control-sm mb-2" id="emojiSearch" placeholder="Emoji ara…">
-              <div id="emojiGrid" class="d-flex flex-wrap gap-1" style="max-height:200px; overflow:auto"></div>
-            </div>
+          <div class="mb-3">
+            <label for="postCategory" class="form-label">Kategori</label>
+            <select class="form-select" id="postCategory" name="category" required>
+              <option value="">Kategori seçin</option>
+              <option value="yenimuzik">Yeni Müzik</option>
+              <option value="endustri">Endüstri Haberleri</option>
+              <option value="degerlendirme">Değerlendirme</option>
+              <option value="album">Albüm İnceleme</option>
+              <option value="roportaj">Röportajlar</option>
+              <option value="etkinlik">Etkinlikler</option>
+              <option value="dizifilm">Dizi & Filmler</option>
+            </select>
           </div>
-          
-          <!-- URL Popover -->
-          <div id="urlPopover" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:320px;">
-            <div class="card-body py-2">
-              <div class="mb-2 small text-muted" id="urlPopoverTitle">Bağlantı ekle</div>
-              <input type="url" class="form-control form-control-sm mb-2" id="urlPopoverInput" placeholder="https://...">
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="urlPopoverCancel">İptal</button>
-                <button type="button" class="btn btn-sm btn-primary" id="urlPopoverOk">Ekle</button>
-              </div>
-            </div>
+          <div class="mb-3">
+            <label for="postContent" class="form-label">İçerik</label>
+            <textarea class="form-control" id="postContent" name="content" rows="6" required></textarea>
           </div>
-          
-          <!-- Editor and Preview -->
-          <div class="row g-2">
-            <div class="col-md-6">
-              <textarea id="postContent" name="content" rows="12" class="form-control" placeholder="İçerik (Markdown destekli)" required></textarea>
-            </div>
-            <div class="col-md-6">
-              <div class="form-control" style="height:100%; overflow:auto; background: var(--input-bg); border-color: var(--border)">
-                <div class="small text-muted mb-1">Önizleme</div>
-                <div id="postPreview" class="markdown-body"></div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Media URLs -->
-          <div class="row g-2">
-            <div class="col-md-6">
-              <input id="postMediaUrl" name="mediaUrl" type="url" class="form-control" placeholder="Fotoğraf/GIF URL (opsiyonel)">
-            </div>
-            <div class="col-md-6">
-              <input id="postLinkUrl" name="linkUrl" type="url" class="form-control" placeholder="Harici Link (opsiyonel)">
-            </div>
-          </div>
-          
-          <!-- Poll UI -->
-          <div class="mt-3 border-top pt-3">
-            <div class="form-check form-switch mb-2">
-              <input class="form-check-input" type="checkbox" id="pollEnable">
-              <label class="form-check-label" for="pollEnable">Anket ekle</label>
-            </div>
-
-            <div id="pollFields" class="card card-body" style="display:none; background: var(--input-bg); border-color: var(--border)">
-              <div class="mb-2">
-                <input id="pollQuestion" class="form-control" placeholder="Anket sorusu (10-140 karakter)">
-              </div>
-
-              <div id="pollOptionsWrap" class="mb-2">
-                <div class="input-group mb-2">
-                  <span class="input-group-text">1</span>
-                  <input id="pollOption1" class="form-control poll-option" placeholder="Seçenek 1 (1-60 karakter)">
-                </div>
-                <div class="input-group mb-2">
-                  <span class="input-group-text">2</span>
-                  <input id="pollOption2" class="form-control poll-option" placeholder="Seçenek 2 (1-60 karakter)">
-                </div>
-              </div>
-
-              <div class="d-flex gap-2 mb-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="addPollOption">Seçenek Ekle</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="removePollOption">Son Seçeneği Kaldır</button>
-              </div>
-
-              <div class="mb-2">
-                <label for="pollClosesAt" class="form-label small text-muted">İsteğe bağlı bitiş zamanı</label>
-                <input id="pollClosesAt" type="datetime-local" class="form-control form-control-sm">
-                <div class="form-text">Belirtilirse, bu zamandan sonra oy verilemez.</div>
-              </div>
-            </div>
+          <div class="mb-3">
+            <label for="postTags" class="form-label">Etiketler (virgülle ayırın)</label>
+            <input type="text" class="form-control" id="postTags" name="tags" placeholder="müzik, albüm, inceleme">
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">
-            <i class="fas fa-paper-plane me-1"></i>Paylaş
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-paper-plane me-2"></i>Paylaş
           </button>
         </div>
       </form>
-    </div>
-  </div>
-
-  <!-- Post Detail Modal -->
-  <div class="modal fade" id="postDetailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="postDetailTitle">Gönderi</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="small text-muted mb-2" id="postDetailMeta"></div>
-          <div id="postDetailContent"></div>
-        </div>
-      </div>
     </div>
   </div>
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  
-  <!-- Language files -->
+  <script src="js/app.js"></script>
+  <script src="js/lang.js"></script>
   <script>
-    // Load Turkish translations directly
-    window.translations = {
-      "home": "Ana Sayfa",
-      "about": "Hakkında",
-      "contact": "İletişim",
-      "welcome": "Bloguma Hoşgeldin",
-      "subtitle": "Müzik, sanat ve kültür üzerine",
-      "login": "Giriş",
-      "register": "Kayıt",
-      "logout": "Çıkış",
-      "profile": "Profil",
-      "newPost": "Yeni Gönderi",
-      "search": "Ara...",
-      "notifications": "Bildirimler",
-      "saved": "Kaydedilenler",
-      "mod": "Mod",
-      "submit": "Gönder",
-      "title": "Başlık",
-      "content": "İçerik",
-      "category": "Kategori",
-      "mediaUrl": "Fotoğraf/GIF URL (opsiyonel)",
-      "linkUrl": "Harici Link (opsiyonel)",
-      "share": "Paylaş",
-      "popular": "En Popüler",
-      "latest": "En Son Eklenenler",
-      "comments": "Yorumlar",
-      "like": "Beğen",
-      "bookmark": "Kaydet",
-      "report": "Raporla",
-      "edit": "Düzenle",
-      "delete": "Sil",
-      "pin": "Sabitle",
-      "lock": "Kilitle",
-      "newMusic": "Yeni Müzik",
-      "industry": "Endüstri Haberleri",
-      "review": "Değerlendirme",
-      "album": "Albüm İnceleme",
-      "interview": "Röportajlar",
-      "event": "Etkinlikler",
-      "series": "Dizi & Filmler",
-      "loading": "Yükleniyor...",
-      "error": "Hata",
-      "success": "Başarılı",
-      "cancel": "İptal",
-      "save": "Kaydet",
-      "close": "Kapat",
-      "send": "Gönder",
-      "name": "Adınız",
-      "email": "Email",
-      "password": "Parola",
-      "username": "Kullanıcı Adı",
-      "message": "Mesajınız",
-      "writeComment": "Yorum yaz...",
-      "noPosts": "Henüz gönderi yok",
-      "noComments": "Henüz yorum yok",
-      "loadMore": "Daha Fazla",
-      "allRightsReserved": "Tüm hakları saklıdır",
-      "avatarUrl": "Avatar URL",
-      "avatarUrlPlaceholder": "https://... (fotoğraf/gif)",
-      "avatarUrlHelp": "URL boş kaydedilirse avatar kaldırılır.",
-      "uploadFile": "Veya dosya yükle",
-      "upload": "Yükle",
-      "myPosts": "Gönderilerim",
-      "noPostsYet": "Henüz gönderi yok",
-      "createFirstPost": "İlk gönderinizi oluşturun",
-      "welcomeMessage": "Nara Müzik'e hoş geldiniz!",
-      "profileSettings": "Profil Ayarları",
-      "accountInfo": "Hesap Bilgileri",
-      "contactMessage": "Bize mesaj bırakın; evencreed hesabının gelen kutusuna düşecek.",
-      "popularAlbums": "Popüler Albümler",
-      "popularAlbumsDesc": "En çok dinlenen ve tartışılan albümleri keşfedin",
-      "addComment": "Ekle",
-      "albumSearch": "Albüm Ara",
-      "searchAlbum": "Albüm adı yazın...",
-      "searchResults": "Arama Sonuçları",
-      "myFavorites": "Favori Albümlerim",
-      "loadingFavorites": "Favori albümleriniz yükleniyor...",
-      "noFavorites": "Henüz favori albümünüz yok.",
-      "addFavorites": "Albüm inceleme sayfasından favori albümlerinizi ekleyebilirsiniz."
-    };
-  </script>
-  
-  <script src="js/app.js?v=2"></script>
-  <script src="js/lang.js?v=2"></script>
-  <script src="js/translation.js?v=2"></script>
-
-  <script>
-    (function(){
-    'use strict';
-    // Small helpers
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    // Theme toggle (data-theme + localStorage)
-    const themeToggle = document.getElementById('themeToggle');
-    const root = document.documentElement;
-
-    function applyTheme(theme){
-      if(theme === 'light'){
-        root.setAttribute('data-theme','light');
-        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-        document.getElementById('mainNavbar').classList.remove('navbar-dark');
-        document.getElementById('mainNavbar').classList.add('navbar-light');
-      } else {
-        root.removeAttribute('data-theme');
-        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-        document.getElementById('mainNavbar').classList.remove('navbar-light');
-        document.getElementById('mainNavbar').classList.add('navbar-dark');
-      }
-    }
-
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    applyTheme(savedTheme);
-
-    themeToggle.addEventListener('click', () => {
-      const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-      localStorage.setItem('theme', next);
-      applyTheme(next);
-    });
-
-    // Load sidebar data
-    async function loadSidebarData() {
-      try {
-        const base = (typeof window !== 'undefined' && window.__API_BASE__) ? window.__API_BASE__ : (location.hostname.includes('localhost') ? 'http://localhost:4000' : 'https://naramusic.onrender.com');
-        
-        // Load popular posts for sidebar
-        const popularRes = await fetch(`${base}/api/posts/popular?limit=3`);
-        const popularPosts = await popularRes.json();
-        
-        const sidebarPopular = document.getElementById('sidebarPopularPosts');
-        if (popularPosts.length > 0) {
-          sidebarPopular.innerHTML = popularPosts.map(post => `
-            <div class="item">
-              <img src="${post.imageUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400&auto=format&fit=crop'}" alt="${post.title}" style="width: 50px; height: 50px; object-fit: cover;">
-              <div>
-                <div class="fw-semibold">${post.title}</div>
-                <div class="meta">${post.views || 0} okuma</div>
-              </div>
-            </div>
-          `).join('');
+    // Initialize theme
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set current year
+      document.getElementById('year').textContent = new Date().getFullYear();
+      
+      // Initialize theme toggle
+      const themeToggle = document.getElementById('themeToggle');
+      const root = document.documentElement;
+      
+      function applyTheme(theme) {
+        if (theme === 'light') {
+          root.setAttribute('data-theme', 'light');
+          themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
         } else {
-          sidebarPopular.innerHTML = '<div class="text-muted small">Henüz popüler gönderi yok.</div>';
+          root.removeAttribute('data-theme');
+          themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
         }
-
-        // Load recent comments for sidebar
-        const commentsRes = await fetch(`${base}/api/comments/recent?limit=3`);
-        const recentComments = await commentsRes.json();
-        
-        const sidebarComments = document.getElementById('sidebarRecentComments');
-        if (recentComments.length > 0) {
-          sidebarComments.innerHTML = recentComments.map(comment => `
-            <div class="item">
-              <div>
-                <div class="fw-semibold">${comment.author || 'Anonim'}</div>
-                <div class="meta">"${comment.content.substring(0, 50)}${comment.content.length > 50 ? '...' : ''}" • ${new Date(comment.createdAt).toLocaleDateString('tr-TR')}</div>
-              </div>
-            </div>
-          `).join('');
-        } else {
-          sidebarComments.innerHTML = '<div class="text-muted small">Henüz yorum yok.</div>';
-        }
-
-      } catch (error) {
-        console.error('Sidebar data loading error:', error);
-        
-        // Show error state
-        document.getElementById('sidebarPopularPosts').innerHTML = '<div class="text-muted small">Veri yüklenemedi.</div>';
-        document.getElementById('sidebarRecentComments').innerHTML = '<div class="text-muted small">Veri yüklenemedi.</div>';
       }
-    }
-
-    // Load sidebar data on page load
-    loadSidebarData();
-
-    // Language toggle functionality
-    const languageToggle = document.getElementById('language-toggle');
-    if (languageToggle) {
-      languageToggle.addEventListener('change', async (e) => {
-        const selectedLang = e.target.value;
-        if (selectedLang === 'tr') {
-          // Reset to original Turkish content
-          location.reload();
-        } else if (selectedLang === 'en') {
-          // Translate to English
-          await window.translationService.translatePage('en');
-        }
+      
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      applyTheme(savedTheme);
+      
+      themeToggle.addEventListener('click', () => {
+        const currentTheme = root.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        localStorage.setItem('theme', newTheme);
+        applyTheme(newTheme);
       });
-    }
-
-    // app.js will render popular and latest via API
-
-    // Form eventleri app.js içinde yönetiliyor
-    })();
+      
+      // Initialize sort filters
+      document.querySelectorAll('input[name="sortFilter"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          // Update active state
+          document.querySelectorAll('label[for^="sort"]').forEach(label => {
+            label.classList.remove('active');
+          });
+          e.target.nextElementSibling.classList.add('active');
+          
+          // Reload posts with new sorting
+          loadLatestPostsPaginated(true);
+        });
+      });
+    });
   </script>
 </body>
 </html>

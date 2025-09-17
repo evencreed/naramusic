@@ -4,1272 +4,532 @@ const BACKEND_BASE = isLocalHost
   ? "http://localhost:4000"
   : "https://naramusic.onrender.com";
 
-const API_URL = `${BACKEND_BASE}/api/posts`;
-
-// Dil durumu
+// Global state
 let CURRENT_LANG = localStorage.getItem("lang") || "tr";
 let CURRENT_USER = JSON.parse(localStorage.getItem("user") || "null");
 let AUTH_TOKEN = localStorage.getItem('token') || null;
+let currentPage = 1;
+let isLoading = false;
 
-function updateAuthUI(){
+// Utility functions
+function showLoading(element) {
+  if (element) {
+    element.classList.add('loading');
+    element.innerHTML = '<div class="text-center py-4"><div class="spinner"></div><p class="mt-2">Yükleniyor...</p></div>';
+  }
+}
+
+function hideLoading(element) {
+  if (element) {
+    element.classList.remove('loading');
+  }
+}
+
+function showAlert(message, type = 'info') {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+  alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  
+  const container = document.querySelector('.container') || document.body;
+  container.insertBefore(alertDiv, container.firstChild);
+  
+  setTimeout(() => {
+    alertDiv.remove();
+  }, 5000);
+}
+
+// Auth functions
+function updateAuthUI() {
   const authButtons = document.getElementById('authButtons');
   const newPostBtn = document.querySelector('[data-bs-target="#createPostModal"]');
   const savedLink = document.getElementById('savedLink');
   const modLink = document.getElementById('modLink');
+  
   if (!authButtons) return;
-  if (CURRENT_USER){
+  
+  if (CURRENT_USER) {
     authButtons.innerHTML = `
-      <a class="btn btn-outline-light btn-sm" href="${location.pathname.includes('/pages/') ? '../pages/profil.html' : 'pages/profil.html'}">Profil</a>
-      <button id="logoutBtn" class="btn btn-outline-light btn-sm">Çıkış</button>
+      <a class="btn btn-outline-light btn-sm" href="${location.pathname.includes('/pages/') ? '../pages/profil.html' : 'pages/profil.html'}">
+        <i class="fas fa-user me-1"></i>Profil
+      </a>
+      <button id="logoutBtn" class="btn btn-outline-light btn-sm">
+        <i class="fas fa-sign-out-alt me-1"></i>Çıkış
+      </button>
     `;
-    if(newPostBtn){ newPostBtn.classList.remove('disabled'); newPostBtn.removeAttribute('disabled'); newPostBtn.title=''; }
-    const lb = document.getElementById('logoutBtn');
-    if(lb){ lb.addEventListener('click', ()=>{ localStorage.removeItem('user'); CURRENT_USER=null; location.reload(); }); }
-    if (savedLink){ savedLink.classList.remove('d-none'); }
-    if (modLink){ modLink.classList.toggle('d-none', !(CURRENT_USER.role==='admin' || CURRENT_USER.role==='moderator')); }
+    
+    if (newPostBtn) {
+      newPostBtn.classList.remove('disabled');
+      newPostBtn.removeAttribute('disabled');
+      newPostBtn.title = '';
+    }
+    
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        CURRENT_USER = null;
+        AUTH_TOKEN = null;
+        location.reload();
+      });
+    }
+    
+    if (savedLink) savedLink.classList.remove('d-none');
+    if (modLink) {
+      modLink.classList.toggle('d-none', !(CURRENT_USER.role === 'admin' || CURRENT_USER.role === 'moderator'));
+    }
   } else {
     authButtons.innerHTML = `
-      <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
-      <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
+      <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">
+        <i class="fas fa-sign-in-alt me-1"></i>Giriş
+      </button>
+      <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">
+        <i class="fas fa-user-plus me-1"></i>Kayıt
+      </button>
     `;
-    if(newPostBtn){ newPostBtn.classList.add('disabled'); newPostBtn.setAttribute('disabled','disabled'); newPostBtn.title='Gönderi oluşturmak için giriş yapın'; }
-    if (savedLink){ savedLink.classList.add('d-none'); }
-    if (modLink){ modLink.classList.add('d-none'); }
+    
+    if (newPostBtn) {
+      newPostBtn.classList.add('disabled');
+      newPostBtn.setAttribute('disabled', 'disabled');
+      newPostBtn.title = 'Gönderi oluşturmak için giriş yapın';
+    }
+    
+    if (savedLink) savedLink.classList.add('d-none');
+    if (modLink) modLink.classList.add('d-none');
   }
 }
 
-async function translateMany(textArray, target){
-  if (target === "tr") return textArray; // Türkçe ise çeviri yok
+// API functions
+async function apiRequest(endpoint, options = {}) {
+  const url = `${BACKEND_BASE}${endpoint}`;
+  const config = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(AUTH_TOKEN && { 'Authorization': `Bearer ${AUTH_TOKEN}` })
+    },
+    ...options
+  };
+  
   try {
-    const res = await fetch(`${BACKEND_BASE}/api/translate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ texts: textArray, target })
-    });
-    const data = await res.json();
-    if (data.translations) return data.translations;
-  } catch (e) {
-    console.error("translateMany error", e);
+    const response = await fetch(url, config);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'API isteği başarısız');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('API Error:', error);
+    showAlert(error.message, 'danger');
+    throw error;
   }
-  return textArray;
 }
 
-// Ana sayfa (index.html) için: Popüler + En Son Postlar
-document.addEventListener("DOMContentLoaded", () => {
-  updateAuthUI();
-  enforceAuthForCreatePost();
-  setupLiveMarkdownPreview();
-  setupMarkdownToolbar();
-  setupUrlPopoverForEditor();
-  setupDraftAutosave();
-  setupMentionAutocomplete();
-  setupEmojiPicker();
-  setupNotificationsDropdown();
-  if (document.getElementById("popularPosts")) {
-    loadPopularPosts();
-  }
-  if (document.getElementById("latestPosts")) {
-    loadLatestPostsPaginated(true);
-    const moreBtn = document.getElementById('loadMoreLatest');
-    if (moreBtn){ moreBtn.addEventListener('click', ()=> loadLatestPostsPaginated(false)); }
-  }
-  // Hero pinned highlight
-  const heroSlide = document.getElementById('heroPinnedSlide');
-  if (heroSlide){
-    (async ()=>{
-      try{
-        // Try to find a pinned post among latest 50
-        const r = await fetch(`${BACKEND_BASE}/api/posts?limit=30`);
-        const data = await r.json();
-        const items = Array.isArray(data.items)? data.items : [];
-        const pinned = items.find(p=>p.pinned) || items[0];
-        if (!pinned) return;
-        const tEl = document.getElementById('heroPinnedTitle');
-        const xEl = document.getElementById('heroPinnedExcerpt');
-        const lEl = document.getElementById('heroPinnedLink');
-        const iEl = document.getElementById('heroPinnedImg');
-        if (tEl) tEl.textContent = pinned.title || 'Öne Çıkan';
-        if (xEl) xEl.textContent = (pinned.content||'').substring(0,140);
-        if (lEl){ const base = location.pathname.includes('/pages/') ? '' : 'pages/'; lEl.href = `${base}post.html?id=${encodeURIComponent(pinned.id)}`; }
-        if (iEl && pinned.mediaUrl){ iEl.src = pinned.mediaUrl; }
-      }catch(_){ }
-    })();
-  }
-  if (document.getElementById("categoryPosts")) {
-    const category = document.body.getAttribute("data-category"); 
-    loadCategoryPosts(category);
-  }
-  if (document.getElementById('spotifyPlaylist')){
-    loadSpotifyPlaylist();
-  }
-  if (document.getElementById("newPostForm")) {
-    setupNewPostForm();
-  }
-});
-
-// "Yeni Gönderi" butonu için giriş zorunluluğu
-function enforceAuthForCreatePost(){
-  const buttons = document.querySelectorAll('[data-bs-target="#createPostModal"]');
-  if(!buttons || !buttons.length) return;
-  buttons.forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
-      if (CURRENT_USER) return; // girişliyse izin ver
-      e.preventDefault();
-      e.stopPropagation();
-      const loginModalEl = document.getElementById('loginModal');
-      if(loginModalEl){
-        const body = loginModalEl.querySelector('.modal-body');
-        if(body && !body.querySelector('.auth-required-msg')){
-          const div = document.createElement('div');
-          div.className = 'alert alert-warning auth-required-msg';
-          div.innerHTML = 'Yeni gönderi oluşturmak için önce giriş yapmanız gerekmektedir. Kayıt olmadıysanız <a href="#" id="goToRegister">buradan kayıt olabilirsiniz</a>.';
-          body.prepend(div);
-          const link = div.querySelector('#goToRegister');
-          if(link){
-            link.addEventListener('click', (ev)=>{
-              ev.preventDefault();
-              const lm = bootstrap.Modal.getOrCreateInstance(loginModalEl);
-              lm.hide();
-              const rmEl = document.getElementById('registerModal');
-              if(rmEl){ bootstrap.Modal.getOrCreateInstance(rmEl).show(); }
-            });
-          }
-        }
-        bootstrap.Modal.getOrCreateInstance(loginModalEl).show();
-      } else {
-        alert('Yeni gönderi oluşturmak için önce giriş yapmanız gerekmektedir.');
-      }
-    }, true);
-  });
-}
-
-// Spotify Playlist yerleştirme (oEmbed/iframe) — backend gerekmez
-function loadSpotifyPlaylist(){
-  const container = document.getElementById('spotifyPlaylist');
+// Post functions
+async function loadLatestPostsPaginated(reset = false) {
+  if (isLoading) return;
+  
+  const container = document.getElementById('latestPostsList');
   if (!container) return;
-  const playlistId = container.getAttribute('data-playlist-id') || '37i9dQZF1DX2TRYkJECvfC';
-  const playlistUrl = container.getAttribute('data-playlist-url') || `https://open.spotify.com/playlist/${playlistId}`;
-  container.innerHTML = '<div class="text-muted">Spotify çalma listesi yükleniyor...</div>';
-  fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(playlistUrl)}`)
-    .then(r=>r.ok?r.json():Promise.reject(new Error('oembed failed')))
-    .then(data=>{
-      if (data && data.html){
-        container.innerHTML = data.html;
-      } else {
-        throw new Error('no html');
-      }
-    })
-    .catch(()=>{
-      const iframe = document.createElement('iframe');
-      iframe.src = `https://open.spotify.com/embed/playlist/${playlistId}`;
-      iframe.width = '100%';
-      iframe.height = '380';
-      iframe.frameBorder = '0';
-      iframe.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
-      iframe.loading = 'lazy';
-      container.innerHTML = '';
-      container.appendChild(iframe);
-    });
-}
-
-// Popüler Postlar
-function loadPopularPosts() {
-  fetch(`${API_URL}/popular`)
-    .then(res => res.json())
-    .then(async posts => {
-      // pinned-first then views desc (already popular by views, we just ensure pinned bubble up)
-      posts.sort((a,b)=>{
-        const ap = a.pinned?1:0, bp = b.pinned?1:0; if (ap!==bp) return bp-ap; return (b.views||0)-(a.views||0);
-      });
-      if (CURRENT_LANG === 'en' && posts.length){
-        const toTranslate = [];
-        posts.forEach(p => {
-          toTranslate.push(p.title);
-          toTranslate.push(p.content.substring(0, 160));
-        });
-        const translated = await translateMany(toTranslate, 'en');
-        for (let i=0; i<posts.length; i++){
-          posts[i].title = translated[i*2] || posts[i].title;
-          posts[i].content = translated[i*2+1] || posts[i].content;
-        }
-      }
-      const container = document.getElementById("popularPosts");
-      if (!posts.length) {
-        container.innerHTML = "<p>Henüz popüler post yok.</p>";
-        return;
-      }
-      container.innerHTML = posts.map(p => {
-        const thumb = p.mediaUrl ? `<img src="${p.mediaUrl}" alt="" class="post-thumb mb-2">` : '';
-        const linkBtn = p.linkUrl ? `<a href="${p.linkUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">Bağlantı</a>` : '';
-        const musicPreview = p.musicData ? `<div class="music-preview-container mt-2" data-music='${JSON.stringify(p.musicData)}'></div>` : '';
-        return `
-        <div class="col-md-4 mb-3">
-          <div class="card h-100 shadow-sm" data-post-id="${p.id}">
-            <div class="card-body">
-              ${(p.pinned?'<span class="badge bg-warning text-dark me-1">📌 Sabit</span>':'')+(p.locked?'<span class="badge bg-secondary me-1">🔒 Kilitli</span>':'')}
-              ${thumb}
-              <h5 class="card-title">${p.title}</h5>
-              <p class="card-text">${p.content.substring(0,100)}...</p>
-              <span class="badge bg-primary">${p.category}</span>
-              ${linkBtn ? `<div class=\"mt-2\">${linkBtn}</div>` : ''}
-              ${musicPreview}
-              <div class="mt-2 d-flex gap-2">
-                <button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>
-                <button class="btn btn-sm btn-outline-light bookmark-btn" data-id="${p.id}">🔖 Kaydet</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;}).join("");
-      attachPostCardHandlers(container);
-      // Trigger music preview initialization
-      document.dispatchEvent(new CustomEvent('postsLoaded'));
-    })
-    .catch(err => console.error("Popüler postları yüklerken hata:", err));
-}
-
-// En Son Postlar
-function loadLatestPosts() {
-  fetch(`${API_URL}/latest`)
-    .then(res => res.json())
-    .then(async posts => {
-      posts.sort((a,b)=>{
-        const ap = a.pinned?1:0, bp = b.pinned?1:0; if (ap!==bp) return bp-ap; return new Date(b.createdAt||0)-new Date(a.createdAt||0);
-      });
-      if (CURRENT_LANG === 'en' && posts.length){
-        const toTranslate = [];
-        posts.forEach(p => {
-          toTranslate.push(p.title);
-          toTranslate.push(p.content.substring(0, 200));
-        });
-        const translated = await translateMany(toTranslate, 'en');
-        for (let i=0; i<posts.length; i++){
-          posts[i].title = translated[i*2] || posts[i].title;
-          posts[i].content = translated[i*2+1] || posts[i].content;
-        }
-      }
-      const container = document.getElementById("latestPosts");
-      if (!posts.length) {
-        container.innerHTML = "<p>Henüz post eklenmedi.</p>";
-        return;
-      }
-      container.innerHTML = posts.map(p => {
-        const thumb = p.mediaUrl ? `<img src="${p.mediaUrl}" alt="" class="post-thumb mb-2">` : '';
-        const linkBtn = p.linkUrl ? `<a href="${p.linkUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">Bağlantı</a>` : '';
-        const musicPreview = p.musicData ? `<div class="music-preview-container mt-2" data-music='${JSON.stringify(p.musicData)}'></div>` : '';
-        return `
-        <div class="col-md-6 mb-3">
-          <div class="card h-100 shadow-sm" data-post-id="${p.id}">
-            <div class="card-body">
-              ${(p.pinned?'<span class="badge bg-warning text-dark me-1">📌 Sabit</span>':'')+(p.locked?'<span class="badge bg-secondary me-1">🔒 Kilitli</span>':'')}
-              ${thumb}
-              <h5 class="card-title">${p.title}</h5>
-              <p class="card-text">${p.content.substring(0,150)}...</p>
-              <span class="badge bg-secondary">${p.category}</span>
-              ${linkBtn ? `<div class=\"mt-2\">${linkBtn}</div>` : ''}
-              ${musicPreview}
-              <div class="mt-2 d-flex gap-2">
-                <button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>
-                <button class="btn btn-sm btn-outline-light bookmark-btn" data-id="${p.id}">🔖 Kaydet</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;}).join("");
-      attachPostCardHandlers(container);
-      // Trigger music preview initialization
-      document.dispatchEvent(new CustomEvent('postsLoaded'));
-    })
-    .catch(err => console.error("Son postları yüklerken hata:", err));
-}
-
-// Kategoriye Göre Postlar (ör. yenimuzik.html)
-function loadCategoryPosts(category) {
-  fetch(`${API_URL}/category/${category}`)
-    .then(res => res.json())
-    .then(async posts => {
-      if (CURRENT_LANG === 'en' && posts.length){
-        const toTranslate = [];
-        posts.forEach(p => {
-          toTranslate.push(p.title);
-          toTranslate.push(p.content.substring(0, 200));
-        });
-        const translated = await translateMany(toTranslate, 'en');
-        for (let i=0; i<posts.length; i++){
-          posts[i].title = translated[i*2] || posts[i].title;
-          posts[i].content = translated[i*2+1] || posts[i].content;
-        }
-      }
-      const container = document.getElementById("categoryPosts");
-      if (!posts.length) {
-        container.innerHTML = "<p>Bu kategoride henüz post yok.</p>";
-        return;
-      }
-      container.innerHTML = posts.map(p => {
-        const thumb = p.mediaUrl ? `<img src="${p.mediaUrl}" alt="" class="post-thumb mb-2">` : '';
-        const linkBtn = p.linkUrl ? `<a href="${p.linkUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">Bağlantı</a>` : '';
-        const author = p.authorName ? `<a class="link-light text-decoration-none" href="${location.pathname.includes('/pages/')?'':'pages/'}user.html?uid=${p.authorId}&name=${encodeURIComponent(p.authorName)}">${p.authorName}</a>` : 'Anonim';
-        const musicPreview = p.musicData ? `<div class="music-preview-container mt-2" data-music='${JSON.stringify(p.musicData)}'></div>` : '';
-        return `
-        <div class="col-md-6 mb-3">
-          <div class="card h-100 shadow-sm" data-post-id="${p.id}">
-            <div class="card-body">
-              ${(p.pinned?'<span class="badge bg-warning text-dark me-1">📌 Sabit</span>':'')+(p.locked?'<span class="badge bg-secondary me-1">🔒 Kilitli</span>':'')}
-              ${thumb}
-              <h5 class="card-title">${p.title}</h5>
-              <p class="card-text">${p.content.substring(0,150)}...</p>
-              <small class="text-muted">Paylaşan: ${author}</small>
-              ${linkBtn ? `<div class=\"mt-2\">${linkBtn}</div>` : ''}
-              ${musicPreview}
-              <div class="mt-2 d-flex gap-2">
-                <button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>
-                <button class="btn btn-sm btn-outline-light bookmark-btn" data-id="${p.id}">🔖 Kaydet</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;}).join("");
-      attachPostCardHandlers(container);
-      // Trigger music preview initialization
-      document.dispatchEvent(new CustomEvent('postsLoaded'));
-    })
-    .catch(err => console.error("Kategori postlarını yüklerken hata:", err));
-}
-
-// Kartlar: detay modalı ve görüntülenme arttırma
-function attachPostCardHandlers(scope){
-  const root = scope || document;
-  const cards = root.querySelectorAll('.card[data-post-id]');
-  cards.forEach(card => {
-    card.style.cursor = 'pointer';
-    card.addEventListener('click', async (ev)=>{
-      if (ev.target.closest('.btn, .bookmark-btn, .like-btn, a, .music-preview')) return;
-      const id = card.getAttribute('data-post-id');
-      const base = location.pathname.includes('/pages/') ? '' : 'pages/';
-      location.href = `${base}post.html?id=${encodeURIComponent(id)}`;
-    });
-  });
-
-  // Setup music previews for cards with music data
-  const musicContainers = root.querySelectorAll('.music-preview-container[data-music]');
-  musicContainers.forEach(container => {
-    try {
-      const musicData = JSON.parse(container.getAttribute('data-music'));
-      if (musicData && musicData.trackId) {
-        container.innerHTML = musicPreview.createPreviewWidgetFromMusicData(musicData);
-      }
-    } catch (error) {
-      console.error('Error parsing music data:', error);
+  
+  if (reset) {
+    currentPage = 1;
+    container.innerHTML = '';
+  }
+  
+  isLoading = true;
+  showLoading(container);
+  
+  try {
+    const data = await apiRequest(`/api/posts?page=${currentPage}&limit=6&sort=latest`);
+    
+    if (data.posts && data.posts.length > 0) {
+      const postsHtml = data.posts.map(post => createPostCard(post)).join('');
+      container.innerHTML += postsHtml;
+      currentPage++;
+    } else if (reset) {
+      container.innerHTML = '<div class="col-12"><div class="text-center py-5"><p class="text-muted">Henüz gönderi bulunmuyor.</p></div></div>';
     }
-  });
-}
-
-// Elevate admin/mod controls on post detail if present
-document.addEventListener('DOMContentLoaded', ()=>{
-  const postActions = document.getElementById('postActions');
-  if (!postActions) return;
-  // Add pin/lock buttons for admin/mod
-  const user = JSON.parse(localStorage.getItem('user')||'null');
-  if (!user || !(['admin','moderator','superadmin'].includes(user.role))) return;
-  // create buttons
-  const pinBtn = document.createElement('button'); pinBtn.className='btn btn-sm btn-outline-info'; pinBtn.id='pinPostBtn'; pinBtn.textContent='📌 Sabitle';
-  const lockBtn = document.createElement('button'); lockBtn.className='btn btn-sm btn-outline-secondary'; lockBtn.id='lockPostBtn'; lockBtn.textContent='🔒 Kilitle';
-  postActions.appendChild(pinBtn); postActions.appendChild(lockBtn);
-  const token = localStorage.getItem('token');
-  const idMatch = location.search.match(/id=([^&]+)/); const postId = idMatch? decodeURIComponent(idMatch[1]) : null;
-  const base = location.hostname.includes('localhost')? 'http://localhost:4000':'https://naramusic.onrender.com';
-  if (pinBtn && postId){ pinBtn.addEventListener('click', async ()=>{ try{ await fetch(`${base}/api/posts/${postId}/pin`, { method:'POST', headers:{ 'Content-Type':'application/json','Authorization':`Bearer ${token}` }, body: JSON.stringify({ pinned: true }) }); alert('Sabitleme gönderildi'); }catch(_){ alert('Sabitleme hata'); } }); }
-  if (lockBtn && postId){ lockBtn.addEventListener('click', async ()=>{ try{ await fetch(`${base}/api/posts/${postId}/lock`, { method:'POST', headers:{ 'Content-Type':'application/json','Authorization':`Bearer ${token}` }, body: JSON.stringify({ locked: true }) }); alert('Kilitleme gönderildi'); }catch(_){ alert('Kilitleme hata'); } }); }
-});
-
-function showPostDetailModal(p){
-  const mEl = document.getElementById('postDetailModal');
-  if(!mEl){ return; }
-  const titleEl = mEl.querySelector('#postDetailTitle');
-  const metaEl = mEl.querySelector('#postDetailMeta');
-  const contentEl = mEl.querySelector('#postDetailContent');
-  if (titleEl) titleEl.textContent = p.title || 'Gönderi';
-  if (metaEl) metaEl.textContent = `${p.authorName || 'Anonim'} • ${new Date(p.createdAt).toLocaleString()} • ${p.category || ''}`;
-  let html = '';
-  if (p.mediaUrl){ html += `<img src="${p.mediaUrl}" alt="" class="img-fluid rounded mb-3">`; }
-  html += `<div>${(p.content||'').replace(/\n/g,'<br>')}</div>`;
-  if (p.linkUrl){ html += `<div class="mt-3"><a class="btn btn-sm btn-outline-secondary" href="${p.linkUrl}" target="_blank">Bağlantıyı Aç</a></div>`; }
-  if (contentEl) contentEl.innerHTML = html;
-  bootstrap.Modal.getOrCreateInstance(mEl).show();
-}
-
-// Yeni Post Ekleme Sayfası (newpost.html)
-function setupNewPostForm() {
-  const form = document.getElementById("newPostForm");
-  if (!form) return;
-
-  // Setup music selection
-  setupMusicSelection();
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!CURRENT_USER){
-      alert('Gönderi oluşturmak için giriş yapın.');
-      return;
+    
+    // Update load more button
+    const loadMoreBtn = document.getElementById('loadMoreLatest');
+    if (loadMoreBtn) {
+      loadMoreBtn.style.display = data.posts && data.posts.length === 6 ? 'block' : 'none';
     }
-
-    const title = document.getElementById("postTitle").value;
-    const content = document.getElementById("postContent").value;
-    const category = document.getElementById("postCategory").value;
-    const mediaUrl = (document.getElementById("postMediaUrl")?.value || '').trim();
-    const linkUrl = (document.getElementById("postLinkUrl")?.value || '').trim();
-    const tags = (document.getElementById("postTags")?.value || '')
-      .split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
-
-    // Get selected music track
-    const selectedTrack = window.musicSearch?.getSelectedTrack();
-    const musicData = selectedTrack ? {
-      trackId: selectedTrack.id,
-      trackName: selectedTrack.name,
-      artistName: selectedTrack.artist,
-      albumName: selectedTrack.album,
-      coverUrl: selectedTrack.coverUrl
-    } : null;
-
-    const authorId = CURRENT_USER.id;
-    const authorName = CURRENT_USER.username;
-
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${AUTH_TOKEN}` },
-        body: JSON.stringify({ 
-          title, 
-          content, 
-          category, 
-          mediaUrl, 
-          linkUrl, 
-          tags,
-          musicData 
-        })
-      });
-      const data = await res.json();
-
-      if (data.error) {
-        alert("Post eklenemedi: " + data.error);
-      } else {
-        alert("Post başarıyla eklendi!");
-        form.reset();
-        clearMusicSelection();
-        // Kategori sayfasına yönlendir
-        const categoryTo = (category || '').toLowerCase();
-        const base = location.pathname.includes('/pages/') ? '' : 'pages/';
-        if (categoryTo === 'yenimuzik') {
-          location.href = `${base}yenimuzik.html`;
-        } else if (categoryTo === 'endustri') {
-          location.href = `${base}endustri.html`;
-        } else if (categoryTo === 'degerlendirme') {
-          location.href = `${base}degerlendirme.html`;
-        } else if (categoryTo === 'album') {
-          location.href = `${base}album.html`;
-        } else if (categoryTo === 'roportaj') {
-          location.href = `${base}roportaj.html`;
-        } else if (categoryTo === 'etkinlik') {
-          location.href = `${base}etkinlik.html`;
-        } else if (categoryTo === 'dizifilm') {
-          location.href = `${base}dizifilm.html`;
-        }
-      }
-    } catch (err) {
-      console.error("Post ekleme hatası:", err);
-    }
-  });
+    
+  } catch (error) {
+    container.innerHTML = '<div class="col-12"><div class="text-center py-5"><p class="text-danger">Gönderiler yüklenirken hata oluştu.</p></div></div>';
+  } finally {
+    isLoading = false;
+    hideLoading(container);
+  }
 }
 
-// Setup music selection for post form
-function setupMusicSelection() {
-  // Add music selection button to form
-  const form = document.getElementById("newPostForm");
-  if (!form) return;
+async function loadPopularPosts() {
+  const container = document.getElementById('popularPosts');
+  if (!container) return;
+  
+  showLoading(container);
+  
+  try {
+    const data = await apiRequest('/api/posts?limit=5&sort=popular');
+    
+    if (data.posts && data.posts.length > 0) {
+      const postsHtml = data.posts.map(post => createPopularPostItem(post)).join('');
+      container.innerHTML = postsHtml;
+    } else {
+      container.innerHTML = '<p class="text-muted text-center">Henüz popüler gönderi bulunmuyor.</p>';
+    }
+  } catch (error) {
+    container.innerHTML = '<p class="text-danger text-center">Popüler gönderiler yüklenirken hata oluştu.</p>';
+  } finally {
+    hideLoading(container);
+  }
+}
 
-  // Check if music selection already exists
-  if (document.getElementById("musicSelectionContainer")) return;
+async function loadCategoryPosts(category) {
+  const container = document.getElementById('categoryPosts');
+  if (!container) return;
+  
+  showLoading(container);
+  
+  try {
+    const data = await apiRequest(`/api/posts?category=${category}&limit=20`);
+    
+    if (data.posts && data.posts.length > 0) {
+      const postsHtml = data.posts.map(post => createPostCard(post)).join('');
+      container.innerHTML = `<div class="row g-4">${postsHtml}</div>`;
+    } else {
+      container.innerHTML = '<div class="text-center py-5"><p class="text-muted">Bu kategoride henüz gönderi bulunmuyor.</p></div>';
+    }
+  } catch (error) {
+    container.innerHTML = '<div class="text-center py-5"><p class="text-danger">Gönderiler yüklenirken hata oluştu.</p></div>';
+  } finally {
+    hideLoading(container);
+  }
+}
 
-  const musicSelectionHTML = `
-    <div class="mb-3" id="musicSelectionContainer">
-      <label class="form-label">🎵 Müzik Seç (Opsiyonel)</label>
-      <div class="d-flex gap-2 mb-2">
-        <button type="button" class="btn btn-outline-primary btn-sm" id="selectMusicBtn">
-          <i class="fas fa-music"></i> Müzik Ara ve Seç
-        </button>
-        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearMusicBtn" style="display: none;">
-          <i class="fas fa-times"></i> Temizle
-        </button>
-      </div>
-      <div id="selectedMusicDisplay" class="d-none">
-        <div class="card">
-          <div class="card-body p-3">
-            <div class="d-flex align-items-center gap-3">
-              <img id="selectedMusicCover" src="" alt="Album Cover" class="music-selected-cover">
-              <div class="flex-grow-1">
-                <h6 id="selectedMusicTitle" class="mb-1"></h6>
-                <p id="selectedMusicArtist" class="mb-1 text-muted"></p>
-                <small id="selectedMusicAlbum" class="text-muted"></small>
-              </div>
+// UI Components
+function createPostCard(post) {
+  const timeAgo = getTimeAgo(post.createdAt);
+  const categoryName = getCategoryName(post.category);
+  const excerpt = post.content ? post.content.substring(0, 150) + '...' : '';
+  
+  return `
+    <div class="col-md-6">
+      <article class="card h-100 post-card">
+        <div class="card-body">
+          <div class="d-flex align-items-start mb-3">
+            <img src="${post.author?.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(post.author?.username || 'User')}" 
+                 alt="${post.author?.username || 'User'}" class="rounded-circle me-3" style="width: 40px; height: 40px;">
+            <div class="flex-grow-1">
+              <h6 class="mb-0">@${post.author?.username || 'user'}</h6>
+              <small class="text-muted">${timeAgo}</small>
             </div>
+            <span class="badge bg-primary">${categoryName}</span>
+          </div>
+          
+          <h5 class="card-title mb-3">
+            <a href="pages/post.html?id=${post.id}" class="text-decoration-none">${post.title}</a>
+          </h5>
+          
+          <p class="card-text text-muted mb-3">${excerpt}</p>
+          
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex gap-3">
+              <button class="btn btn-sm btn-outline-primary like-btn" data-post-id="${post.id}">
+                <i class="fas fa-heart me-1"></i>${post.likes || 0}
+              </button>
+              <button class="btn btn-sm btn-outline-secondary comment-btn" data-post-id="${post.id}">
+                <i class="fas fa-comment me-1"></i>${post.comments || 0}
+              </button>
+              <button class="btn btn-sm btn-outline-secondary share-btn" data-post-id="${post.id}">
+                <i class="fas fa-share me-1"></i>Paylaş
+              </button>
+            </div>
+            <button class="btn btn-sm btn-outline-warning bookmark-btn" data-post-id="${post.id}">
+              <i class="fas fa-bookmark"></i>
+            </button>
           </div>
         </div>
+      </article>
+    </div>
+  `;
+}
+
+function createPopularPostItem(post) {
+  const timeAgo = getTimeAgo(post.createdAt);
+  
+  return `
+    <div class="d-flex align-items-start mb-3">
+      <div class="flex-grow-1">
+        <h6 class="mb-1">
+          <a href="pages/post.html?id=${post.id}" class="text-decoration-none">${post.title}</a>
+        </h6>
+        <small class="text-muted">${timeAgo} • ${post.likes || 0} beğeni</small>
       </div>
     </div>
   `;
-
-  // Insert after category field
-  const categoryField = form.querySelector('#postCategory')?.closest('.mb-3');
-  if (categoryField) {
-    categoryField.insertAdjacentHTML('afterend', musicSelectionHTML);
-  } else {
-    form.insertAdjacentHTML('afterbegin', musicSelectionHTML);
-  }
-
-  // Setup event listeners
-  const selectMusicBtn = document.getElementById("selectMusicBtn");
-  const clearMusicBtn = document.getElementById("clearMusicBtn");
-  const selectedMusicDisplay = document.getElementById("selectedMusicDisplay");
-
-  if (selectMusicBtn) {
-    selectMusicBtn.addEventListener("click", () => {
-      const modal = new bootstrap.Modal(document.getElementById('musicSearchModal'));
-      modal.show();
-    });
-  }
-
-  if (clearMusicBtn) {
-    clearMusicBtn.addEventListener("click", () => {
-      clearMusicSelection();
-    });
-  }
-
-  // Listen for track selection
-  document.addEventListener('trackSelected', (e) => {
-    displaySelectedMusic(e.detail);
-  });
 }
 
-// Display selected music
-function displaySelectedMusic(track) {
-  const selectedMusicDisplay = document.getElementById("selectedMusicDisplay");
-  const selectedMusicCover = document.getElementById("selectedMusicCover");
-  const selectedMusicTitle = document.getElementById("selectedMusicTitle");
-  const selectedMusicArtist = document.getElementById("selectedMusicArtist");
-  const selectedMusicAlbum = document.getElementById("selectedMusicAlbum");
-  const clearMusicBtn = document.getElementById("clearMusicBtn");
-
-  if (selectedMusicDisplay && track) {
-    selectedMusicCover.src = track.coverUrl || '/images/default-album.png';
-    selectedMusicTitle.textContent = track.name;
-    selectedMusicArtist.textContent = track.artist;
-    selectedMusicAlbum.textContent = track.album;
-    
-    selectedMusicDisplay.classList.remove('d-none');
-    clearMusicBtn?.style.setProperty('display', 'inline-block');
-  }
-}
-
-// Clear music selection
-function clearMusicSelection() {
-  const selectedMusicDisplay = document.getElementById("selectedMusicDisplay");
-  const clearMusicBtn = document.getElementById("clearMusicBtn");
-
-  if (selectedMusicDisplay) {
-    selectedMusicDisplay.classList.add('d-none');
-  }
+// Utility functions
+function getTimeAgo(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
   
-  if (clearMusicBtn) {
-    clearMusicBtn.style.setProperty('display', 'none');
-  }
-
-  // Clear from music search
-  if (window.musicSearch) {
-    window.musicSearch.clearSelection();
-  }
+  if (diffInSeconds < 60) return 'Az önce';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} dakika önce`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} saat önce`;
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} gün önce`;
+  return date.toLocaleDateString('tr-TR');
 }
 
-// Create Post modal: live markdown preview
-/* YouTube embed helpers (client-side enhancement for sanitized content) */
-function youtubeIdFromUrl(url){
-  try{
-    const u = new URL(url, location.href);
-    const host = u.hostname.toLowerCase();
-    const allowed = ['youtube.com','www.youtube.com','m.youtube.com','youtu.be'];
-    if (!allowed.includes(host)) return null;
-
-    let id = null;
-    if (host === 'youtu.be'){
-      const seg = u.pathname.split('/').filter(Boolean)[0] || '';
-      if (/^[A-Za-z0-9_-]{11}$/.test(seg)) id = seg;
-    } else if (host === 'youtube.com' || host === 'www.youtube.com' || host === 'm.youtube.com'){
-      if (u.pathname === '/watch'){
-        const v = u.searchParams.get('v') || '';
-        if (/^[A-Za-z0-9_-]{11}$/.test(v)) id = v;
-      } else if (u.pathname.startsWith('/shorts/')){
-        const seg = u.pathname.split('/')[2] || '';
-        if (/^[A-Za-z0-9_-]{11}$/.test(seg)) id = seg;
-      }
-    }
-    if (!id) return null;
-
-    // parse start time from t=, start=, or #t= fragments
-    let start = 0;
-    const tParam = u.searchParams.get('t') || u.searchParams.get('start') || (u.hash && u.hash.startsWith('#t=') ? u.hash.slice(3) : '');
-    if (tParam){
-      const t = String(tParam);
-      const m = t.match(/(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/i);
-      if (m && (m[1] || m[2] || m[3])){
-        start = (parseInt(m[1]||'0',10)*3600) + (parseInt(m[2]||'0',10)*60) + (parseInt(m[3]||'0',10));
-      } else {
-        const n = parseInt(t.replace(/[^\d]/g,''),10);
-        if (!isNaN(n)) start = n;
-      }
-    }
-    return { id, start: start > 0 ? start : 0 };
-  }catch(_){ return null; }
-}
-
-function enhanceYouTubeEmbeds(container){
-  if (!container) return;
-
-  const createWrapper = (videoId, startSec)=>{
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'position:relative;width:100%;padding-top:56.25%;background:#000;border-radius:.5rem;overflow:hidden;';
-    const src = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1` + (startSec ? `&start=${startSec}` : '');
-    const iframe = document.createElement('iframe');
-    iframe.src = src;
-    iframe.title = 'YouTube video player';
-    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-    iframe.allowFullscreen = true;
-    iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:0;';
-    wrap.appendChild(iframe);
-    return wrap;
+function getCategoryName(category) {
+  const categories = {
+    'yenimuzik': 'Yeni Müzik',
+    'endustri': 'Endüstri',
+    'degerlendirme': 'Değerlendirme',
+    'album': 'Albüm',
+    'roportaj': 'Röportaj',
+    'etkinlik': 'Etkinlik',
+    'dizifilm': 'Dizi & Film'
   };
-
-  // Transform anchors
-  container.querySelectorAll('a[href]').forEach(a=>{
-    try{
-      const info = youtubeIdFromUrl(a.href);
-      if (info && info.id){
-        const w = createWrapper(info.id, info.start);
-        a.replaceWith(w);
-      }
-    }catch(_){}
-  });
-
-  // Transform bare text URLs inside paragraphs
-  const ytUrlRe = /\bhttps?:\/\/(?:www\.)?(?:m\.)?(?:youtube\.com\/watch\?[^ \n\r\t<>"]+|youtube\.com\/shorts\/[A-Za-z0-9_-]{11}\S*|youtu\.be\/[A-Za-z0-9_-]{11}\S*)/gi;
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
-    acceptNode(node){
-      if (!node.parentElement) return NodeFilter.FILTER_REJECT;
-      if (node.parentElement.tagName.toLowerCase() !== 'p') return NodeFilter.FILTER_SKIP;
-      if (!node.nodeValue || !ytUrlRe.test(node.nodeValue)) return NodeFilter.FILTER_SKIP;
-      ytUrlRe.lastIndex = 0;
-      return NodeFilter.FILTER_ACCEPT;
-    }
-  });
-  const toProcess = [];
-  let node;
-  while ((node = walker.nextNode())) toProcess.push(node);
-
-  toProcess.forEach(textNode=>{
-    const text = textNode.nodeValue || '';
-    ytUrlRe.lastIndex = 0;
-    let last = 0;
-    const frag = document.createDocumentFragment();
-    let m;
-    while ((m = ytUrlRe.exec(text))){
-      const urlStr = m[0];
-      const idx = m.index;
-      if (idx > last) frag.appendChild(document.createTextNode(text.slice(last, idx)));
-      const info = youtubeIdFromUrl(urlStr);
-      if (info && info.id){
-        frag.appendChild(createWrapper(info.id, info.start));
-      } else {
-        frag.appendChild(document.createTextNode(urlStr));
-      }
-      last = idx + urlStr.length;
-    }
-    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
-    textNode.parentNode.replaceChild(frag, textNode);
-  });
-}
-// expose for reuse
-window.enhanceYouTubeEmbeds = enhanceYouTubeEmbeds;
-
-function setupLiveMarkdownPreview(){
-  const textarea = document.getElementById('postContent');
-  const preview = document.getElementById('postPreview');
-  if (!textarea || !preview) return;
-  const render = (value)=>{
-    const raw = String(value||'');
-    try{
-      if (window.marked && typeof window.marked.parse === 'function'){
-        preview.innerHTML = window.marked.parse(raw);
-      } else {
-        preview.innerHTML = raw
-          .replace(/\n\n/g,'</p><p>')
-          .replace(/\n/g,'<br>');
-      }
-      if (typeof window.enhanceYouTubeEmbeds === 'function') {
-        window.enhanceYouTubeEmbeds(preview);
-      }
-    }catch(_){ preview.textContent = raw; }
-  };
-  render(textarea.value);
-  ['input','change','keyup'].forEach(evt=> textarea.addEventListener(evt, ()=> render(textarea.value)));
+  return categories[category] || 'Genel';
 }
 
-// Notifications dropdown
-function setupNotificationsDropdown(){
-  const btn = document.getElementById('notifDropdownBtn');
-  const menu = document.getElementById('notifMenu');
-  if (!btn || !menu) return;
-  btn.addEventListener('click', async ()=>{
-    if (!CURRENT_USER){
-      menu.innerHTML = '<li class="px-3 py-2 text-muted small">Bildirime erişmek için giriş yapın.</li>';
-      return;
-    }
-    try{
-      const r = await fetch(`${BACKEND_BASE}/api/notifications`, { headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` }});
-      const items = await r.json();
-      if (!Array.isArray(items) || !items.length){
-        menu.innerHTML = '<li class="px-3 py-2 text-muted small">Bildiriminiz yok.</li>';
+// Event handlers
+function setupEventHandlers() {
+  // Like button
+  document.addEventListener('click', async (e) => {
+    if (e.target.closest('.like-btn')) {
+      const btn = e.target.closest('.like-btn');
+      const postId = btn.dataset.postId;
+      
+      if (!CURRENT_USER) {
+        showAlert('Beğenmek için giriş yapın', 'warning');
         return;
       }
-      menu.innerHTML = items.map(n=>`
-        <li>
-          <a href="#" class="dropdown-item d-flex justify-content-between align-items-center notif-item" data-id="${n.id}">
-            <span>${n.type==='mention' ? 'Bahsetme' : 'Bildirim'} • ${n.fromUser ? ('@'+n.fromUser) : ''}</span>
-            ${n.read? '' : '<span class="badge bg-primary">Yeni</span>'}
-          </a>
-        </li>
-      `).join('') + '<li><hr class="dropdown-divider"></li><li><button id="markAllRead" class="dropdown-item text-center">Tümünü okundu işaretle</button></li>';
-    }catch(err){
-      console.error(err);
-      menu.innerHTML = '<li class="px-3 py-2 text-danger small">Bildiriler yüklenemedi</li>';
+      
+      try {
+        await apiRequest(`/api/posts/${postId}/like`, { method: 'POST' });
+        const currentLikes = parseInt(btn.textContent.match(/\d+/)?.[0] || 0);
+        btn.innerHTML = `<i class="fas fa-heart me-1"></i>${currentLikes + 1}`;
+        btn.classList.add('btn-primary');
+        btn.classList.remove('btn-outline-primary');
+      } catch (error) {
+        showAlert('Beğeni işlemi başarısız', 'danger');
+      }
+    }
+    
+    // Bookmark button
+    if (e.target.closest('.bookmark-btn')) {
+      const btn = e.target.closest('.bookmark-btn');
+      const postId = btn.dataset.postId;
+      
+      if (!CURRENT_USER) {
+        showAlert('Kaydetmek için giriş yapın', 'warning');
+        return;
+      }
+      
+      try {
+        await apiRequest(`/api/posts/${postId}/bookmark`, { method: 'POST' });
+        btn.classList.add('btn-warning');
+        btn.classList.remove('btn-outline-warning');
+        showAlert('Gönderi kaydedildi', 'success');
+      } catch (error) {
+        showAlert('Kaydetme işlemi başarısız', 'danger');
+      }
     }
   });
-  menu.addEventListener('click', async (e)=>{
-    const item = e.target.closest('.notif-item');
-    if (item){
-      e.preventDefault();
-      const id = item.getAttribute('data-id');
-      try{ await fetch(`${BACKEND_BASE}/api/notifications/${id}/read`, { method:'POST', headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` }}); item.querySelector('.badge')?.remove(); }
-      catch(err){ console.error(err); }
-    }
-    if (e.target && e.target.id === 'markAllRead'){
-      e.preventDefault();
-      // naive: iterate current items
-      menu.querySelectorAll('.notif-item').forEach(async a=>{
-        const id = a.getAttribute('data-id');
-        try{ await fetch(`${BACKEND_BASE}/api/notifications/${id}/read`, { method:'POST', headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` }}); a.querySelector('.badge')?.remove(); }catch(_){ }
-      });
-    }
-  });
+  
+  // Load more button
+  const loadMoreBtn = document.getElementById('loadMoreLatest');
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', () => loadLatestPostsPaginated(false));
+  }
 }
 
-// Markdown toolbar logic
-function setupMarkdownToolbar(){
-  const textarea = document.getElementById('postContent');
-  if (!textarea) return;
-  const toolbar = document.querySelector('[aria-label="Editor toolbar"]');
-  if (!toolbar) return;
-
-  function surroundSelection(prefix, suffix){
-    const start = textarea.selectionStart || 0;
-    const end = textarea.selectionEnd || 0;
-    const value = textarea.value;
-    const selected = value.slice(start, end);
-    const before = value.slice(0, start);
-    const after = value.slice(end);
-    textarea.value = before + prefix + selected + (suffix ?? '') + after;
-    const cursorPos = before.length + prefix.length + selected.length + (suffix ? suffix.length : 0);
-    textarea.focus();
-    textarea.setSelectionRange(cursorPos, cursorPos);
-    textarea.dispatchEvent(new Event('input'));
-  }
-
-  function insertLinePrefix(prefix){
-    const start = textarea.selectionStart || 0;
-    const end = textarea.selectionEnd || 0;
-    const value = textarea.value;
-    const pre = value.slice(0, start);
-    const sel = value.slice(start, end);
-    const post = value.slice(end);
-    // expand to full lines
-    const lineStart = pre.lastIndexOf('\n') + 1;
-    const lineEnd = end + (post.indexOf('\n')===-1 ? 0 : post.indexOf('\n'));
-    const block = value.slice(lineStart, lineEnd || end);
-    const lines = block.split('\n').map(l=> prefix + (l.trim().length? l : ''));
-    const newBlock = lines.join('\n');
-    textarea.value = value.slice(0, lineStart) + newBlock + value.slice(lineStart + block.length);
-    const newCursor = lineStart + newBlock.length;
-    textarea.focus();
-    textarea.setSelectionRange(newCursor, newCursor);
-    textarea.dispatchEvent(new Event('input'));
-  }
-
-  toolbar.addEventListener('click', (e)=>{
-    const btn = e.target.closest('[data-md-btn]');
-    if (!btn) return;
-    e.preventDefault();
-    const type = btn.getAttribute('data-md-btn');
-    if (type === 'bold') return surroundSelection('**','**');
-    if (type === 'italic') return surroundSelection('*','*');
-    if (type === 'strike') return surroundSelection('~~','~~');
-    if (type === 'h2') return insertLinePrefix('## ');
-    if (type === 'h3') return insertLinePrefix('### ');
-    if (type === 'quote') return insertLinePrefix('> ');
-    if (type === 'ul') return insertLinePrefix('- ');
-    if (type === 'ol') return insertLinePrefix('1. ');
-    if (type === 'task') return insertLinePrefix('- [ ] ');
-    if (type === 'link') return openUrlPopover('link');
-    if (type === 'image') return openUrlPopover('image');
-    if (type === 'code') return surroundSelection('`','`');
-    if (type === 'codeblock') return surroundSelection('\n```\n','\n```\n');
-    if (type === 'table'){
-      const tpl = '\n| Başlık 1 | Başlık 2 | Başlık 3 |\n| --- | --- | --- |\n| Hücre | Hücre | Hücre |\n| Hücre | Hücre | Hücre |\n';
-      return surroundSelection('\n'+tpl,'');
-    }
-    if (type === 'hr'){
-      return surroundSelection('\n\n---\n\n','');
-    }
-    if (type === 'emoji'){
-      if (typeof window.openEmojiPicker === 'function') window.openEmojiPicker();
-      return;
-    }
-  });
-
-  // Keyboard shortcuts
-  textarea.addEventListener('keydown', (e)=>{
-    if (e.ctrlKey || e.metaKey){
-      if (e.key.toLowerCase()==='b'){ e.preventDefault(); surroundSelection('**','**'); }
-      if (e.key.toLowerCase()==='i'){ e.preventDefault(); surroundSelection('*','*'); }
-      if (e.key.toLowerCase()==='k'){ e.preventDefault(); const url = prompt('Bağlantı URL'); if (url) surroundSelection('[',`](${url})`); }
-    }
-  });
-}
-
-// Popover for link/image URL
-function setupUrlPopoverForEditor(){
-  const pop = document.getElementById('urlPopover');
-  const popInput = document.getElementById('urlPopoverInput');
-  const popOk = document.getElementById('urlPopoverOk');
-  const popCancel = document.getElementById('urlPopoverCancel');
-  const popTitle = document.getElementById('urlPopoverTitle');
-  const textarea = document.getElementById('postContent');
-  if (!pop || !textarea) return;
-  let mode = 'link';
-  function placeNearToolbar(){
-    const toolbar = document.querySelector('[aria-label="Editor toolbar"]');
-    if (!toolbar) return;
-    const rect = toolbar.getBoundingClientRect();
-    pop.style.left = Math.max(16, rect.left + window.scrollX) + 'px';
-    pop.style.top = (rect.bottom + window.scrollY + 8) + 'px';
-  }
-  function open(type){ mode = type; pop.style.display='block'; placeNearToolbar(); popInput.value=''; popInput.focus(); popTitle.textContent = type==='link' ? 'Bağlantı ekle' : 'Resim ekle'; }
-  function close(){ pop.style.display='none'; }
-  window.openUrlPopover = open;
-  popOk.addEventListener('click', ()=>{
-    const url = popInput.value.trim();
-    if (!url) { close(); return; }
-    if (mode==='link'){
-      // surround with [text](url)
-      const start = textarea.selectionStart || 0; const end = textarea.selectionEnd || 0;
-      const sel = textarea.value.slice(start,end) || 'bağlantı';
-      const before = textarea.value.slice(0,start), after = textarea.value.slice(end);
-      textarea.value = before + '[' + sel + '](' + url + ')' + after;
-    } else {
-      const start = textarea.selectionStart || 0; const end = textarea.selectionEnd || 0;
-      const sel = textarea.value.slice(start,end) || 'alt';
-      const before = textarea.value.slice(0,start), after = textarea.value.slice(end);
-      textarea.value = before + '![' + sel + '](' + url + ')' + after;
-    }
-    textarea.focus();
-    textarea.dispatchEvent(new Event('input'));
-    close();
-  });
-  popCancel.addEventListener('click', close);
-  document.addEventListener('click', (e)=>{ if (!pop.contains(e.target) && !e.target.closest('[data-md-btn="link"], [data-md-btn="image"]')) close(); });
-  window.addEventListener('resize', placeNearToolbar);
-}
-
-// Draft autosave
-function setupDraftAutosave(){
-  const form = document.getElementById('newPostForm');
-  if (!form) return;
-  const title = document.getElementById('postTitle');
-  const content = document.getElementById('postContent');
-  const category = document.getElementById('postCategory');
-  const mediaUrl = document.getElementById('postMediaUrl');
-  const linkUrl = document.getElementById('postLinkUrl');
-  const KEY = 'draft_newpost_v1';
-  // Restore
-  try{
-    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (saved){
-      if (saved.title && title) title.value = saved.title;
-      if (saved.content && content) content.value = saved.content;
-      if (saved.category && category) category.value = saved.category;
-      if (saved.mediaUrl && mediaUrl) mediaUrl.value = saved.mediaUrl;
-      if (saved.linkUrl && linkUrl) linkUrl.value = saved.linkUrl;
-      content?.dispatchEvent(new Event('input'));
-    }
-  }catch(_){ }
-  function persist(){
-    const data = { title: title?.value||'', content: content?.value||'', category: category?.value||'', mediaUrl: mediaUrl?.value||'', linkUrl: linkUrl?.value||'' };
-    localStorage.setItem(KEY, JSON.stringify(data));
-  }
-  ['input','change','keyup'].forEach(evt=>{
-    [title,content,category,mediaUrl,linkUrl].forEach(el=>{ if (el) el.addEventListener(evt, persist); });
-  });
-  form.addEventListener('submit', ()=>{ try{ localStorage.removeItem(KEY); }catch(_){ } });
-}
-
-// Mention autocomplete (very simple)
-function setupMentionAutocomplete(){
-  const textarea = document.getElementById('postContent');
-  if (!textarea) return;
-  const listEl = document.createElement('div');
-  listEl.className = 'card shadow-sm';
-  listEl.style.cssText = 'position:absolute; z-index:2000; display:none; width:220px;';
-  document.body.appendChild(listEl);
-  let candidates = [];
-  async function ensureCandidates(){
-    if (candidates.length) return;
-    try{
-      // Basit: son 400 post yazarlarını topla (backend search endpoint'ini kullanalım)
-      const r = await fetch(`${BACKEND_BASE}/api/posts/latest`);
-      const items = await r.json();
-      const names = new Set(); items.forEach(p=>{ if (p.authorName) names.add(p.authorName); });
-      candidates = Array.from(names);
-    }catch(_){ candidates = []; }
-  }
-  function placeList(){
-    const rect = textarea.getBoundingClientRect();
-    listEl.style.left = (rect.left + window.scrollX + 8) + 'px';
-    listEl.style.top = (rect.top + window.scrollY + rect.height - 8) + 'px';
-  }
-  function showList(items){
-    if (!items.length){ hideList(); return; }
-    listEl.innerHTML = '<div class="list-group list-group-flush">' + items.slice(0,8).map(n=>`<button type="button" class="list-group-item list-group-item-action py-1 px-2">@${n}</button>`).join('') + '</div>';
-    placeList();
-    listEl.style.display='block';
-  }
-  function hideList(){ listEl.style.display='none'; }
-  textarea.addEventListener('input', async ()=>{
-    const val = textarea.value;
-    const m = val.slice(0, textarea.selectionStart||0).match(/@([a-zA-Z0-9_]{2,20})$/);
-    if (!m){ hideList(); return; }
-    await ensureCandidates();
-    const q = m[1].toLowerCase();
-    const matches = candidates.filter(n=> n.toLowerCase().startsWith(q));
-    showList(matches);
-  });
-  listEl.addEventListener('click', (e)=>{
-    const btn = e.target.closest('button.list-group-item');
-    if (!btn) return;
-    const handle = btn.textContent.replace('@','');
-    const pos = textarea.selectionStart||0;
-    const before = textarea.value.slice(0,pos).replace(/@([a-zA-Z0-9_]{2,20})$/, '@'+handle);
-    const after = textarea.value.slice(pos);
-    textarea.value = before + after;
-    textarea.focus();
-    textarea.dispatchEvent(new Event('input'));
-    hideList();
-  });
-  document.addEventListener('click', (e)=>{ if (!listEl.contains(e.target)) hideList(); });
-  window.addEventListener('resize', placeList);
-}
-
-// Emoji picker
-function setupEmojiPicker(){
-  const picker = document.getElementById('emojiPicker');
-  const grid = document.getElementById('emojiGrid');
-  const search = document.getElementById('emojiSearch');
-  const textarea = document.getElementById('postContent');
-  if (!picker || !grid || !search || !textarea) return;
-  // Simple emoji set (can be expanded)
-  const EMOJIS = '😀 😃 😄 😁 😆 😅 😂 🙂 😉 😊 😇 🤩 😍 😘 😗 😙 😚 😋 😛 😜 🤪 🤓 😎 🥳 🤠 😏 🤗 🤔 🤨 😐 😑 😶 🙄 😯 😪 😴 🤤 😮‍💨 😌 😍 🙌 👍 👎 👏 🙏 🔥 🎉 💯 ✨ 🎶 🎵 🎧 🥁 🎸 🎹 🎺 🎻 🎤 🎼'.split(' ');
-  function render(list){
-    grid.innerHTML = list.map(e=>`<button type="button" class="btn btn-sm btn-outline-secondary" data-emoji="${e}">${e}</button>`).join('');
-  }
-  function place(){
-    const toolbar = document.querySelector('[aria-label="Editor toolbar"]');
-    if (!toolbar) return;
-    const rect = toolbar.getBoundingClientRect();
-    picker.style.left = Math.max(16, rect.left + window.scrollX) + 'px';
-    picker.style.top = (rect.bottom + window.scrollY + 8) + 'px';
-  }
-  function open(){ picker.style.display='block'; place(); search.value=''; render(EMOJIS); search.focus(); }
-  function close(){ picker.style.display='none'; }
-  window.openEmojiPicker = open;
-  grid.addEventListener('click', (e)=>{
-    const btn = e.target.closest('[data-emoji]'); if (!btn) return;
-    const emoji = btn.getAttribute('data-emoji');
-    const start = textarea.selectionStart||0; const end = textarea.selectionEnd||0;
-    const before = textarea.value.slice(0,start); const after = textarea.value.slice(end);
-    textarea.value = before + emoji + after;
-    const pos = before.length + emoji.length; textarea.focus(); textarea.setSelectionRange(pos,pos); textarea.dispatchEvent(new Event('input'));
-    close();
-  });
-  search.addEventListener('input', ()=>{
-    const q = search.value.trim();
-    if (!q){ render(EMOJIS); return; }
-    const res = EMOJIS.filter(e=> e.includes(q));
-    render(res);
-  });
-  document.addEventListener('click', (e)=>{ if (!picker.contains(e.target) && !e.target.closest('[data-md-btn="emoji"]')) close(); });
-  window.addEventListener('resize', place);
-}
-
-// Basit sahte kimlik doğrulama kancaları (yerine Firebase gelecek)
-window.addEventListener('load', ()=>{
+// Form handlers
+function setupFormHandlers() {
+  // Login form
   const loginForm = document.getElementById('loginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+      
+      try {
+        const response = await apiRequest('/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        
+        CURRENT_USER = response.user;
+        AUTH_TOKEN = response.token;
+        localStorage.setItem('user', JSON.stringify(CURRENT_USER));
+        localStorage.setItem('token', AUTH_TOKEN);
+        
+        updateAuthUI();
+        showAlert('Giriş başarılı!', 'success');
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        modal.hide();
+        
+      } catch (error) {
+        showAlert('Giriş başarısız: ' + error.message, 'danger');
+      }
+    });
+  }
+  
+  // Register form
   const registerForm = document.getElementById('registerForm');
-  // Helper: fully close any open modals and remove stray backdrops
-  function closeAllModals(){
-    try{
-      document.querySelectorAll('.modal.show').forEach(m=>{
-        try{ bootstrap.Modal.getOrCreateInstance(m).hide(); }catch(_){ }
-      });
-      document.querySelectorAll('.modal-backdrop').forEach(b=>b.remove());
-      document.body.classList.remove('modal-open');
-      document.body.style.removeProperty('padding-right');
-    }catch(e){ console.warn('closeAllModals warn', e); }
-  }
-  // Login modalına "Şifremi unuttum?" akışını ekle
-  const loginModal = document.getElementById('loginModal');
-  if (loginModal){
-    const body = loginModal.querySelector('.modal-body');
-    if (body && !body.querySelector('#forgotPasswordLink')){
-      const forgotWrapper = document.createElement('div');
-      forgotWrapper.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mt-2">
-          <small class="text-muted">Parolanızı mı unuttunuz?</small>
-          <a href="#" id="forgotPasswordLink" class="small">Şifremi unuttum</a>
-        </div>
-        <form id="resetPasswordForm" class="mt-2 d-none">
-          <input name="email" type="email" class="form-control mb-2" placeholder="Kayıtlı email" required>
-          <input name="newPassword" type="password" class="form-control mb-2" placeholder="Yeni parola" required>
-          <button type="submit" class="btn btn-outline-secondary w-100">Parolayı Sıfırla</button>
-        </form>
-      `;
-      body.appendChild(forgotWrapper);
-      const forgotLink = body.querySelector('#forgotPasswordLink');
-      const resetForm = body.querySelector('#resetPasswordForm');
-      const loginEmailInput = body.querySelector('input[name="email"]');
-      if (forgotLink && resetForm){
-        forgotLink.addEventListener('click', (e)=>{
-          e.preventDefault();
-          // email alanını reset formuna taşı
-          const resetEmail = resetForm.querySelector('input[name="email"]');
-          if (loginEmailInput && resetEmail && !resetEmail.value){
-            resetEmail.value = loginEmailInput.value;
-          }
-          resetForm.classList.toggle('d-none');
-        });
-        resetForm.addEventListener('submit', async (e)=>{
-          e.preventDefault();
-          const fd = new FormData(resetForm);
-          const payload = { email: fd.get('email'), newPassword: fd.get('newPassword') };
-          try{
-            const r = await fetch(`${BACKEND_BASE}/api/auth/reset-password`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-            const data = await r.json();
-            if(data.error){ alert(data.error); return; }
-            alert('Parola sıfırlandı. Yeni parolanızla giriş yapabilirsiniz.');
-            resetForm.classList.add('d-none');
-            // yeni parola ile girişe odaklan
-            if (loginEmailInput){ loginEmailInput.value = payload.email; }
-            const loginPwd = body.querySelector('input[name="password"]');
-            if (loginPwd){ loginPwd.value = fd.get('newPassword'); }
-          }catch(err){ console.error(err); alert('Parola sıfırlama hatası'); }
-        });
-      }
-    }
-  }
-  if (registerForm){
-    registerForm.addEventListener('submit', async (e)=>{
+  if (registerForm) {
+    registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const fd = new FormData(registerForm);
-      const payload = { username: fd.get('username'), email: fd.get('email'), password: fd.get('password') };
-      try{
-        const r = await fetch(`${BACKEND_BASE}/api/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-        const data = await r.json();
-        if(data.error){ alert(data.error); return; }
-        localStorage.setItem('user', JSON.stringify(data.user)); localStorage.setItem('token', data.token);
-        CURRENT_USER = data.user; AUTH_TOKEN = data.token; updateAuthUI();
-        const reg = document.getElementById('registerModal');
-        if (reg){ bootstrap.Modal.getOrCreateInstance(reg).hide(); }
-        closeAllModals();
-        alert('Kayıt başarılı. E-postanızı doğrulamanız için bağlantı gönderildi.');
-      }catch(err){ console.error(err); alert('Kayıt hatası'); }
+      
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+      
+      try {
+        const response = await apiRequest('/api/auth/register', {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        
+        showAlert('Kayıt başarılı! E-posta adresinizi kontrol edin.', 'success');
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+        modal.hide();
+        
+      } catch (error) {
+        showAlert('Kayıt başarısız: ' + error.message, 'danger');
+      }
     });
   }
-  if (loginForm){
-    loginForm.addEventListener('submit', async (e)=>{
+  
+  // Create post form
+  const createPostForm = document.getElementById('newPostForm');
+  if (createPostForm) {
+    createPostForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const fd = new FormData(loginForm);
-      const payload = { email: fd.get('email'), password: fd.get('password') };
-      try{
-        const r = await fetch(`${BACKEND_BASE}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-        const data = await r.json();
-        if(data.error){ alert(data.error); return; }
-        localStorage.setItem('user', JSON.stringify(data.user)); localStorage.setItem('token', data.token);
-        CURRENT_USER = data.user; AUTH_TOKEN = data.token; updateAuthUI();
-        const logm = document.getElementById('loginModal');
-        if (logm){ bootstrap.Modal.getOrCreateInstance(logm).hide(); }
-        closeAllModals();
-        if (!data.user?.verified){
-          // kullanıcıya doğrulama linki isteği opsiyonu sun
-          if (confirm('E-postanız doğrulanmamış görünüyor. Doğrulama bağlantısı gönderilsin mi?')){
-            try{ await fetch(`${BACKEND_BASE}/api/auth/send-verification`, { method:'POST', headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` } }); alert('Doğrulama e-postası gönderildi.'); }catch(_){ alert('Gönderilemedi.'); }
-          }
+      
+      if (!CURRENT_USER) {
+        showAlert('Gönderi oluşturmak için giriş yapın', 'warning');
+        return;
+      }
+      
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+      
+      try {
+        await apiRequest('/api/posts', {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        
+        showAlert('Gönderi başarıyla oluşturuldu!', 'success');
+        
+        // Close modal and reload posts
+        const modal = bootstrap.Modal.getInstance(document.getElementById('createPostModal'));
+        modal.hide();
+        
+        // Reload posts if on main page
+        if (document.getElementById('latestPostsList')) {
+          loadLatestPostsPaginated(true);
         }
-      }catch(err){ console.error(err); alert('Giriş hatası'); }
+        
+      } catch (error) {
+        showAlert('Gönderi oluşturulamadı: ' + error.message, 'danger');
+      }
     });
   }
-});
+}
 
-// Arama, sayfalandırma, like, tag desteği:
+// Stats functions
+async function loadStats() {
+  try {
+    const data = await apiRequest('/api/stats');
+    
+    const totalPosts = document.getElementById('totalPosts');
+    const totalUsers = document.getElementById('totalUsers');
+    const totalComments = document.getElementById('totalComments');
+    
+    if (totalPosts) totalPosts.textContent = data.totalPosts || 0;
+    if (totalUsers) totalUsers.textContent = data.totalUsers || 0;
+    if (totalComments) totalComments.textContent = data.totalComments || 0;
+    
+  } catch (error) {
+    console.error('Stats loading error:', error);
+  }
+}
 
-// Search
-const searchInput = document.getElementById('globalSearch') || document.querySelector('input[placeholder="Ara..."]');
-if (searchInput){
-  searchInput.id = 'globalSearch';
-  let t;
-  searchInput.addEventListener('input', ()=>{
-    clearTimeout(t);
-    const q = searchInput.value.trim();
-    t = setTimeout(async ()=>{
-      if (!q) return;
-      const r = await fetch(`${BACKEND_BASE}/api/search?q=${encodeURIComponent(q)}`);
-      const items = await r.json();
-      // basit render: latestPosts alanına yaz
-      const container = document.getElementById("latestPosts");
-      if (container){
-        container.innerHTML = items.map(p=>`
-          <div class="col-md-6 mb-3">
-            <div class="card h-100 shadow-sm" data-post-id="${p.id}">
-              <div class="card-body">
-                ${p.mediaUrl?`<img src="${p.mediaUrl}" class="post-thumb mb-2">`:''}
-                <h5 class="card-title">${p.title}</h5>
-                <div class="mb-2"><span class="badge bg-secondary">${p.category||''}</span> ${Array.isArray(p.tags)?p.tags.map(t=>`<span class="badge bg-dark ms-1">#${t}</span>`).join(''):''}</div>
-                <p class="card-text">${(p.content||'').substring(0,150)}...</p>
-              </div>
-            </div>
-          </div>
-        `).join('');
-        attachPostCardHandlers(container);
-      }
-    }, 300);
-  });
-
-  // Enter ile gelişmiş arama sayfasına git
-  searchInput.addEventListener('keydown', (e)=>{
-    if (e.key === 'Enter'){
-      const val = searchInput.value.trim();
-      if (val){
-        e.preventDefault();
-        const base = location.pathname.includes('/pages/') ? '' : 'pages/';
-        location.href = `${base}search.html?q=${encodeURIComponent(val)}`;
-      }
+// Featured post
+async function loadFeaturedPost() {
+  try {
+    const data = await apiRequest('/api/posts?featured=true&limit=1');
+    
+    if (data.posts && data.posts.length > 0) {
+      const post = data.posts[0];
+      const titleEl = document.getElementById('heroPinnedTitle');
+      const excerptEl = document.getElementById('heroPinnedExcerpt');
+      const linkEl = document.getElementById('heroPinnedLink');
+      const imgEl = document.getElementById('heroPinnedImg');
+      
+      if (titleEl) titleEl.textContent = post.title;
+      if (excerptEl) excerptEl.textContent = post.content ? post.content.substring(0, 140) + '...' : '';
+      if (linkEl) linkEl.href = `pages/post.html?id=${post.id}`;
+      if (imgEl && post.mediaUrl) imgEl.src = post.mediaUrl;
     }
-  });
-}
-
-// "En son" için sayfalandırma (Load More)
-let latestCursor = null;
-async function loadLatestPostsPaginated(reset=false){
-  const container = document.getElementById("latestPosts");
-  if (!container) return;
-  if (reset){ latestCursor = null; container.innerHTML = ''; }
-  const url = new URL(`${BACKEND_BASE}/api/posts`);
-  if (latestCursor) url.searchParams.set('after', latestCursor);
-  const r = await fetch(url.toString());
-  const data = await r.json();
-  const items = data.items || [];
-  container.insertAdjacentHTML('beforeend', items.map(p=>`
-    <div class="col-md-6 mb-3">
-      <div class="card h-100 shadow-sm" data-post-id="${p.id}">
-        <div class="card-body">
-          ${p.mediaUrl?`<img src="${p.mediaUrl}" class="post-thumb mb-2">`:''}
-          <h5 class="card-title">${p.title}</h5>
-          <div class="mb-2"><span class="badge bg-secondary">${p.category||''}</span> ${Array.isArray(p.tags)?p.tags.map(t=>`<span class="badge bg-dark ms-1">#${t}</span>`).join(''):''}</div>
-          <p class="card-text">${(p.content||'').substring(0,150)}...</p>
-        </div>
-      </div>
-    </div>
-  `).join(''));
-  attachPostCardHandlers(container);
-  latestCursor = data.nextAfter;
-  const moreBtn = document.getElementById('loadMoreLatest');
-  if (moreBtn){ moreBtn.disabled = !latestCursor; moreBtn.classList.toggle('d-none', !latestCursor); }
-}
-
-// Post like butonları (kart üstünde gösterim basit):
-function renderLikeButton(p){
-  return `<button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>`;
-}
-document.addEventListener('click', async (e)=>{
-  const btn = e.target.closest('.like-btn');
-  if (!btn) return;
-  if (!CURRENT_USER){ alert('Beğenmek için giriş yapın'); return; }
-  const id = btn.getAttribute('data-id');
-  const r = await fetch(`${BACKEND_BASE}/api/posts/${id}/like`, { method:'POST', headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` }});
-  const data = await r.json();
-  if (!data.error){ btn.innerHTML = `👍 ${data.likes}`; }
-});
-
-// Bookmarks toggle
-document.addEventListener('click', async (e)=>{
-  const b = e.target.closest('.bookmark-btn');
-  if (!b) return;
-  e.preventDefault(); e.stopPropagation();
-  if (!CURRENT_USER){ alert('Kaydetmek için giriş yapın'); return; }
-  const id = b.getAttribute('data-id');
-  try{
-    const r = await fetch(`${BACKEND_BASE}/api/posts/${id}/bookmark`, { method:'POST', headers:{ 'Authorization': `Bearer ${AUTH_TOKEN}` }});
-    const data = await r.json();
-    if (!data.error){ b.innerHTML = data.bookmarked ? '🔖 Kaydedildi' : '🔖 Kaydet'; }
-  }catch(err){ console.error(err); }
-});
-
-// Navbar temaya uygun renkte değiştiriliyor
-function updateNavbarTheme() {
-  const navbar = document.querySelector(".navbar");
-  if (!navbar) return;
-
-  const isDarkTheme = !document.documentElement.hasAttribute('data-theme') || document.documentElement.getAttribute('data-theme') !== 'light';
-  if (isDarkTheme) {
-    navbar.classList.remove("navbar-light", "bg-light");
-    navbar.classList.add("navbar-dark");
-  } else {
-    navbar.classList.remove("navbar-dark");
-    navbar.classList.add("navbar-light", "bg-light");
+  } catch (error) {
+    console.error('Featured post loading error:', error);
   }
 }
 
-// Sayfa yüklendiğinde ve tema değiştiğinde çalıştır
-window.addEventListener("DOMContentLoaded", updateNavbarTheme);
-window.addEventListener("themeChange", updateNavbarTheme);
-
-// Ensure navbar-dark class persists on dark theme
-if (localStorage.getItem('theme') === 'dark') {
-  const navbar = document.querySelector('nav');
-  if (navbar && !navbar.classList.contains('navbar-dark')) {
-    navbar.classList.add('navbar-dark');
+// Initialize app
+document.addEventListener('DOMContentLoaded', () => {
+  updateAuthUI();
+  setupEventHandlers();
+  setupFormHandlers();
+  
+  // Load content based on page
+  if (document.getElementById('latestPostsList')) {
+    loadLatestPostsPaginated(true);
   }
-}
+  
+  if (document.getElementById('popularPosts')) {
+    loadPopularPosts();
+  }
+  
+  if (document.getElementById('categoryPosts')) {
+    const category = document.body.getAttribute('data-category');
+    if (category) {
+      loadCategoryPosts(category);
+    }
+  }
+  
+  // Load stats
+  loadStats();
+  
+  // Load featured post
+  loadFeaturedPost();
+});
 
-// Clear cache-busting issue by appending version query to CSS
-const link = document.querySelector('link[href*="styles.css"]');
-if (link) {
-  const url = new URL(link.href);
-  url.searchParams.set('v', Date.now());
-  link.href = url.toString();
-}
-
-// Dil toggle yönetimi lang.js tarafından yapılır; app.js içerisinde tekrarlanmaz
+// Export for use in other scripts
+window.NaraMusic = {
+  apiRequest,
+  showAlert,
+  loadLatestPostsPaginated,
+  loadPopularPosts,
+  loadCategoryPosts,
+  CURRENT_USER,
+  AUTH_TOKEN
+};

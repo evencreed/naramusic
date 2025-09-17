@@ -1,0 +1,86 @@
+<!-- Topbar -->
+<div class="topbar d-none d-lg-block">
+  <div class="container">
+    <div class="me-auto small text-muted">Nara Müzik — Müzik tartışma topluluğu</div>
+    <div class="d-flex gap-3">
+      <a href="#about" class="text-muted">Hakkında</a>
+      <a href="contact.html" class="text-muted">İletişim</a>
+      <a href="submit.html" class="text-muted">Gönder</a>
+    </div>
+  </div>
+</div>
+
+<!-- Main navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
+  <div class="container-fluid">
+    <div class="d-flex align-items-center">
+      <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">
+        <i class="fas fa-bars"></i>
+      </button>
+      <a class="navbar-brand me-3" href="../index.html">Nara Müzik</a>
+
+      <!-- Desktop links -->
+      <div class="d-none d-lg-flex align-items-center gap-2">
+        <a class="nav-link px-2" href="yenimuzik.html">Yeni Müzik</a>
+        <a class="nav-link px-2" href="endustri.html">Endüstri Haberleri</a>
+        <a class="nav-link px-2" href="degerlendirme.html">Değerlendirme</a>
+        <a class="nav-link px-2" href="album.html">Albüm İnceleme</a>
+        <a class="nav-link px-2" href="roportaj.html">Röportajlar</a>
+        <a class="nav-link px-2" href="etkinlik.html">Etkinlikler</a>
+        <a class="nav-link px-2" href="dizifilm.html">Dizi & Filmler</a>
+      </div>
+    </div>
+
+    <div class="d-flex ms-auto align-items-center gap-2">
+      <!-- Search -->
+      <div class="d-none d-md-block">
+        <input id="globalSearch" class="form-control form-control-sm" style="width:220px" placeholder="Ara...">
+      </div>
+
+      <!-- Language Toggle -->
+      <select id="language-toggle" class="form-select form-select-sm" style="width: auto;">
+        <option value="en">EN</option>
+        <option value="tr" selected>TR</option>
+      </select>
+
+      <!-- Theme Toggle -->
+      <button id="themeToggle" class="btn btn-outline-light btn-sm">
+        <i class="fas fa-moon"></i>
+      </button>
+
+      <!-- New Post Button -->
+      <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">
+        <i class="fas fa-plus me-1"></i>Yeni Gönderi
+      </button>
+
+      <!-- Auth Buttons -->
+      <div id="authButtons" class="d-flex gap-1">
+        <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
+        <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile Sidebar -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="sideMenu">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Menü</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <nav class="nav flex-column">
+      <a class="nav-link" href="yenimuzik.html">Yeni Müzik</a>
+      <a class="nav-link" href="endustri.html">Endüstri Haberleri</a>
+      <a class="nav-link" href="degerlendirme.html">Değerlendirme</a>
+      <a class="nav-link" href="album.html">Albüm İnceleme</a>
+      <a class="nav-link" href="roportaj.html">Röportajlar</a>
+      <a class="nav-link" href="etkinlik.html">Etkinlikler</a>
+      <a class="nav-link" href="dizifilm.html">Dizi & Filmler</a>
+      <hr>
+      <a class="nav-link" href="profil.html" id="savedLink" style="display: none;">Profil</a>
+      <a class="nav-link" href="messages.html" id="modLink" style="display: none;">Mesajlar</a>
+      <a class="nav-link" href="admin.html" id="modLink" style="display: none;">Yönetim</a>
+    </nav>
+  </div>
+</div>
