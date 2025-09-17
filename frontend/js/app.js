@@ -103,12 +103,14 @@ function updateAuthUI() {
 }
 
 
-// API functions with retry mechanism
+// API functions with retry mechanism and HTTP/1.1 fallback
 async function apiRequest(endpoint, options = {}, retries = 3) {
   const url = `${BACKEND_BASE}${endpoint}`;
   const config = {
     headers: {
       'Content-Type': 'application/json',
+      'Connection': 'keep-alive',
+      'Cache-Control': 'no-cache',
       ...(AUTH_TOKEN && { 'Authorization': `Bearer ${AUTH_TOKEN}` })
     },
     ...options
@@ -117,7 +119,22 @@ async function apiRequest(endpoint, options = {}, retries = 3) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       console.log(`Trying ${url} (attempt ${attempt}/${retries})`);
-      const response = await fetch(url, config);
+      
+      // Try with different fetch configurations
+      let response;
+      if (attempt === 1) {
+        // First attempt: normal fetch
+        response = await fetch(url, config);
+      } else if (attempt === 2) {
+        // Second attempt: with no-cors mode for HTTP2 issues
+        response = await fetch(url, { ...config, mode: 'cors', cache: 'no-cache' });
+      } else {
+        // Third attempt: with different headers
+        response = await fetch(url, { 
+          ...config, 
+          headers: { ...config.headers, 'Accept': 'application/json' }
+        });
+      }
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -132,7 +149,7 @@ async function apiRequest(endpoint, options = {}, retries = 3) {
       console.error(`API Error (attempt ${attempt}/${retries}):`, error);
       
       // Check if it's a network error that might be retryable
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('HTTP2'))) {
         if (attempt < retries) {
           console.log(`Retrying in ${attempt * 1000}ms...`);
           await new Promise(resolve => setTimeout(resolve, attempt * 1000));
