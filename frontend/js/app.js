@@ -201,6 +201,7 @@ function loadPopularPosts() {
       container.innerHTML = posts.map(p => {
         const thumb = p.mediaUrl ? `<img src="${p.mediaUrl}" alt="" class="post-thumb mb-2">` : '';
         const linkBtn = p.linkUrl ? `<a href="${p.linkUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">Bağlantı</a>` : '';
+        const musicPreview = p.musicData ? `<div class="music-preview-container mt-2" data-music='${JSON.stringify(p.musicData)}'></div>` : '';
         return `
         <div class="col-md-4 mb-3">
           <div class="card h-100 shadow-sm" data-post-id="${p.id}">
@@ -211,6 +212,7 @@ function loadPopularPosts() {
               <p class="card-text">${p.content.substring(0,100)}...</p>
               <span class="badge bg-primary">${p.category}</span>
               ${linkBtn ? `<div class=\"mt-2\">${linkBtn}</div>` : ''}
+              ${musicPreview}
               <div class="mt-2 d-flex gap-2">
                 <button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>
                 <button class="btn btn-sm btn-outline-light bookmark-btn" data-id="${p.id}">🔖 Kaydet</button>
@@ -220,6 +222,8 @@ function loadPopularPosts() {
         </div>
       `;}).join("");
       attachPostCardHandlers(container);
+      // Trigger music preview initialization
+      document.dispatchEvent(new CustomEvent('postsLoaded'));
     })
     .catch(err => console.error("Popüler postları yüklerken hata:", err));
 }
@@ -252,6 +256,7 @@ function loadLatestPosts() {
       container.innerHTML = posts.map(p => {
         const thumb = p.mediaUrl ? `<img src="${p.mediaUrl}" alt="" class="post-thumb mb-2">` : '';
         const linkBtn = p.linkUrl ? `<a href="${p.linkUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">Bağlantı</a>` : '';
+        const musicPreview = p.musicData ? `<div class="music-preview-container mt-2" data-music='${JSON.stringify(p.musicData)}'></div>` : '';
         return `
         <div class="col-md-6 mb-3">
           <div class="card h-100 shadow-sm" data-post-id="${p.id}">
@@ -262,6 +267,7 @@ function loadLatestPosts() {
               <p class="card-text">${p.content.substring(0,150)}...</p>
               <span class="badge bg-secondary">${p.category}</span>
               ${linkBtn ? `<div class=\"mt-2\">${linkBtn}</div>` : ''}
+              ${musicPreview}
               <div class="mt-2 d-flex gap-2">
                 <button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>
                 <button class="btn btn-sm btn-outline-light bookmark-btn" data-id="${p.id}">🔖 Kaydet</button>
@@ -271,6 +277,8 @@ function loadLatestPosts() {
         </div>
       `;}).join("");
       attachPostCardHandlers(container);
+      // Trigger music preview initialization
+      document.dispatchEvent(new CustomEvent('postsLoaded'));
     })
     .catch(err => console.error("Son postları yüklerken hata:", err));
 }
@@ -301,6 +309,7 @@ function loadCategoryPosts(category) {
         const thumb = p.mediaUrl ? `<img src="${p.mediaUrl}" alt="" class="post-thumb mb-2">` : '';
         const linkBtn = p.linkUrl ? `<a href="${p.linkUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">Bağlantı</a>` : '';
         const author = p.authorName ? `<a class="link-light text-decoration-none" href="${location.pathname.includes('/pages/')?'':'pages/'}user.html?uid=${p.authorId}&name=${encodeURIComponent(p.authorName)}">${p.authorName}</a>` : 'Anonim';
+        const musicPreview = p.musicData ? `<div class="music-preview-container mt-2" data-music='${JSON.stringify(p.musicData)}'></div>` : '';
         return `
         <div class="col-md-6 mb-3">
           <div class="card h-100 shadow-sm" data-post-id="${p.id}">
@@ -311,6 +320,7 @@ function loadCategoryPosts(category) {
               <p class="card-text">${p.content.substring(0,150)}...</p>
               <small class="text-muted">Paylaşan: ${author}</small>
               ${linkBtn ? `<div class=\"mt-2\">${linkBtn}</div>` : ''}
+              ${musicPreview}
               <div class="mt-2 d-flex gap-2">
                 <button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">👍 ${p.likes||0}</button>
                 <button class="btn btn-sm btn-outline-light bookmark-btn" data-id="${p.id}">🔖 Kaydet</button>
@@ -320,6 +330,8 @@ function loadCategoryPosts(category) {
         </div>
       `;}).join("");
       attachPostCardHandlers(container);
+      // Trigger music preview initialization
+      document.dispatchEvent(new CustomEvent('postsLoaded'));
     })
     .catch(err => console.error("Kategori postlarını yüklerken hata:", err));
 }
@@ -331,11 +343,24 @@ function attachPostCardHandlers(scope){
   cards.forEach(card => {
     card.style.cursor = 'pointer';
     card.addEventListener('click', async (ev)=>{
-      if (ev.target.closest('.btn, .bookmark-btn, .like-btn, a')) return;
+      if (ev.target.closest('.btn, .bookmark-btn, .like-btn, a, .music-preview')) return;
       const id = card.getAttribute('data-post-id');
       const base = location.pathname.includes('/pages/') ? '' : 'pages/';
       location.href = `${base}post.html?id=${encodeURIComponent(id)}`;
     });
+  });
+
+  // Setup music previews for cards with music data
+  const musicContainers = root.querySelectorAll('.music-preview-container[data-music]');
+  musicContainers.forEach(container => {
+    try {
+      const musicData = JSON.parse(container.getAttribute('data-music'));
+      if (musicData && musicData.trackId) {
+        container.innerHTML = musicPreview.createPreviewWidgetFromMusicData(musicData);
+      }
+    } catch (error) {
+      console.error('Error parsing music data:', error);
+    }
   });
 }
 
@@ -376,6 +401,11 @@ function showPostDetailModal(p){
 // Yeni Post Ekleme Sayfası (newpost.html)
 function setupNewPostForm() {
   const form = document.getElementById("newPostForm");
+  if (!form) return;
+
+  // Setup music selection
+  setupMusicSelection();
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!CURRENT_USER){
@@ -391,6 +421,16 @@ function setupNewPostForm() {
     const tags = (document.getElementById("postTags")?.value || '')
       .split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
 
+    // Get selected music track
+    const selectedTrack = window.musicSearch?.getSelectedTrack();
+    const musicData = selectedTrack ? {
+      trackId: selectedTrack.id,
+      trackName: selectedTrack.name,
+      artistName: selectedTrack.artist,
+      albumName: selectedTrack.album,
+      coverUrl: selectedTrack.coverUrl
+    } : null;
+
     const authorId = CURRENT_USER.id;
     const authorName = CURRENT_USER.username;
 
@@ -398,7 +438,15 @@ function setupNewPostForm() {
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${AUTH_TOKEN}` },
-        body: JSON.stringify({ title, content, category, mediaUrl, linkUrl, tags })
+        body: JSON.stringify({ 
+          title, 
+          content, 
+          category, 
+          mediaUrl, 
+          linkUrl, 
+          tags,
+          musicData 
+        })
       });
       const data = await res.json();
 
@@ -407,6 +455,7 @@ function setupNewPostForm() {
       } else {
         alert("Post başarıyla eklendi!");
         form.reset();
+        clearMusicSelection();
         // Kategori sayfasına yönlendir
         const categoryTo = (category || '').toLowerCase();
         const base = location.pathname.includes('/pages/') ? '' : 'pages/';
@@ -430,6 +479,114 @@ function setupNewPostForm() {
       console.error("Post ekleme hatası:", err);
     }
   });
+}
+
+// Setup music selection for post form
+function setupMusicSelection() {
+  // Add music selection button to form
+  const form = document.getElementById("newPostForm");
+  if (!form) return;
+
+  // Check if music selection already exists
+  if (document.getElementById("musicSelectionContainer")) return;
+
+  const musicSelectionHTML = `
+    <div class="mb-3" id="musicSelectionContainer">
+      <label class="form-label">🎵 Müzik Seç (Opsiyonel)</label>
+      <div class="d-flex gap-2 mb-2">
+        <button type="button" class="btn btn-outline-primary btn-sm" id="selectMusicBtn">
+          <i class="fas fa-music"></i> Müzik Ara ve Seç
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearMusicBtn" style="display: none;">
+          <i class="fas fa-times"></i> Temizle
+        </button>
+      </div>
+      <div id="selectedMusicDisplay" class="d-none">
+        <div class="card">
+          <div class="card-body p-3">
+            <div class="d-flex align-items-center gap-3">
+              <img id="selectedMusicCover" src="" alt="Album Cover" class="music-selected-cover">
+              <div class="flex-grow-1">
+                <h6 id="selectedMusicTitle" class="mb-1"></h6>
+                <p id="selectedMusicArtist" class="mb-1 text-muted"></p>
+                <small id="selectedMusicAlbum" class="text-muted"></small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Insert after category field
+  const categoryField = form.querySelector('#postCategory')?.closest('.mb-3');
+  if (categoryField) {
+    categoryField.insertAdjacentHTML('afterend', musicSelectionHTML);
+  } else {
+    form.insertAdjacentHTML('afterbegin', musicSelectionHTML);
+  }
+
+  // Setup event listeners
+  const selectMusicBtn = document.getElementById("selectMusicBtn");
+  const clearMusicBtn = document.getElementById("clearMusicBtn");
+  const selectedMusicDisplay = document.getElementById("selectedMusicDisplay");
+
+  if (selectMusicBtn) {
+    selectMusicBtn.addEventListener("click", () => {
+      const modal = new bootstrap.Modal(document.getElementById('musicSearchModal'));
+      modal.show();
+    });
+  }
+
+  if (clearMusicBtn) {
+    clearMusicBtn.addEventListener("click", () => {
+      clearMusicSelection();
+    });
+  }
+
+  // Listen for track selection
+  document.addEventListener('trackSelected', (e) => {
+    displaySelectedMusic(e.detail);
+  });
+}
+
+// Display selected music
+function displaySelectedMusic(track) {
+  const selectedMusicDisplay = document.getElementById("selectedMusicDisplay");
+  const selectedMusicCover = document.getElementById("selectedMusicCover");
+  const selectedMusicTitle = document.getElementById("selectedMusicTitle");
+  const selectedMusicArtist = document.getElementById("selectedMusicArtist");
+  const selectedMusicAlbum = document.getElementById("selectedMusicAlbum");
+  const clearMusicBtn = document.getElementById("clearMusicBtn");
+
+  if (selectedMusicDisplay && track) {
+    selectedMusicCover.src = track.coverUrl || '/images/default-album.png';
+    selectedMusicTitle.textContent = track.name;
+    selectedMusicArtist.textContent = track.artist;
+    selectedMusicAlbum.textContent = track.album;
+    
+    selectedMusicDisplay.classList.remove('d-none');
+    clearMusicBtn?.style.setProperty('display', 'inline-block');
+  }
+}
+
+// Clear music selection
+function clearMusicSelection() {
+  const selectedMusicDisplay = document.getElementById("selectedMusicDisplay");
+  const clearMusicBtn = document.getElementById("clearMusicBtn");
+
+  if (selectedMusicDisplay) {
+    selectedMusicDisplay.classList.add('d-none');
+  }
+  
+  if (clearMusicBtn) {
+    clearMusicBtn.style.setProperty('display', 'none');
+  }
+
+  // Clear from music search
+  if (window.musicSearch) {
+    window.musicSearch.clearSelection();
+  }
 }
 
 // Create Post modal: live markdown preview

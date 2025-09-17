@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oynatma Listeleri - Nara Müzik</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="../css/styles.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="container d-flex justify-content-between align-items-center py-1">
+      <div class="small">
+        <span>🎵 Nara Müzik Forum</span>
+      </div>
+      <div class="d-flex gap-3 small">
+        <span id="currentTime"></span>
+        <button id="themeToggle" class="btn btn-sm btn-outline-secondary">🌙</button>
+        <button id="languageToggle" class="btn btn-sm btn-outline-secondary">TR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg mainnav">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title">Menü</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" href="../index.html">Ana Sayfa</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="yenimuzik.html">Yeni Müzik</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="album.html">Albümler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="etkinlik.html">Etkinlikler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="playlists.html">Oynatma Listeleri</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="search.html">Arama</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">İletişim</a>
+            </li>
+          </ul>
+          <div class="d-flex gap-2" id="authButtons">
+            <!-- Auth buttons will be populated by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container mt-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="h2 mb-1">🎵 Oynatma Listeleri</h1>
+            <p class="text-muted">Favori müziklerinizi organize edin ve paylaşın</p>
+          </div>
+          <button id="createPlaylistBtn" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Yeni Liste Oluştur
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Playlist Tabs -->
+    <ul class="nav nav-tabs mb-4" id="playlistTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="my-playlists-tab" data-bs-toggle="tab" data-bs-target="#my-playlists" type="button" role="tab">
+          <i class="fas fa-list"></i> Listelerim
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="public-playlists-tab" data-bs-toggle="tab" data-bs-target="#public-playlists" type="button" role="tab">
+          <i class="fas fa-globe"></i> Herkese Açık
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="featured-playlists-tab" data-bs-toggle="tab" data-bs-target="#featured-playlists" type="button" role="tab">
+          <i class="fas fa-star"></i> Öne Çıkanlar
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="playlistTabContent">
+      <!-- My Playlists Tab -->
+      <div class="tab-pane fade show active" id="my-playlists" role="tabpanel">
+        <div class="row">
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5>Oluşturduğum Listeler</h5>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary" id="sortByDateBtn">
+                  <i class="fas fa-calendar"></i> Tarih
+                </button>
+                <button class="btn btn-outline-secondary" id="sortByNameBtn">
+                  <i class="fas fa-sort-alpha-down"></i> İsim
+                </button>
+                <button class="btn btn-outline-secondary" id="sortByTracksBtn">
+                  <i class="fas fa-music"></i> Şarkı Sayısı
+                </button>
+              </div>
+            </div>
+            <div id="myPlaylistsList" class="row g-3">
+              <!-- My playlists will be loaded here -->
+            </div>
+            <div id="myPlaylistsLoading" class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Yükleniyor...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Public Playlists Tab -->
+      <div class="tab-pane fade" id="public-playlists" role="tabpanel">
+        <div class="row">
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5>Herkese Açık Listeler</h5>
+              <div class="d-flex gap-2">
+                <select id="publicGenreFilter" class="form-select form-select-sm" style="width: auto;">
+                  <option value="">Tüm Türler</option>
+                  <option value="rock">Rock</option>
+                  <option value="pop">Pop</option>
+                  <option value="jazz">Jazz</option>
+                  <option value="classical">Klasik</option>
+                  <option value="electronic">Elektronik</option>
+                </select>
+                <button class="btn btn-outline-secondary btn-sm" id="refreshPublicBtn">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </div>
+            </div>
+            <div id="publicPlaylistsList" class="row g-3">
+              <!-- Public playlists will be loaded here -->
+            </div>
+            <div id="publicPlaylistsLoading" class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Yükleniyor...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Featured Playlists Tab -->
+      <div class="tab-pane fade" id="featured-playlists" role="tabpanel">
+        <div class="row">
+          <div class="col-12">
+            <h5 class="mb-3">Öne Çıkan Listeler</h5>
+            <div id="featuredPlaylistsList" class="row g-3">
+              <!-- Featured playlists will be loaded here -->
+            </div>
+            <div id="featuredPlaylistsLoading" class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Yükleniyor...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-4 mt-5">
+    <div class="container">
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
+    </div>
+  </footer>
+
+  <!-- Create Playlist Modal -->
+  <div class="modal fade" id="createPlaylistModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Yeni Oynatma Listesi Oluştur</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="createPlaylistForm">
+            <div class="mb-3">
+              <label for="playlistName" class="form-label">Liste Adı *</label>
+              <input type="text" class="form-control" id="playlistName" required placeholder="Örn: Favori Rock Şarkılarım">
+            </div>
+            <div class="mb-3">
+              <label for="playlistDescription" class="form-label">Açıklama</label>
+              <textarea class="form-control" id="playlistDescription" rows="3" placeholder="Liste hakkında kısa bir açıklama yazın..."></textarea>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="playlistGenre" class="form-label">Tür</label>
+                  <select class="form-select" id="playlistGenre">
+                    <option value="">Tür Seçin</option>
+                    <option value="rock">Rock</option>
+                    <option value="pop">Pop</option>
+                    <option value="jazz">Jazz</option>
+                    <option value="classical">Klasik</option>
+                    <option value="electronic">Elektronik</option>
+                    <option value="hip-hop">Hip-Hop</option>
+                    <option value="country">Country</option>
+                    <option value="blues">Blues</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="playlistMood" class="form-label">Ruh Hali</label>
+                  <select class="form-select" id="playlistMood">
+                    <option value="">Ruh Hali Seçin</option>
+                    <option value="happy">Mutlu</option>
+                    <option value="sad">Hüzünlü</option>
+                    <option value="energetic">Enerjik</option>
+                    <option value="calm">Sakin</option>
+                    <option value="romantic">Romantik</option>
+                    <option value="nostalgic">Nostaljik</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="playlistPublic">
+                <label class="form-check-label" for="playlistPublic">
+                  Herkese açık yap (diğer kullanıcılar görebilir)
+                </label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="playlistCollaborative">
+                <label class="form-check-label" for="playlistCollaborative">
+                  İşbirlikçi liste (diğer kullanıcılar şarkı ekleyebilir)
+                </label>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="button" class="btn btn-primary" id="savePlaylistBtn">Oluştur</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Playlist Modal -->
+  <div class="modal fade" id="editPlaylistModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Oynatma Listesini Düzenle</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editPlaylistForm">
+            <input type="hidden" id="editPlaylistId">
+            <div class="mb-3">
+              <label for="editPlaylistName" class="form-label">Liste Adı *</label>
+              <input type="text" class="form-control" id="editPlaylistName" required>
+            </div>
+            <div class="mb-3">
+              <label for="editPlaylistDescription" class="form-label">Açıklama</label>
+              <textarea class="form-control" id="editPlaylistDescription" rows="3"></textarea>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="editPlaylistGenre" class="form-label">Tür</label>
+                  <select class="form-select" id="editPlaylistGenre">
+                    <option value="">Tür Seçin</option>
+                    <option value="rock">Rock</option>
+                    <option value="pop">Pop</option>
+                    <option value="jazz">Jazz</option>
+                    <option value="classical">Klasik</option>
+                    <option value="electronic">Elektronik</option>
+                    <option value="hip-hop">Hip-Hop</option>
+                    <option value="country">Country</option>
+                    <option value="blues">Blues</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="editPlaylistMood" class="form-label">Ruh Hali</label>
+                  <select class="form-select" id="editPlaylistMood">
+                    <option value="">Ruh Hali Seçin</option>
+                    <option value="happy">Mutlu</option>
+                    <option value="sad">Hüzünlü</option>
+                    <option value="energetic">Enerjik</option>
+                    <option value="calm">Sakin</option>
+                    <option value="romantic">Romantik</option>
+                    <option value="nostalgic">Nostaljik</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="editPlaylistPublic">
+                <label class="form-check-label" for="editPlaylistPublic">
+                  Herkese açık yap
+                </label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="editPlaylistCollaborative">
+                <label class="form-check-label" for="editPlaylistCollaborative">
+                  İşbirlikçi liste
+                </label>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="button" class="btn btn-primary" id="updatePlaylistBtn">Güncelle</button>
+          <button type="button" class="btn btn-danger" id="deletePlaylistBtn">Sil</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Music to Playlist Modal -->
+  <div class="modal fade" id="addMusicModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Müzik Ekle</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="musicSearchInput" class="form-label">Müzik Ara</label>
+            <input type="text" class="form-control" id="musicSearchInput" placeholder="Sanatçı, şarkı veya albüm adı yazın...">
+          </div>
+          <div id="musicSearchResults" class="row g-2">
+            <!-- Music search results will be loaded here -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/music-preview.js"></script>
+  <script src="../js/music-search.js"></script>
+  <script src="../js/music-rating.js"></script>
+  <script src="../js/playlist-manager.js"></script>
+  <script src="../js/lang.js"></script>
+</body>
+</html>

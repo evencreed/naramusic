@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Müzik Haberleri - Nara Müzik</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="../css/styles.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="container d-flex justify-content-between align-items-center py-1">
+      <div class="small">
+        <span>🎵 Nara Müzik Forum</span>
+      </div>
+      <div class="d-flex gap-3 small">
+        <span id="currentTime"></span>
+        <button id="themeToggle" class="btn btn-sm btn-outline-secondary">🌙</button>
+        <button id="languageToggle" class="btn btn-sm btn-outline-secondary">TR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg mainnav">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title">Menü</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" href="../index.html">Ana Sayfa</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="yenimuzik.html">Yeni Müzik</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="album.html">Albümler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="etkinlik.html">Etkinlikler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="playlists.html">Oynatma Listeleri</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="haberler.html">Haberler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="search.html">Arama</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">İletişim</a>
+            </li>
+          </ul>
+          <div class="d-flex gap-2" id="authButtons">
+            <!-- Auth buttons will be populated by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container mt-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="h2 mb-1">📰 Müzik Haberleri</h1>
+            <p class="text-muted">En güncel müzik haberleri ve güncellemeler</p>
+          </div>
+          <button id="refreshNewsBtn" class="btn btn-outline-primary">
+            <i class="fas fa-sync-alt"></i> Yenile
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- News Categories -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-outline-primary active news-category-btn" data-category="all">
+                <i class="fas fa-globe"></i> Tümü
+              </button>
+              <button class="btn btn-outline-primary news-category-btn" data-category="releases">
+                <i class="fas fa-music"></i> Yeni Çıkışlar
+              </button>
+              <button class="btn btn-outline-primary news-category-btn" data-category="concerts">
+                <i class="fas fa-microphone"></i> Konserler
+              </button>
+              <button class="btn btn-outline-primary news-category-btn" data-category="artists">
+                <i class="fas fa-user"></i> Sanatçılar
+              </button>
+              <button class="btn btn-outline-primary news-category-btn" data-category="industry">
+                <i class="fas fa-industry"></i> Sektör
+              </button>
+              <button class="btn btn-outline-primary news-category-btn" data-category="awards">
+                <i class="fas fa-trophy"></i> Ödüller
+              </button>
+              <button class="btn btn-outline-primary news-category-btn" data-category="technology">
+                <i class="fas fa-laptop"></i> Teknoloji
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- News Content -->
+    <div class="row">
+      <!-- Main News Column -->
+      <div class="col-lg-8">
+        <!-- Featured News -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-star text-warning"></i> Öne Çıkan Haber
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div id="featuredNews">
+              <!-- Featured news will be loaded here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- News List -->
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Son Haberler</h5>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-secondary" id="sortByDateBtn">
+                <i class="fas fa-calendar"></i> Tarih
+              </button>
+              <button class="btn btn-outline-secondary" id="sortByPopularityBtn">
+                <i class="fas fa-fire"></i> Popülerlik
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="newsList">
+              <!-- News list will be loaded here -->
+            </div>
+            <div id="newsLoading" class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Yükleniyor...</span>
+              </div>
+            </div>
+            <div id="loadMoreNews" class="text-center mt-3" style="display: none;">
+              <button class="btn btn-outline-primary" id="loadMoreBtn">
+                <i class="fas fa-plus"></i> Daha Fazla Yükle
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="col-lg-4">
+        <!-- Trending News -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h6 class="mb-0">
+              <i class="fas fa-fire text-danger"></i> Trend Haberler
+            </h6>
+          </div>
+          <div class="card-body">
+            <div id="trendingNews">
+              <!-- Trending news will be loaded here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- News Sources -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h6 class="mb-0">
+              <i class="fas fa-newspaper"></i> Haber Kaynakları
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="news-sources">
+              <a href="#" class="news-source-item">
+                <img src="/images/sources/spotify.png" alt="Spotify" class="news-source-logo">
+                <span>Spotify News</span>
+              </a>
+              <a href="#" class="news-source-item">
+                <img src="/images/sources/billboard.png" alt="Billboard" class="news-source-logo">
+                <span>Billboard</span>
+              </a>
+              <a href="#" class="news-source-item">
+                <img src="/images/sources/rollingstone.png" alt="Rolling Stone" class="news-source-logo">
+                <span>Rolling Stone</span>
+              </a>
+              <a href="#" class="news-source-item">
+                <img src="/images/sources/pitchfork.png" alt="Pitchfork" class="news-source-logo">
+                <span>Pitchfork</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Newsletter Signup -->
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">
+              <i class="fas fa-envelope"></i> Haber Bülteni
+            </h6>
+          </div>
+          <div class="card-body">
+            <p class="small text-muted">Müzik haberlerini e-posta ile alın</p>
+            <form id="newsletterForm">
+              <div class="mb-2">
+                <input type="email" class="form-control form-control-sm" placeholder="E-posta adresiniz" required>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm w-100">
+                <i class="fas fa-paper-plane"></i> Abone Ol
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-4 mt-5">
+    <div class="container">
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
+    </div>
+  </footer>
+
+  <!-- News Detail Modal -->
+  <div class="modal fade" id="newsDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="newsDetailTitle">Haber Detayı</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="newsDetailBody">
+          <!-- News detail will be loaded here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+          <button type="button" class="btn btn-primary" id="shareNewsBtn">
+            <i class="fas fa-share"></i> Paylaş
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/news-manager.js"></script>
+  <script src="../js/lang.js"></script>
+</body>
+</html>

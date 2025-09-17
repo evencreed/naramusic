@@ -1,136 +1,171 @@
-// Translation service using LibreTranslate API
+// Translation Service
 class TranslationService {
   constructor() {
-    this.apiBase = window.location.hostname.includes('localhost') 
-      ? 'http://localhost:4000' 
-      : window.location.origin; // Use same origin for edge function
-    this.cache = new Map();
-    this.isTranslating = false;
+    this.currentLang = localStorage.getItem('lang') || 'tr';
+    this.translations = window.translations || {};
+    this.init();
   }
 
-  // Get supported languages
-  async getLanguages() {
-    try {
-      const response = await fetch(`${this.apiBase}/api/translate/languages`);
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching languages:', error);
-      return [];
-    }
+  init() {
+    this.setupEventListeners();
+    this.loadTranslations();
   }
 
-  // Translate text
-  async translate(text, source = 'en', target = 'tr') {
-    if (!text || text.trim() === '') return text;
-    
-    // Check cache first
-    const cacheKey = `${text}-${source}-${target}`;
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey);
-    }
-
-    try {
-      const response = await fetch(`${this.apiBase}/api/translate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: text,
-          source: source,
-          target: target
-        })
+  setupEventListeners() {
+    // Language toggle
+    const languageToggle = document.getElementById('language-toggle');
+    if (languageToggle) {
+      languageToggle.addEventListener('change', (e) => {
+        this.changeLanguage(e.target.value);
       });
-
-      if (!response.ok) {
-        throw new Error(`Translation API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      // Cache the result
-      this.cache.set(cacheKey, data.translatedText);
-      
-      return data.translatedText;
-    } catch (error) {
-      console.error('Translation error:', error);
-      return text; // Return original text if translation fails
     }
   }
 
-  // Translate multiple texts
-  async translateBatch(texts, source = 'en', target = 'tr') {
-    const results = [];
-    
-    for (const text of texts) {
-      const translated = await this.translate(text, source, target);
-      results.push(translated);
+  loadTranslations() {
+    // Load translations from window.translations
+    if (window.translations) {
+      this.translations = window.translations;
     }
-    
-    return results;
   }
 
-  // Translate page content
-  async translatePage(targetLang = 'tr') {
-    if (this.isTranslating) return;
-    this.isTranslating = true;
+  async changeLanguage(lang) {
+    if (lang === this.currentLang) return;
 
+    this.currentLang = lang;
+    localStorage.setItem('lang', lang);
+
+    if (lang === 'tr') {
+      // Reset to original Turkish content
+      location.reload();
+    } else {
+      // Translate to English
+      await this.translatePage(lang);
+    }
+  }
+
+  async translatePage(targetLang) {
     try {
       // Get all translatable elements
       const elements = document.querySelectorAll('[data-translate]');
+      const texts = Array.from(elements).map(el => el.textContent.trim());
       
-      for (const element of elements) {
-        const originalText = element.textContent.trim();
-        if (originalText) {
-          const translatedText = await this.translate(originalText, 'en', targetLang);
-          element.textContent = translatedText;
-        }
-      }
+      if (texts.length === 0) return;
 
-      // Translate placeholders
-      const inputs = document.querySelectorAll('input[placeholder], textarea[placeholder]');
-      for (const input of inputs) {
-        const originalPlaceholder = input.getAttribute('placeholder');
-        if (originalPlaceholder) {
-          const translatedPlaceholder = await this.translate(originalPlaceholder, 'en', targetLang);
-          input.setAttribute('placeholder', translatedPlaceholder);
+      // Translate texts
+      const translatedTexts = await this.translateTexts(texts, targetLang);
+      
+      // Apply translations
+      elements.forEach((el, index) => {
+        if (translatedTexts[index]) {
+          el.textContent = translatedTexts[index];
         }
-      }
+      });
 
-      // Translate titles and alt texts
-      const titles = document.querySelectorAll('[title]');
-      for (const title of titles) {
-        const originalTitle = title.getAttribute('title');
-        if (originalTitle) {
-          const translatedTitle = await this.translate(originalTitle, 'en', targetLang);
-          title.setAttribute('title', translatedTitle);
-        }
+      // Update page title
+      if (targetLang === 'en') {
+        document.title = 'Nara Music - Music Community';
       }
 
     } catch (error) {
-      console.error('Page translation error:', error);
-    } finally {
-      this.isTranslating = false;
+      console.error('Translation error:', error);
     }
   }
 
-  // Clear cache
-  clearCache() {
-    this.cache.clear();
+  async translateTexts(texts, targetLang) {
+    try {
+      const response = await fetch(`${BACKEND_BASE}/api/translate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          texts: texts,
+          target: targetLang
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.translations || texts;
+      } else {
+        // Fallback to local translations
+        return this.getLocalTranslations(texts, targetLang);
+      }
+    } catch (error) {
+      console.error('Translation API error:', error);
+      return this.getLocalTranslations(texts, targetLang);
+    }
+  }
+
+  getLocalTranslations(texts, targetLang) {
+    const localTranslations = {
+      'tr': {
+        'Ana Sayfa': 'Home',
+        'Hakkında': 'About',
+        'İletişim': 'Contact',
+        'Giriş': 'Login',
+        'Kayıt': 'Register',
+        'Yeni Gönderi': 'New Post',
+        'Ara...': 'Search...',
+        'Bildirimler': 'Notifications',
+        'Kaydedilenler': 'Saved',
+        'Mod': 'Mod',
+        'En Popüler': 'Most Popular',
+        'En Son Eklenenler': 'Latest',
+        'Popüler': 'Popular',
+        'Son Yorumlar': 'Recent Comments',
+        'Kategoriler': 'Categories',
+        'Topluluk': 'Community',
+        'Üye Ol': 'Sign Up',
+        'Giriş Yap': 'Login',
+        'Kayıt Ol': 'Register',
+        'Yeni Gönderi Oluştur': 'Create New Post',
+        'Başlık': 'Title',
+        'İçerik': 'Content',
+        'Kategori': 'Category',
+        'Paylaş': 'Share',
+        'Daha Fazla': 'Load More',
+        'Yükleniyor...': 'Loading...',
+        'Hata': 'Error',
+        'Başarılı': 'Success',
+        'İptal': 'Cancel',
+        'Kaydet': 'Save',
+        'Kapat': 'Close',
+        'Gönder': 'Send',
+        'Adınız': 'Your Name',
+        'Email': 'Email',
+        'Parola': 'Password',
+        'Kullanıcı Adı': 'Username',
+        'Mesajınız': 'Your Message',
+        'Yorum yaz...': 'Write a comment...',
+        'Henüz gönderi yok': 'No posts yet',
+        'Henüz yorum yok': 'No comments yet',
+        'Tüm hakları saklıdır': 'All rights reserved',
+        'Nara Müzik — Müzik tartışma topluluğu': 'Nara Music — Music discussion community',
+        'Nara Müzik, topluluk odaklı bir müzik platformudur. Üyeler yeni parçaları, röportajları ve etkinlikleri paylaşır; biz de keşfi kolaylaştıran sade bir arayüz sunarız.': 'Nara Music is a community-focused music platform. Members share new tracks, interviews and events; we provide a simple interface that makes discovery easy.'
+      }
+    };
+
+    return texts.map(text => {
+      const translation = localTranslations[targetLang]?.[text];
+      return translation || text;
+    });
+  }
+
+  translate(key, fallback = '') {
+    return this.translations[key] || fallback;
+  }
+
+  getCurrentLanguage() {
+    return this.currentLang;
   }
 }
 
-// Create global instance
-window.translationService = new TranslationService();
-
-// Auto-translate on page load if language is not Turkish
+// Initialize translation service
 document.addEventListener('DOMContentLoaded', () => {
-  const currentLang = document.documentElement.lang || 'en';
-  if (currentLang !== 'tr') {
-    // Small delay to ensure page is fully loaded
-    setTimeout(() => {
-      window.translationService.translatePage('tr');
-    }, 1000);
-  }
+  window.translationService = new TranslationService();
 });
 
+// Export for global access
+window.TranslationService = TranslationService;

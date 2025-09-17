@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Müzik Analitikleri - Nara Müzik</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="../css/styles.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="container d-flex justify-content-between align-items-center py-1">
+      <div class="small">
+        <span>🎵 Nara Müzik Forum</span>
+      </div>
+      <div class="d-flex gap-3 small">
+        <span id="currentTime"></span>
+        <button id="themeToggle" class="btn btn-sm btn-outline-secondary">🌙</button>
+        <button id="languageToggle" class="btn btn-sm btn-outline-secondary">TR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg mainnav">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title">Menü</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" href="../index.html">Ana Sayfa</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="yenimuzik.html">Yeni Müzik</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="album.html">Albümler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="etkinlik.html">Etkinlikler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="playlists.html">Oynatma Listeleri</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="haberler.html">Haberler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="listeler.html">Listeler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="sosyal.html">Sosyal</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="analitik.html">Analitikler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="search.html">Arama</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">İletişim</a>
+            </li>
+          </ul>
+          <div class="d-flex gap-2" id="authButtons">
+            <!-- Auth buttons will be populated by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container mt-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="h2 mb-1">📊 Müzik Analitikleri</h1>
+            <p class="text-muted">Detaylı müzik istatistikleri ve analizler</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button id="refreshAnalyticsBtn" class="btn btn-outline-primary">
+              <i class="fas fa-sync-alt"></i> Yenile
+            </button>
+            <button id="exportDataBtn" class="btn btn-outline-success">
+              <i class="fas fa-download"></i> Veri İndir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Tabs -->
+    <ul class="nav nav-tabs mb-4" id="analyticsTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+          <i class="fas fa-chart-pie"></i> Genel Bakış
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="listening-tab" data-bs-toggle="tab" data-bs-target="#listening" type="button" role="tab">
+          <i class="fas fa-headphones"></i> Dinleme Alışkanlıkları
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="genres-tab" data-bs-toggle="tab" data-bs-target="#genres" type="button" role="tab">
+          <i class="fas fa-tags"></i> Müzik Türleri
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="artists-tab" data-bs-toggle="tab" data-bs-target="#artists" type="button" role="tab">
+          <i class="fas fa-user"></i> Sanatçılar
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="time-tab" data-bs-toggle="tab" data-bs-target="#time" type="button" role="tab">
+          <i class="fas fa-clock"></i> Zaman Analizi
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="social-tab" data-bs-toggle="tab" data-bs-target="#social" type="button" role="tab">
+          <i class="fas fa-users"></i> Sosyal Etkileşim
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="analyticsTabContent">
+      <!-- Overview Tab -->
+      <div class="tab-pane fade show active" id="overview" role="tabpanel">
+        <div class="row">
+          <!-- Key Metrics -->
+          <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card text-center">
+              <div class="card-body">
+                <i class="fas fa-music fa-2x text-primary mb-2"></i>
+                <h4 class="card-title" id="totalTracks">0</h4>
+                <p class="card-text">Toplam Şarkı</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card text-center">
+              <div class="card-body">
+                <i class="fas fa-clock fa-2x text-success mb-2"></i>
+                <h4 class="card-title" id="totalListenTime">0</h4>
+                <p class="card-text">Toplam Dinleme Süresi</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card text-center">
+              <div class="card-body">
+                <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                <h4 class="card-title" id="averageRating">0</h4>
+                <p class="card-text">Ortalama Puan</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card text-center">
+              <div class="card-body">
+                <i class="fas fa-heart fa-2x text-danger mb-2"></i>
+                <h4 class="card-title" id="totalLikes">0</h4>
+                <p class="card-text">Toplam Beğeni</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row">
+          <div class="col-lg-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Müzik Türü Dağılımı</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="genreDistributionChart" width="400" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Aylık Dinleme Trendi</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="monthlyTrendChart" width="400" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Artists and Tracks -->
+        <div class="row">
+          <div class="col-lg-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">En Çok Dinlenen Sanatçılar</h5>
+              </div>
+              <div class="card-body">
+                <div id="topArtistsList">
+                  <!-- Top artists will be loaded here -->
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">En Çok Dinlenen Şarkılar</h5>
+              </div>
+              <div class="card-body">
+                <div id="topTracksList">
+                  <!-- Top tracks will be loaded here -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Listening Habits Tab -->
+      <div class="tab-pane fade" id="listening" role="tabpanel">
+        <div class="row">
+          <div class="col-lg-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Günlük Dinleme Saatleri</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="dailyListeningChart" width="400" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Haftalık Dinleme Dağılımı</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="weeklyListeningChart" width="400" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-12 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Dinleme Alışkanlıkları Detayı</h5>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="stat-item">
+                      <h6>En Aktif Gün</h6>
+                      <p class="stat-value" id="mostActiveDay">-</p>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="stat-item">
+                      <h6>En Aktif Saat</h6>
+                      <p class="stat-value" id="mostActiveHour">-</p>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="stat-item">
+                      <h6>Ortalama Dinleme Süresi</h6>
+                      <p class="stat-value" id="avgSessionDuration">-</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Genres Tab -->
+      <div class="tab-pane fade" id="genres" role="tabpanel">
+        <div class="row">
+          <div class="col-lg-8 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Müzik Türü Analizi</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="genreAnalysisChart" width="400" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Tür Detayları</h5>
+              </div>
+              <div class="card-body">
+                <div id="genreDetailsList">
+                  <!-- Genre details will be loaded here -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Artists Tab -->
+      <div class="tab-pane fade" id="artists" role="tabpanel">
+        <div class="row">
+          <div class="col-lg-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Sanatçı Dinleme Dağılımı</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="artistDistributionChart" width="400" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Sanatçı Trend Analizi</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="artistTrendChart" width="400" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time Analysis Tab -->
+      <div class="tab-pane fade" id="time" role="tabpanel">
+        <div class="row">
+          <div class="col-lg-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Aylık Dinleme Trendi</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="monthlyTrendDetailChart" width="400" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Yıllık Karşılaştırma</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="yearlyComparisonChart" width="400" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Social Tab -->
+      <div class="tab-pane fade" id="social" role="tabpanel">
+        <div class="row">
+          <div class="col-lg-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Sosyal Etkileşim</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="socialInteractionChart" width="400" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Paylaşım İstatistikleri</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="sharingStatsChart" width="400" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-4 mt-5">
+    <div class="container">
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/analytics-manager.js"></script>
+  <script src="../js/lang.js"></script>
+</body>
+</html>

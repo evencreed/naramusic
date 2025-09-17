@@ -3,259 +3,356 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SanatÃ§Ä±</title>
-
-  <!-- Bootstrap -->
+  <title>Sanatçı — Nara Müzik</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Site CSS -->
   <link rel="stylesheet" href="../css/styles.css">
-
-  <!-- Theme tokens to mirror index.html -->
   <style>
-    :root{
-      --bg:#0b0b0b;
-      --text:#eaeaea;
-      --panel:#121214;
-      --muted:#9aa3ae;
-      --accent:#77c2ff;
-      --accent-contrast:#0a1118;
-      --border: rgba(255,255,255,0.06);
-      --elev-1: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      --input-bg:#0f1113;
+    .artist-hero { 
+      background: linear-gradient(135deg, var(--accent) 0%, var(--panel) 100%);
+      border-radius: 1rem;
+      padding: 3rem 2rem;
+      margin-bottom: 2rem;
     }
-    :root[data-theme="light"]{
-      --bg:#f8fafc;
-      --text:#0f172a;
-      --panel:#ffffff;
-      --muted:#5b6778;
-      --accent:#2563eb;
-      --accent-contrast:#ffffff;
-      --border: rgba(15,23,42,0.08);
-      --elev-1: linear-gradient(180deg, rgba(2,6,23,0.02), rgba(2,6,23,0.01));
-      --input-bg:#f1f5f9;
+    .artist-avatar { 
+      width: 120px; 
+      height: 120px; 
+      border-radius: 50%; 
+      border: 4px solid var(--accent-contrast);
+      object-fit: cover;
     }
-    html,body{height:100%}
-    body{
-      background:var(--bg);
-      color:var(--text);
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
-      padding-top:72px;
+    .track-item { 
+      padding: 0.75rem; 
+      border-radius: 0.5rem; 
+      transition: background-color 0.2s ease;
+      cursor: pointer;
     }
-    .topbar{
-      position:fixed; top:0; left:0; right:0; height:40px;
-      background:var(--panel); z-index:1040;
-      border-bottom:1px solid var(--border);
+    .track-item:hover { background-color: var(--glass); }
+    .play-btn { 
+      width: 40px; 
+      height: 40px; 
+      border-radius: 50%; 
+      background: var(--accent); 
+      color: var(--accent-contrast);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
     }
-    .topbar .container{height:100%; display:flex; align-items:center; gap:12px; font-size:13px}
-    .mainnav{
-      position:fixed; top:40px; left:0; right:0; z-index:1039;
-      border-bottom:1px solid var(--border);
-      background:transparent;
+    .play-btn:hover { 
+      transform: scale(1.1); 
+      background: var(--accent-contrast);
+      color: var(--accent);
     }
-    .navbar-brand{font-weight:800; letter-spacing:.6px}
-    .nav-link{color:color-mix(in oklab, var(--text) 85%, transparent)}
-    .nav-link:hover{color:var(--accent)}
-    main.container{max-width:1150px}
-
-    .hero{
-      background: var(--panel);
-      border:1px solid var(--border);
-      border-radius:.5rem;
-      overflow:hidden;
+    .album-cover { 
+      width: 60px; 
+      height: 60px; 
+      border-radius: 0.5rem; 
+      object-fit: cover;
     }
-    .hero-img{
-      width:100%;
-      height:260px;
-      object-fit:cover;
-      filter:brightness(.8);
+    .follow-btn { 
+      background: var(--accent); 
+      color: var(--accent-contrast); 
+      border: none;
+      transition: all 0.2s ease;
     }
-    .hero-body{
-      padding:16px;
+    .follow-btn:hover { 
+      background: var(--accent-contrast); 
+      color: var(--accent);
     }
-    .badge-genre{
-      background-color: color-mix(in oklab, var(--text) 10%, transparent);
+    .follow-btn.following { 
+      background: var(--muted); 
       color: var(--text);
     }
-
-    .card{background:var(--elev-1); border:1px solid var(--border)}
-    .track-play{
-      width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center;
-      border-radius:50%;
-    }
-    .track-row:hover{ background-color: rgba(255,255,255,0.03); }
-    .cover-tile{
-      cursor:pointer; transition: transform .12s ease;
-    }
-    .cover-tile:hover{ transform: translateY(-2px); }
-    .muted{ color: var(--muted); }
-
-    @media (max-width:991px){
-      .mainnav{top:0}
-      body{padding-top:56px}
-      .hero-img{height:200px}
-    }
-
-    /* Light theme overrides for Bootstrap utility classes */
-    :root[data-theme="light"] .text-light{ color: var(--text) !important; }
-    :root[data-theme="light"] .bg-dark{ background-color: var(--input-bg) !important; }
-    :root[data-theme="light"] .form-control.bg-dark,
-    :root[data-theme="light"] .form-select.bg-dark{ background-color: var(--input-bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
-    :root[data-theme="light"] .btn-outline-light{ color: var(--text) !important; border-color: var(--border) !important; }
-    :root[data-theme="light"] .btn-outline-light:hover{ background: var(--text) !important; color: var(--accent-contrast) !important; }
-    :root[data-theme="light"] .badge.bg-secondary{ background-color: color-mix(in oklab, var(--text) 10%, transparent) !important; color: var(--text) !important; }
   </style>
 </head>
 <body>
-
-  <!-- Top thin bar -->
-  <div class="topbar d-none d-lg-block">
-    <div class="container">
-      <div class="me-auto small text-muted">Nara MÃ¼zik â€” MÃ¼zik tartÄ±ÅŸma topluluÄŸu</div>
-      <div class="d-flex gap-3">
-        <a href="../index.html#about" class="text-muted">About</a>
-        <a href="contact.html" class="text-muted">Contact</a>
-        <a href="submit.html" class="text-muted" data-bs-toggle="modal" data-bs-target="#createPostModal">Submit</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
+  <nav class="navbar navbar-dark mainnav" id="mainNavbar">
     <div class="container-fluid">
       <div class="d-flex align-items-center">
-        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">â˜°</button>
-        <a class="navbar-brand me-3" href="../index.html" data-lang="home">Nara MÃ¼zik</a>
+        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">☰</button>
+        <a class="navbar-brand me-3" href="../index.html">Nara Müzik</a>
         <div class="d-none d-lg-flex align-items-center gap-2">
-          <a class="nav-link px-2" href="yenimuzik.html" data-lang="newMusic">Yeni MÃ¼zik</a>
-          <a class="nav-link px-2" href="endustri.html" data-lang="industry">EndÃ¼stri Haberleri</a>
-          <a class="nav-link px-2" href="degerlendirme.html" data-lang="review">DeÄŸerlendirme</a>
-          <a class="nav-link px-2" href="album.html" data-lang="album">AlbÃ¼m Ä°nceleme</a>
-          <a class="nav-link px-2" href="roportaj.html" data-lang="interview">RÃ¶portajlar</a>
-          <a class="nav-link px-2" href="etkinlik.html" data-lang="event">Etkinlikler</a>
-          <a class="nav-link px-2" href="dizifilm.html" data-lang="series">Dizi &amp; Filmler</a>
+          <a class="nav-link px-2" href="yenimuzik.html">Yeni Müzik</a>
+          <a class="nav-link px-2" href="endustri.html">Endüstri Haberleri</a>
+          <a class="nav-link px-2" href="degerlendirme.html">Değerlendirme</a>
+          <a class="nav-link px-2" href="album.html">Albüm İnceleme</a>
+          <a class="nav-link px-2" href="roportaj.html">Röportajlar</a>
+          <a class="nav-link px-2" href="etkinlik.html">Etkinlikler</a>
+          <a class="nav-link px-2" href="dizifilm.html">Dizi & Filmler</a>
         </div>
       </div>
       <div class="d-flex ms-auto align-items-center gap-2">
         <div class="d-none d-md-block">
-          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" data-placeholder-lang="search" placeholder="Ara...">
+          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
         </div>
         <select id="language-toggle">
           <option value="en">EN</option>
           <option value="tr">TR</option>
         </select>
-        <button id="themeToggle" class="btn btn-outline-light btn-sm">â˜€ï¸</button>
-        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal" data-lang="newPost">Yeni GÃ¶nderi</button>
+        <button id="themeToggle" class="btn btn-outline-light btn-sm">🌙</button>
+        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">Yeni Gönderi</button>
         <div id="authButtons" class="d-flex gap-1">
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">GiriÅŸ</button>
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">KayÄ±t</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
         </div>
       </div>
     </div>
   </nav>
 
-  <!-- Offcanvas -->
-  <div class="offcanvas offcanvas-start" tabindex="-1" id="sideMenu">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title">Kategoriler</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-    </div>
-    <div class="offcanvas-body">
-      <ul class="list-unstyled mb-0">
-        <li><a href="yenimuzik.html">Yeni MÃ¼zik</a></li>
-        <li><a href="endustri.html">EndÃ¼stri Haberleri</a></li>
-        <li><a href="degerlendirme.html">DeÄŸerlendirme</a></li>
-        <li><a href="album.html">AlbÃ¼m Ä°nceleme</a></li>
-        <li><a href="roportaj.html">RÃ¶portajlar</a></li>
-        <li><a href="etkinlik.html">Etkinlikler</a></li>
-        <li><a href="dizifilm.html">Dizi ve Filmler</a></li>
-      </ul>
-    </div>
-  </div>
-
   <main class="container mt-4">
-    <!-- Back link / breadcrumb -->
-    <div class="mb-3">
-      <a href="../index.html" class="text-decoration-none">&larr; Geri</a>
+    <!-- Artist Hero Section -->
+    <div class="artist-hero">
+      <div class="row align-items-center">
+        <div class="col-md-3 text-center">
+          <img src="https://picsum.photos/120/120?random=1" alt="Taylor Swift" class="artist-avatar mb-3">
+        </div>
+        <div class="col-md-9">
+          <h1 class="display-5 fw-bold mb-2">Taylor Swift</h1>
+          <p class="lead mb-3">Pop Sanatçısı • 2006'dan beri aktif</p>
+          <div class="row mb-3">
+            <div class="col-sm-4">
+              <div class="h4 mb-0">12.5M</div>
+              <small class="text-muted">Takipçi</small>
+            </div>
+            <div class="col-sm-4">
+              <div class="h4 mb-0">10</div>
+              <small class="text-muted">Stüdyo Albümü</small>
+            </div>
+            <div class="col-sm-4">
+              <div class="h4 mb-0">150+</div>
+              <small class="text-muted">Şarkı</small>
+            </div>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <span class="badge bg-primary">Pop</span>
+            <span class="badge bg-secondary">Country</span>
+            <span class="badge bg-success">Folk</span>
+            <span class="badge bg-info">Alternative</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- HERO -->
-    <section class="hero mb-4">
-      <img id="artistImage" class="hero-img" alt="Artist">
-      <div class="hero-body">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <div>
-            <h2 id="artistName" class="mb-1">SanatÃ§Ä±</h2>
-            <div class="small muted">
-              <span id="artistFollowers">â€”</span> takipÃ§i
+    <div class="row">
+      <div class="col-lg-8">
+        <!-- Top Tracks -->
+        <section class="mb-5">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>En Popüler Şarkılar</h3>
+            <button class="btn btn-outline-primary btn-sm">Tümünü Gör</button>
+          </div>
+          <div class="card">
+            <div class="card-body p-0">
+              <div id="topTracksList">
+                <div class="track-item d-flex align-items-center">
+                  <button class="play-btn me-3">
+                    <i class="fas fa-play"></i>
+                  </button>
+                  <img src="https://picsum.photos/60/60?random=2" alt="Anti-Hero" class="album-cover me-3">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1">Anti-Hero</h6>
+                    <p class="text-muted small mb-0">Midnights • 2022</p>
+                  </div>
+                  <div class="text-muted small">3:20</div>
+                </div>
+                <div class="track-item d-flex align-items-center">
+                  <button class="play-btn me-3">
+                    <i class="fas fa-play"></i>
+                  </button>
+                  <img src="https://picsum.photos/60/60?random=3" alt="Lavender Haze" class="album-cover me-3">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1">Lavender Haze</h6>
+                    <p class="text-muted small mb-0">Midnights • 2022</p>
+                  </div>
+                  <div class="text-muted small">3:22</div>
+                </div>
+                <div class="track-item d-flex align-items-center">
+                  <button class="play-btn me-3">
+                    <i class="fas fa-play"></i>
+                  </button>
+                  <img src="https://picsum.photos/60/60?random=4" alt="Shake It Off" class="album-cover me-3">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1">Shake It Off</h6>
+                    <p class="text-muted small mb-0">1989 • 2014</p>
+                  </div>
+                  <div class="text-muted small">3:39</div>
+                </div>
+                <div class="track-item d-flex align-items-center">
+                  <button class="play-btn me-3">
+                    <i class="fas fa-play"></i>
+                  </button>
+                  <img src="https://picsum.photos/60/60?random=5" alt="Love Story" class="album-cover me-3">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1">Love Story</h6>
+                    <p class="text-muted small mb-0">Fearless • 2008</p>
+                  </div>
+                  <div class="text-muted small">3:55</div>
+                </div>
+                <div class="track-item d-flex align-items-center">
+                  <button class="play-btn me-3">
+                    <i class="fas fa-play"></i>
+                  </button>
+                  <img src="https://picsum.photos/60/60?random=6" alt="Blank Space" class="album-cover me-3">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1">Blank Space</h6>
+                    <p class="text-muted small mb-0">1989 • 2014</p>
+                  </div>
+                  <div class="text-muted small">3:51</div>
+                </div>
+              </div>
             </div>
-            <div class="mt-2 d-flex flex-wrap gap-2" id="artistGenres"></div>
           </div>
-          <div class="d-flex gap-2">
-            <a id="spotifyLink" href="#" target="_blank" rel="noopener" class="btn btn-success">Spotify'da AÃ§</a>
+        </section>
+
+        <!-- Albums & Singles -->
+        <section class="mb-5">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Albümler ve Single'lar</h3>
+            <div class="btn-group" role="group">
+              <input type="radio" class="btn-check" name="albumFilter" id="allAlbums" checked>
+              <label class="btn btn-outline-primary" for="allAlbums">Tümü</label>
+              <input type="radio" class="btn-check" name="albumFilter" id="albumsOnly">
+              <label class="btn btn-outline-primary" for="albumsOnly">Albümler</label>
+              <input type="radio" class="btn-check" name="albumFilter" id="singlesOnly">
+              <label class="btn btn-outline-primary" for="singlesOnly">Single'lar</label>
+            </div>
+          </div>
+          <div class="row g-3" id="albumsGrid">
+            <div class="col-md-6 col-lg-4">
+              <div class="card">
+                <img src="https://picsum.photos/300/300?random=7" class="card-img-top" alt="Midnights">
+                <div class="card-body">
+                  <h6 class="card-title">Midnights</h6>
+                  <p class="card-text text-muted small">2022 • Stüdyo Albümü</p>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-primary">13 şarkı</span>
+                    <button class="btn btn-sm btn-outline-primary">Dinle</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="card">
+                <img src="https://picsum.photos/300/300?random=8" class="card-img-top" alt="1989">
+                <div class="card-body">
+                  <h6 class="card-title">1989</h6>
+                  <p class="card-text text-muted small">2014 • Stüdyo Albümü</p>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-primary">13 şarkı</span>
+                    <button class="btn btn-sm btn-outline-primary">Dinle</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="card">
+                <img src="https://picsum.photos/300/300?random=9" class="card-img-top" alt="Folklore">
+                <div class="card-body">
+                  <h6 class="card-title">Folklore</h6>
+                  <p class="card-text text-muted small">2020 • Stüdyo Albümü</p>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-primary">16 şarkı</span>
+                    <button class="btn btn-sm btn-outline-primary">Dinle</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="col-lg-4">
+        <!-- Follow Button -->
+        <div class="card mb-4">
+          <div class="card-body text-center">
+            <button class="btn follow-btn w-100 mb-3" id="followBtn">
+              <i class="fas fa-plus me-2"></i>Takip Et
+            </button>
+            <p class="text-muted small mb-0">Taylor Swift'i takip ederek yeni müziklerinden haberdar olun.</p>
+          </div>
+        </div>
+
+        <!-- About -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h6 class="mb-0">Hakkında</h6>
+          </div>
+          <div class="card-body">
+            <p class="small">Taylor Swift, Amerikalı şarkıcı-söz yazarı ve müzisyen. Country müzikle başlayan kariyeri, pop müziğe geçiş yaparak dünya çapında büyük başarılar elde etmiştir.</p>
+            <div class="mt-3">
+              <h6 class="small fw-bold">Etiketler</h6>
+              <div class="d-flex flex-wrap gap-1">
+                <span class="badge bg-light text-dark">Big Machine Records</span>
+                <span class="badge bg-light text-dark">Republic Records</span>
+                <span class="badge bg-light text-dark">Nashville</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Related Artists -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h6 class="mb-0">Benzer Sanatçılar</h6>
+          </div>
+          <div class="card-body">
+            <div class="list-group list-group-flush">
+              <a href="#" class="list-group-item list-group-item-action d-flex align-items-center">
+                <img src="https://picsum.photos/40/40?random=10" alt="Ariana Grande" class="rounded-circle me-3">
+                <div>
+                  <h6 class="mb-0 small">Ariana Grande</h6>
+                  <small class="text-muted">Pop</small>
+                </div>
+              </a>
+              <a href="#" class="list-group-item list-group-item-action d-flex align-items-center">
+                <img src="https://picsum.photos/40/40?random=11" alt="Olivia Rodrigo" class="rounded-circle me-3">
+                <div>
+                  <h6 class="mb-0 small">Olivia Rodrigo</h6>
+                  <small class="text-muted">Pop</small>
+                </div>
+              </a>
+              <a href="#" class="list-group-item list-group-item-action d-flex align-items-center">
+                <img src="https://picsum.photos/40/40?random=12" alt="Billie Eilish" class="rounded-circle me-3">
+                <div>
+                  <h6 class="mb-0 small">Billie Eilish</h6>
+                  <small class="text-muted">Alternative Pop</small>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Spotify Embed -->
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">Spotify'da Dinle</h6>
+          </div>
+          <div class="card-body">
+            <div class="text-center">
+              <p class="text-muted small mb-3">Taylor Swift'in müziklerini Spotify'da dinleyin</p>
+              <a href="https://open.spotify.com/artist/06HL4z0CvFAxyc27GXpf02" target="_blank" class="btn btn-success">
+                <i class="fab fa-spotify me-2"></i>Spotify'da Aç
+              </a>
+            </div>
           </div>
         </div>
       </div>
-    </section>
-
-    <div id="errorBox" class="alert alert-danger d-none"></div>
-
-    <!-- Top tracks -->
-    <section class="mb-4">
-      <div class="d-flex align-items-center justify-content-between mb-2">
-        <h5 class="mb-0">En PopÃ¼ler ParÃ§alar</h5>
-      </div>
-      <div class="card">
-        <div class="table-responsive">
-          <table class="table table-dark table-borderless align-middle mb-0">
-            <thead>
-              <tr class="text-muted">
-                <th style="width:56px;"></th>
-                <th>ParÃ§a</th>
-                <th style="width:120px;">SÃ¼re</th>
-                <th style="width:56px;"></th>
-              </tr>
-            </thead>
-            <tbody id="topTracksBody">
-              <!-- rows -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- Albums / Singles -->
-    <section class="mb-4">
-      <div class="d-flex align-items-center justify-content-between mb-2">
-        <h5 class="mb-0">YayÄ±nlar</h5>
-      </div>
-      <div class="row g-3" id="albumsGrid">
-        <!-- tiles -->
-      </div>
-    </section>
-
-    <!-- Fallback embed -->
-    <section id="fallbackEmbedSection" class="d-none">
-      <div class="card p-2">
-        <h6 class="px-2 pt-2">Spotify YerleÅŸtirme</h6>
-        <div id="fallbackEmbed" class="p-2 pt-0"></div>
-      </div>
-    </section>
+    </div>
   </main>
 
-  <!-- Footer -->
   <footer class="text-center py-4 mt-5">
     <div class="container">
-      <small class="text-muted">Â© <span id="year"></span> Nara MÃ¼zik</small>
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
     </div>
   </footer>
 
-  <!-- Modals (login/register/create) to align with app.js behavior -->
+  <!-- Modals -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <form id="loginForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">GiriÅŸ Yap</h5>
+          <h5 class="modal-title">Giriş Yap</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -263,7 +360,7 @@
           <input name="password" type="password" class="form-control" placeholder="Parola" required>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">GiriÅŸ</button>
+          <button type="submit" class="btn btn-primary w-100">Giriş</button>
         </div>
       </form>
     </div>
@@ -273,16 +370,16 @@
     <div class="modal-dialog">
       <form id="registerForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">KayÄ±t Ol</h5>
+          <h5 class="modal-title">Kayıt Ol</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input name="username" class="form-control mb-2" placeholder="KullanÄ±cÄ± AdÄ±" required>
+          <input name="username" class="form-control mb-2" placeholder="Kullanıcı Adı" required>
           <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
           <input name="password" type="password" class="form-control" placeholder="Parola" required>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success w-100">KayÄ±t Ol</button>
+          <button type="submit" class="btn btn-success w-100">Kayıt Ol</button>
         </div>
       </form>
     </div>
@@ -292,439 +389,98 @@
     <div class="modal-dialog modal-lg">
       <form id="newPostForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Yeni GÃ¶nderi OluÅŸtur</h5>
+          <h5 class="modal-title">Yeni Gönderi Oluştur</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input id="postTitle" name="title" class="form-control mb-2" placeholder="BaÅŸlÄ±k" required>
+          <input id="postTitle" name="title" class="form-control mb-2" placeholder="Başlık" required>
           <select id="postCategory" name="category" class="form-select mb-2">
-            <option value="yenimuzik">Yeni MÃ¼zik</option>
-            <option value="endustri">EndÃ¼stri Haberleri</option>
-            <option value="degerlendirme">DeÄŸerlendirme</option>
-            <option value="album">AlbÃ¼m Ä°nceleme</option>
-            <option value="roportaj">RÃ¶portajlar</option>
+            <option value="yenimuzik">Yeni Müzik</option>
+            <option value="endustri">Endüstri Haberleri</option>
+            <option value="degerlendirme">Değerlendirme</option>
+            <option value="album">Albüm İnceleme</option>
+            <option value="roportaj">Röportajlar</option>
             <option value="etkinlik">Etkinlikler</option>
-            <option value="dizifilm">Dizi &amp; Filmler</option>
+            <option value="dizifilm">Dizi & Filmler</option>
           </select>
-          <div class="btn-toolbar mb-2" role="toolbar" aria-label="Editor toolbar">
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="bold"><strong>B</strong></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="italic"><em>I</em></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="strike">S</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="h2">H2</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="h3">H3</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="quote">â€œâ€</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="ul">â€¢ List</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="ol">1. List</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="task">[ ]</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="link">Link</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="image">ðŸ–¼ï¸</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="code"><code>{}</code></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="codeblock">```</button>
-            </div>
-          </div>
-          <div id="emojiPicker" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:300px;">
-            <div class="card-body py-2">
-              <input type="text" class="form-control form-control-sm mb-2" id="emojiSearch" placeholder="Emoji araâ€¦">
-              <div id="emojiGrid" class="d-flex flex-wrap gap-1" style="max-height:200px; overflow:auto"></div>
-            </div>
-          </div>
-          <div id="urlPopover" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:320px;">
-            <div class="card-body py-2">
-              <div class="mb-2 small text-muted" id="urlPopoverTitle">BaÄŸlantÄ± ekle</div>
-              <input type="url" class="form-control form-control-sm mb-2" id="urlPopoverInput" placeholder="https://...">
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="urlPopoverCancel">Ä°ptal</button>
-                <button type="button" class="btn btn-sm btn-primary" id="urlPopoverOk">Ekle</button>
-              </div>
-            </div>
-          </div>
-          <div class="row g-2">
-            <div class="col-md-6">
-              <textarea id="postContent" name="content" rows="10" class="form-control" placeholder="Ä°Ã§erik (Markdown destekli)" required></textarea>
-            </div>
-            <div class="col-md-6">
-              <div class="form-control" style="height:100%; overflow:auto; background: var(--input-bg); border-color: var(--border)">
-                <div class="small text-muted mb-1">Ã–nizleme</div>
-                <div id="postPreview" class="markdown-body"></div>
-              </div>
-            </div>
-          </div>
-          <div class="row g-2 mt-1">
-            <div class="col-md-6">
-              <input id="postMediaUrl" name="mediaUrl" type="url" class="form-control" placeholder="FotoÄŸraf/GIF URL (opsiyonel)">
-            </div>
-            <div class="col-md-6">
-              <input id="postLinkUrl" name="linkUrl" type="url" class="form-control" placeholder="Harici Link (opsiyonel)">
-            </div>
-          </div>
+          <textarea id="postContent" name="content" rows="6" class="form-control" placeholder="İçerik"></textarea>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">PaylaÅŸ</button>
+          <button type="submit" class="btn btn-primary w-100">Paylaş</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Common app helpers (BACKEND_BASE, auth UI, theme, etc.) -->
   <script src="../js/app.js"></script>
-    <!-- Language files -->
-  <script>
-    // Load Turkish translations directly
-    window.translations = {
-      "home": "Ana Sayfa",
-      "about": "HakkÄ±nda",
-      "contact": "Ä°letiÅŸim",
-      "welcome": "Bloguma HoÅŸgeldin",
-      "subtitle": "MÃ¼zik, sanat ve kÃ¼ltÃ¼r Ã¼zerine",
-      "login": "GiriÅŸ",
-      "register": "KayÄ±t",
-      "logout": "Ã‡Ä±kÄ±ÅŸ",
-      "profile": "Profil",
-      "newPost": "Yeni GÃ¶nderi",
-      "search": "Ara...",
-      "notifications": "Bildirimler",
-      "saved": "Kaydedilenler",
-      "mod": "Mod",
-      "submit": "GÃ¶nder",
-      "title": "BaÅŸlÄ±k",
-      "content": "Ä°Ã§erik",
-      "category": "Kategori",
-      "mediaUrl": "FotoÄŸraf/GIF URL (opsiyonel)",
-      "linkUrl": "Harici Link (opsiyonel)",
-      "share": "PaylaÅŸ",
-      "popular": "En PopÃ¼ler",
-      "latest": "En Son Eklenenler",
-      "comments": "Yorumlar",
-      "like": "BeÄŸen",
-      "bookmark": "Kaydet",
-      "report": "Raporla",
-      "edit": "DÃ¼zenle",
-      "delete": "Sil",
-      "pin": "Sabitle",
-      "lock": "Kilitle",
-      "newMusic": "Yeni MÃ¼zik",
-      "industry": "EndÃ¼stri Haberleri",
-      "review": "DeÄŸerlendirme",
-      "album": "AlbÃ¼m Ä°nceleme",
-      "interview": "RÃ¶portajlar",
-      "event": "Etkinlikler",
-      "series": "Dizi & Filmler",
-      "loading": "YÃ¼kleniyor...",
-      "error": "Hata",
-      "success": "BaÅŸarÄ±lÄ±",
-      "cancel": "Ä°ptal",
-      "save": "Kaydet",
-      "close": "Kapat",
-      "send": "GÃ¶nder",
-      "name": "AdÄ±nÄ±z",
-      "email": "Email",
-      "password": "Parola",
-      "username": "KullanÄ±cÄ± AdÄ±",
-      "message": "MesajÄ±nÄ±z",
-      "writeComment": "Yorum yaz...",
-      "noPosts": "HenÃ¼z gÃ¶nderi yok",
-      "noComments": "HenÃ¼z yorum yok",
-      "loadMore": "Daha Fazla",
-      "allRightsReserved": "TÃ¼m haklarÄ± saklÄ±dÄ±r",
-      "avatarUrl": "Avatar URL",
-      "avatarUrlPlaceholder": "https://... (fotoÄŸraf/gif)",
-      "avatarUrlHelp": "URL boÅŸ kaydedilirse avatar kaldÄ±rÄ±lÄ±r.",
-      "uploadFile": "Veya dosya yÃ¼kle",
-      "upload": "YÃ¼kle",
-      "myPosts": "GÃ¶nderilerim",
-      "noPostsYet": "HenÃ¼z gÃ¶nderi yok",
-      "createFirstPost": "Ä°lk gÃ¶nderinizi oluÅŸturun",
-      "welcomeMessage": "Nara MÃ¼zik'e hoÅŸ geldiniz!",
-      "profileSettings": "Profil AyarlarÄ±",
-      "accountInfo": "Hesap Bilgileri",
-      "contactMessage": "Bize mesaj bÄ±rakÄ±n; evencreed hesabÄ±nÄ±n gelen kutusuna dÃ¼ÅŸecek.",
-      "popularAlbums": "PopÃ¼ler AlbÃ¼mler",
-      "popularAlbumsDesc": "En Ã§ok dinlenen ve tartÄ±ÅŸÄ±lan albÃ¼mleri keÅŸfedin",
-      "addComment": "Ekle",
-      "albumSearch": "AlbÃ¼m Ara",
-      "searchAlbum": "AlbÃ¼m adÄ± yazÄ±n...",
-      "searchResults": "Arama SonuÃ§larÄ±",
-      "myFavorites": "Favori AlbÃ¼mlerim",
-      "loadingFavorites": "Favori albÃ¼mleriniz yÃ¼kleniyor...",
-      "noFavorites": "HenÃ¼z favori albÃ¼mÃ¼nÃ¼z yok.",
-      "addFavorites": "AlbÃ¼m inceleme sayfasÄ±ndan favori albÃ¼mlerinizi ekleyebilirsiniz."
-    };
-  </script>
   <script src="../js/lang.js"></script>
-
-  <!-- Page inline logic -->
   <script>
-    (function(){
-      'use strict';
-      // year
-      document.getElementById('year').textContent = new Date().getFullYear();
+  (async function(){
+    'use strict';
+    document.getElementById('year').textContent = new Date().getFullYear();
 
-      // Theme align with index
-      const root = document.documentElement;
-      const themeToggle = document.getElementById('themeToggle');
-      function applyTheme(theme){
-        const nav = document.getElementById('mainNavbar');
-        if(theme === 'light'){
-          root.setAttribute('data-theme','light');
-          nav.classList.remove('navbar-dark');
-          nav.classList.add('navbar-light');
-          themeToggle.textContent = 'ðŸŒ™';
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const root = document.documentElement;
+    function applyTheme(theme){
+      const nav = document.getElementById('mainNavbar');
+      if(theme === 'light'){
+        root.setAttribute('data-theme','light');
+        themeToggle.textContent = '🌙';
+        nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light');
+      } else {
+        root.removeAttribute('data-theme');
+        themeToggle.textContent = '☀️';
+        nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark');
+      }
+    }
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(savedTheme);
+    themeToggle.addEventListener('click', () => {
+      const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      localStorage.setItem('theme', next); applyTheme(next);
+    });
+
+    // Follow functionality
+    const followBtn = document.getElementById('followBtn');
+    let isFollowing = false;
+
+    followBtn.addEventListener('click', () => {
+      isFollowing = !isFollowing;
+      followBtn.classList.toggle('following', isFollowing);
+      
+      if (isFollowing) {
+        followBtn.innerHTML = '<i class="fas fa-check me-2"></i>Takip Ediliyor';
+      } else {
+        followBtn.innerHTML = '<i class="fas fa-plus me-2"></i>Takip Et';
+      }
+    });
+
+    // Play button functionality
+    document.querySelectorAll('.play-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const icon = btn.querySelector('i');
+        if (icon.classList.contains('fa-play')) {
+          icon.classList.remove('fa-play');
+          icon.classList.add('fa-pause');
         } else {
-          root.removeAttribute('data-theme');
-          nav.classList.remove('navbar-light');
-          nav.classList.add('navbar-dark');
-          themeToggle.textContent = 'â˜€ï¸';
+          icon.classList.remove('fa-pause');
+          icon.classList.add('fa-play');
         }
-      }
-      const savedTheme = localStorage.getItem('theme') || 'dark';
-      applyTheme(savedTheme);
-      themeToggle.addEventListener('click', ()=>{
-        const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        localStorage.setItem('theme', next);
-        applyTheme(next);
       });
+    });
 
-      // Helpers
-      function msToTime(ms){
-        if (!ms || isNaN(ms)) return '--:--';
-        const total = Math.floor(ms/1000);
-        const m = Math.floor(total/60);
-        const s = total%60;
-        return m.toString().padStart(2,'0') + ':' + s.toString().padStart(2,'0');
-      }
-      function abbr(n){
-        n = Number(n||0);
-        if (n >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'') + 'B';
-        if (n >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'') + 'M';
-        if (n >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'') + 'K';
-        return String(n);
-      }
+    // Track item click to play
+    document.querySelectorAll('.track-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const playBtn = item.querySelector('.play-btn');
+        playBtn.click();
+      });
+    });
 
-      // Parse query
-      const params = new URLSearchParams(location.search);
-      const id = params.get('id');
-      const artistUrl = params.get('artist');
-      const canonicalUrl = artistUrl ? artistUrl : (id ? 'https://open.spotify.com/artist/' + id : '');
-
-      // Elements
-      const imgEl = document.getElementById('artistImage');
-      const nameEl = document.getElementById('artistName');
-      const follEl = document.getElementById('artistFollowers');
-      const genEl = document.getElementById('artistGenres');
-      const spLink = document.getElementById('spotifyLink');
-      const tracksBody = document.getElementById('topTracksBody');
-      const albumsGrid = document.getElementById('albumsGrid');
-      const errorBox = document.getElementById('errorBox');
-      const fbSec = document.getElementById('fallbackEmbedSection');
-      const fbWrap = document.getElementById('fallbackEmbed');
-
-      if (canonicalUrl){ spLink.href = canonicalUrl; }
-
-      let currentAudio = null;
-      let currentBtn = null;
-
-      function stopCurrent(){
-        if (currentAudio){
-          currentAudio.pause();
-          currentAudio = null;
-        }
-        if (currentBtn){
-          currentBtn.dataset.playing = 'false';
-          currentBtn.innerText = 'â–¶';
-          currentBtn = null;
-        }
-      }
-
-      function renderTracks(tracks){
-        tracksBody.innerHTML = '';
-        if (!Array.isArray(tracks) || !tracks.length){
-          tracksBody.innerHTML = '<tr><td></td><td class="text-muted">ParÃ§a bulunamadÄ±</td><td></td><td></td></tr>';
-          return;
-        }
-        tracks.forEach((t)=>{
-          const tr = document.createElement('tr');
-          tr.className = 'track-row';
-          const canPlay = !!t.preview_url;
-          tr.innerHTML = `
-            <td class="px-2">
-              <button class="btn btn-outline-light btn-sm track-play" ${canPlay?'':'disabled'} data-id="${t.id||''}" data-src="${t.preview_url||''}" aria-label="Oynat">${canPlay?'â–¶':'â¸'}</button>
-            </td>
-            <td>
-              <div class="fw-semibold">${t.name||'-'}</div>
-              ${t.album? `<div class="small muted">${t.album.name||''} â€¢ ${t.album.release_date?String(t.album.release_date).slice(0,4):''}</div>`:''}
-            </td>
-            <td class="muted">${msToTime(t.duration_ms)}</td>
-            <td>
-              ${t.external_urls?.spotify ? `<a href="${t.external_urls.spotify}" class="text-decoration-none" target="_blank" rel="noopener">ðŸ”—</a>`:''}
-            </td>
-          `;
-          tracksBody.appendChild(tr);
-        });
-
-        if (!tracksBody.dataset.clickHandler){
-          tracksBody.addEventListener('click', (e)=>{
-            const btn = e.target.closest('.track-play');
-            if (!btn) return;
-            const src = btn.getAttribute('data-src');
-            if (!src) return;
-            if (currentBtn === btn && currentAudio){
-              if (currentAudio.paused){
-                currentAudio.play().catch(()=>{});
-                btn.dataset.playing = 'true';
-                btn.innerText = 'â¸';
-              } else {
-                currentAudio.pause();
-                btn.dataset.playing = 'false';
-                btn.innerText = 'â–¶';
-              }
-              return;
-            }
-            // new
-            stopCurrent();
-            const audio = new Audio(src);
-            currentAudio = audio;
-            currentBtn = btn;
-            btn.dataset.playing = 'true';
-            btn.innerText = 'â¸';
-            audio.play().catch(()=>{
-              btn.dataset.playing = 'false';
-              btn.innerText = 'â–¶';
-            });
-            audio.addEventListener('ended', ()=>{
-              if (currentBtn){
-                currentBtn.dataset.playing = 'false';
-                currentBtn.innerText = 'â–¶';
-              }
-              currentAudio = null;
-              currentBtn = null;
-            });
-          });
-          tracksBody.dataset.clickHandler = '1';
-        }
-      }
-
-      function renderAlbums(items){
-        albumsGrid.innerHTML = '';
-        if (!Array.isArray(items) || !items.length){
-          albumsGrid.innerHTML = '<div class="col-12 text-muted">AlbÃ¼m veya single bulunamadÄ±.</div>';
-          return;
-        }
-        items.forEach((a)=>{
-          const img = (a.images && a.images[0] && a.images[0].url) ? a.images[0].url : '';
-          const year = a.release_date ? String(a.release_date).slice(0,4) : '';
-          const ext = a.external_urls?.spotify || '#';
-          const col = document.createElement('div');
-          col.className = 'col-6 col-sm-4 col-md-3 col-lg-2';
-          col.innerHTML = `
-            <div class="text-center cover-tile" data-url="${ext}">
-              <div class="ratio ratio-1x1 mb-2">
-                <img src="${img}" alt="${(a.name||'')}" class="w-100 h-100 rounded" style="object-fit:cover;">
-              </div>
-              <div class="small fw-semibold text-truncate" title="${(a.name||'').replace(/"/g,'&quot;')}">${a.name||''}</div>
-              <div class="small muted">${year}</div>
-            </div>
-          `;
-          col.querySelector('.cover-tile').addEventListener('click', ()=>{
-            if (ext && ext !== '#') window.open(ext, '_blank','noopener');
-          });
-          albumsGrid.appendChild(col);
-        });
-      }
-
-      function extractIdFromUrl(u){
-        if (!u) return null;
-        const m = String(u).match(/artist\/([a-zA-Z0-9]+)(?:$|[?#/])/);
-        if (m && m[1]) return m[1];
-        const m2 = String(u).match(/spotify:artist:([a-zA-Z0-9]+)/);
-        if (m2 && m2[1]) return m2[1];
-        return null;
-      }
-
-      function embedFallback(){
-        if (!canonicalUrl) return;
-        fbSec.classList.remove('d-none');
-        // Try oEmbed, fallback to iframe
-        fetch('https://open.spotify.com/oembed?url=' + encodeURIComponent(canonicalUrl))
-          .then(r=>r.ok?r.json():Promise.reject(new Error('oembed failed')))
-          .then(data=>{
-            if (data && data.html){
-              fbWrap.innerHTML = data.html;
-            } else {
-              throw new Error('no html');
-            }
-          })
-          .catch(()=>{
-            const idGuess = extractIdFromUrl(canonicalUrl) || (id || '');
-            const iframe = document.createElement('iframe');
-            iframe.src = idGuess ? ('https://open.spotify.com/embed/artist/' + idGuess) : canonicalUrl.replace('open.spotify.com','open.spotify.com/embed');
-            iframe.width = '100%';
-            iframe.height = '380';
-            iframe.frameBorder = '0';
-            iframe.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
-            iframe.loading = 'lazy';
-            fbWrap.innerHTML = '';
-            fbWrap.appendChild(iframe);
-          });
-      }
-
-      async function loadArtist(){
-        try{
-          // Determine backend base from app.js global
-          const base = (typeof BACKEND_BASE !== 'undefined') ? BACKEND_BASE : (location.hostname.includes('localhost') ? 'http://localhost:4000' : 'https://naramusic.onrender.com');
-          const url = new URL(base + '/api/spotify/artist');
-          if (id) url.searchParams.set('id', id);
-          else if (artistUrl) url.searchParams.set('artist', artistUrl);
-          else {
-            errorBox.classList.remove('d-none');
-            errorBox.textContent = 'Eksik parametre: id veya artist URL gerekli.';
-            embedFallback();
-            return;
-          }
-
-          const r = await fetch(url.toString());
-          const data = await r.json();
-          if (!r.ok || data.error){
-            errorBox.classList.remove('d-none');
-            errorBox.textContent = (data && (data.error || data.message)) ? data.error || data.message : 'Spotify verileri alÄ±namadÄ±';
-            embedFallback();
-            return;
-          }
-
-          // Header
-          nameEl.textContent = data.name || 'SanatÃ§Ä±';
-          follEl.textContent = abbr(data.followers || 0);
-          genEl.innerHTML = Array.isArray(data.genres) ? data.genres.slice(0,8).map(g=>`<span class="badge badge-genre rounded-pill">${g}</span>`).join(' ') : '';
-          const heroImg = (data.images && data.images.length) ? data.images[0].url : '';
-          if (heroImg){ imgEl.src = heroImg; } else { imgEl.style.display='none'; }
-          if (data.external_urls?.spotify){ spLink.href = data.external_urls.spotify; }
-
-          // Sections
-          renderTracks(Array.isArray(data.topTracks) ? data.topTracks : []);
-          renderAlbums(Array.isArray(data.albums) ? data.albums : []);
-
-          // Fallback if minimal
-          const minimal = (!data.topTracks || !data.topTracks.length) && (!data.albums || !data.albums.length);
-          if (minimal) embedFallback();
-        }catch(err){
-          console.error(err);
-          errorBox.classList.remove('d-none');
-          errorBox.textContent = 'Beklenmeyen hata: ' + (err?.message || err);
-          embedFallback();
-        }
-      }
-
-      loadArtist();
-    })();
+  })();
   </script>
 </body>
 </html>
-

@@ -3,330 +3,116 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AlbÃ¼m</title>
+  <title>Albüm İnceleme — Nara Müzik</title>
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
   <!-- Site CSS -->
   <link rel="stylesheet" href="../css/styles.css">
 
-  <!-- Theme tokens to mirror index.html -->
   <style>
-    :root{
-      --bg:#0b0b0b;
-      --text:#eaeaea;
-      --panel:#121214;
-      --muted:#9aa3ae;
-      --accent:#77c2ff;
-      --accent-contrast:#0a1118;
-      --border: rgba(255,255,255,0.06);
-      --elev-1: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      --input-bg:#0f1113;
-    }
-    :root[data-theme="light"]{
-      --bg:#f8fafc;
-      --text:#0f172a;
-      --panel:#ffffff;
-      --muted:#5b6778;
-      --accent:#2563eb;
-      --accent-contrast:#ffffff;
-      --border: rgba(15,23,42,0.08);
-      --elev-1: linear-gradient(180deg, rgba(2,6,23,0.02), rgba(2,6,23,0.01));
-      --input-bg:#f1f5f9;
-    }
-    html,body{height:100%}
-    body{
-      background:var(--bg);
-      color:var(--text);
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
-      padding-top:72px;
-    }
-    .topbar{
-      position:fixed; top:0; left:0; right:0; height:40px;
-      background:var(--panel); z-index:1040;
-      border-bottom:1px solid var(--border);
-    }
-    .topbar .container{height:100%; display:flex; align-items:center; gap:12px; font-size:13px}
-
-    .mainnav{
-      position:fixed; top:40px; left:0; right:0; z-index:1039;
-      border-bottom:1px solid var(--border);
-      background:transparent;
-    }
-    .navbar-brand{font-weight:800; letter-spacing:.6px}
-    .nav-link{color:color-mix(in oklab, var(--text) 85%, transparent)}
-    .nav-link:hover{color:var(--accent)}
-    main.container{max-width:1150px}
-
-    .hero{
-      background: var(--panel);
-      border:1px solid var(--border);
-      border-radius:.5rem;
-      overflow:hidden;
-    }
-    .hero-cover{
-      width:100%;
-      max-width:220px;
-      aspect-ratio: 1/1;
-      border-radius:.5rem;
-      object-fit:cover;
-    }
-    .badge-artist{
-      background-color: color-mix(in oklab, var(--text) 10%, transparent);
-      color: var(--text);
-    }
-    .card{background:var(--elev-1); border:1px solid var(--border)}
-    .track-play{
-      width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center;
-      border-radius:50%;
-    }
-    .track-row:hover{ background-color: rgba(255,255,255,0.03); }
-    .muted{ color: var(--muted); }
-
-    /* Album Cards */
-    .album-card {
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      cursor: pointer;
-    }
-    .album-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    .album-cover {
-      width: 100%;
-      aspect-ratio: 1/1;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-    .album-info {
-      padding: 1rem;
-    }
-    .album-title {
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      line-height: 1.3;
-    }
-    .album-artist {
-      color: var(--muted);
-      font-size: 0.9rem;
-      margin-bottom: 0.25rem;
-    }
-    .album-year {
-      color: var(--muted);
-      font-size: 0.8rem;
-    }
-    .comment-section {
-      border-top: 1px solid var(--border);
-      padding: 1rem;
-      background: rgba(255,255,255,0.02);
-    }
-    .comment-input {
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-    .comment-input:focus {
-      background: var(--input-bg);
-      border-color: var(--accent);
-      color: var(--text);
-      box-shadow: 0 0 0 0.2rem rgba(119, 194, 255, 0.25);
-    }
-    .comment-item {
-      padding: 0.75rem 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .comment-item:last-child {
-      border-bottom: none;
-    }
-    .comment-author {
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: var(--accent);
-    }
-    .comment-date {
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-    .comment-text {
-      margin-top: 0.25rem;
-      line-height: 1.4;
-    }
-
-    @media (max-width:991px){
-      .mainnav{top:0}
-      body{padding-top:56px}
-    }
-
-    /* Light theme overrides for Bootstrap utility classes */
-    :root[data-theme="light"] .text-light{ color: var(--text) !important; }
-    :root[data-theme="light"] .bg-dark{ background-color: var(--input-bg) !important; }
-    :root[data-theme="light"] .form-control.bg-dark,
-    :root[data-theme="light"] .form-select.bg-dark{ background-color: var(--input-bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
-    :root[data-theme="light"] .btn-outline-light{ color: var(--text) !important; border-color: var(--border) !important; }
-    :root[data-theme="light"] .btn-outline-light:hover{ background: var(--text) !important; color: var(--accent-contrast) !important; }
-    :root[data-theme="light"] .badge.bg-secondary{ background-color: color-mix(in oklab, var(--text) 10%, transparent) !important; color: var(--text) !important; }
+    .album-card { transition: transform 0.2s ease; }
+    .album-card:hover { transform: translateY(-5px); }
+    .album-cover { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
+    .play-count { font-size: 0.9rem; color: var(--muted); }
+    .comment-item { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+    .comment-item:last-child { border-bottom: none; }
   </style>
 </head>
 <body>
-
-  <!-- Top thin bar -->
-  <div class="topbar d-none d-lg-block">
-    <div class="container">
-      <div class="me-auto small text-muted">Nara Müzik — Müzik tartışma topluluğu</div>
-      <div class="d-flex gap-3">
-        <a href="../index.html#about" class="text-muted">About</a>
-        <a href="contact.html" class="text-muted">Contact</a>
-        <a href="submit.html" class="text-muted" data-bs-toggle="modal" data-bs-target="#createPostModal">Submit</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
+  <nav class="navbar navbar-dark mainnav" id="mainNavbar">
     <div class="container-fluid">
       <div class="d-flex align-items-center">
-        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">â˜°</button>
-        <a class="navbar-brand me-3" href="../index.html" data-lang="home">Nara Müzik</a>
-
+        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">☰</button>
+        <a class="navbar-brand me-3" href="../index.html">Nara Müzik</a>
         <div class="d-none d-lg-flex align-items-center gap-2">
-          <a class="nav-link px-2" href="yenimuzik.html" data-lang="newMusic">Yeni Müzik</a>
-          <a class="nav-link px-2" href="endustri.html" data-lang="industry">Endüstri Haberleri</a>
-          <a class="nav-link px-2" href="degerlendirme.html" data-lang="review">Değerlendirme</a>
-          <a class="nav-link px-2" href="album.html" data-lang="album">Albüm İnceleme</a>
-          <a class="nav-link px-2" href="roportaj.html" data-lang="interview">Röportajlar</a>
-          <a class="nav-link px-2" href="etkinlik.html" data-lang="event">Etkinlikler</a>
-          <a class="nav-link px-2" href="dizifilm.html" data-lang="series">Dizi &amp; Filmler</a>
+          <a class="nav-link px-2" href="yenimuzik.html">Yeni Müzik</a>
+          <a class="nav-link px-2" href="endustri.html">Endüstri Haberleri</a>
+          <a class="nav-link px-2" href="degerlendirme.html">Değerlendirme</a>
+          <a class="nav-link px-2" href="album.html" style="color: var(--accent)">Albüm İnceleme</a>
+          <a class="nav-link px-2" href="roportaj.html">Röportajlar</a>
+          <a class="nav-link px-2" href="etkinlik.html">Etkinlikler</a>
+          <a class="nav-link px-2" href="dizifilm.html">Dizi & Filmler</a>
         </div>
       </div>
-
       <div class="d-flex ms-auto align-items-center gap-2">
         <div class="d-none d-md-block">
-          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" data-placeholder-lang="search" placeholder="Ara...">
+          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
         </div>
-
         <select id="language-toggle">
           <option value="en">EN</option>
           <option value="tr">TR</option>
         </select>
-
-        <button id="themeToggle" class="btn btn-outline-light btn-sm">â˜€ï¸</button>
-        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal" data-lang="newPost">Yeni GÃ¶nderi</button>
-
+        <button id="themeToggle" class="btn btn-outline-light btn-sm">🌙</button>
+        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">Yeni Gönderi</button>
         <div id="authButtons" class="d-flex gap-1">
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">GiriÅŸ</button>
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">KayÄ±t</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
         </div>
       </div>
     </div>
   </nav>
 
-  <!-- Offcanvas -->
-  <div class="offcanvas offcanvas-start" tabindex="-1" id="sideMenu">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title">Kategoriler</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  <!-- Hero Section -->
+  <section class="hero-section py-5">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <h1 class="display-5 fw-bold mb-3">Albüm İnceleme</h1>
+          <p class="lead text-muted">En çok dinlenen ve tartışılan albümleri keşfedin, yorumlarınızı paylaşın ve favori albümlerinizi kaydedin.</p>
     </div>
-    <div class="offcanvas-body">
-      <ul class="list-unstyled mb-0">
-        <li><a href="yenimuzik.html">Yeni MÃ¼zik</a></li>
-        <li><a href="endustri.html">EndÃ¼stri Haberleri</a></li>
-        <li><a href="degerlendirme.html">DeÄŸerlendirme</a></li>
-        <li><a href="album.html">AlbÃ¼m Ä°nceleme</a></li>
-        <li><a href="roportaj.html">RÃ¶portajlar</a></li>
-        <li><a href="etkinlik.html">Etkinlikler</a></li>
-        <li><a href="dizifilm.html">Dizi ve Filmler</a></li>
-      </ul>
-    </div>
-  </div>
-
-  <main class="container mt-4">
-    <!-- Back link / breadcrumb -->
-    <div class="mb-3">
-      <a href="../index.html" class="text-decoration-none">&larr; Geri</a>
-    </div>
-
-    <div class="row">
-      <!-- Left Sidebar - Album Search -->
-      <div class="col-lg-3 mb-4">
+        <div class="col-lg-4">
         <div class="card">
           <div class="card-header">
-            <h5 class="mb-0" data-lang="albumSearch">AlbÃ¼m Ara</h5>
-          </div>
-          <div class="card-body">
-            <div class="mb-3">
-              <input type="text" id="albumSearchInput" class="form-control" placeholder="AlbÃ¼m adÄ± yazÄ±n..." data-placeholder-lang="searchAlbum">
+              <h6 class="mb-0">Albüm Ara</h6>
             </div>
-            <button id="searchAlbumBtn" class="btn btn-primary w-100 mb-3" data-lang="search">Ara</button>
-            
-            <!-- Search Results -->
-            <div id="searchResults" class="d-none">
-              <h6 data-lang="searchResults">Arama SonuÃ§larÄ±</h6>
-              <div id="searchResultsList" class="list-group">
-                <!-- Search results will be inserted here -->
-              </div>
-            </div>
-            
-            <!-- My Favorites -->
-            <div class="mt-4">
-              <h6 data-lang="myFavorites">Favori AlbÃ¼mlerim</h6>
-              <div id="favoritesList" class="list-group">
-                <!-- Favorites will be loaded here -->
-              </div>
+            <div class="card-body">
+              <input id="albumSearchInput" class="form-control mb-2" placeholder="Albüm adı yazın...">
+              <button id="searchButton" class="btn btn-primary w-100">Ara</button>
+              <div id="albumSearchResults" class="mt-3"></div>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <!-- Right Content - Popular Albums -->
-      <div class="col-lg-9">
-        <!-- Page Header -->
-        <section class="mb-4">
-          <h1 class="h2 mb-2" data-lang="popularAlbums">PopÃ¼ler AlbÃ¼mler</h1>
-          <p class="text-muted" data-lang="popularAlbumsDesc">En Ã§ok dinlenen ve tartÄ±ÅŸÄ±lan albÃ¼mleri keÅŸfedin</p>
+  <!-- Popular Albums -->
+  <main class="container py-4">
+    <section class="mb-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Popüler Albümler</h2>
+        <div class="btn-group" role="group">
+          <input type="radio" class="btn-check" name="sortOptions" id="sortByPopular" checked>
+          <label class="btn btn-outline-primary" for="sortByPopular">Popüler</label>
+          <input type="radio" class="btn-check" name="sortOptions" id="sortByRecent">
+          <label class="btn btn-outline-primary" for="sortByRecent">Yeni</label>
+          <input type="radio" class="btn-check" name="sortOptions" id="sortByRating">
+          <label class="btn btn-outline-primary" for="sortByRating">Puan</label>
+        </div>
+      </div>
+      <div id="albumsGrid" class="row g-4"></div>
     </section>
 
-    <!-- Loading State -->
-    <div id="loadingState" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">YÃ¼kleniyor...</span>
-      </div>
-      <p class="mt-2 text-muted" data-lang="loading">AlbÃ¼mler yÃ¼kleniyor...</p>
-    </div>
-
-    <!-- Error State -->
-    <div id="errorBox" class="alert alert-danger d-none"></div>
-
-    <!-- Albums Grid -->
-    <section id="albumsSection" class="d-none">
-      <div class="row g-4" id="albumsGrid">
-        <!-- Album cards will be inserted here -->
-      </div>
-      
-      <!-- Load More Button -->
-      <div class="text-center mt-4">
-        <button id="loadMoreBtn" class="btn btn-outline-primary" data-lang="loadMore">
-          Daha Fazla AlbÃ¼m YÃ¼kle
-        </button>
-      </div>
+    <!-- My Favorites -->
+    <section class="mb-5" id="favoritesSection" style="display: none;">
+      <h2 class="mb-4">Favori Albümlerim</h2>
+      <div id="favoritesGrid" class="row g-4"></div>
     </section>
-      </div>
-    </div>
   </main>
 
-  <!-- Footer -->
   <footer class="text-center py-4 mt-5">
     <div class="container">
-      <small class="text-muted">Â© <span id="year"></span> Nara MÃ¼zik</small>
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
     </div>
   </footer>
 
-  <!-- Modals (login/register/create) to align with app.js behavior -->
+  <!-- Modals -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <form id="loginForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">GiriÅŸ Yap</h5>
+          <h5 class="modal-title">Giriş Yap</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -334,7 +120,7 @@
           <input name="password" type="password" class="form-control" placeholder="Parola" required>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">GiriÅŸ</button>
+          <button type="submit" class="btn btn-primary w-100">Giriş</button>
         </div>
       </form>
     </div>
@@ -344,16 +130,16 @@
     <div class="modal-dialog">
       <form id="registerForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">KayÄ±t Ol</h5>
+          <h5 class="modal-title">Kayıt Ol</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input name="username" class="form-control mb-2" placeholder="KullanÄ±cÄ± AdÄ±" required>
+          <input name="username" class="form-control mb-2" placeholder="Kullanıcı Adı" required>
           <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
           <input name="password" type="password" class="form-control" placeholder="Parola" required>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success w-100">KayÄ±t Ol</button>
+          <button type="submit" class="btn btn-success w-100">Kayıt Ol</button>
         </div>
       </form>
     </div>
@@ -363,778 +149,238 @@
     <div class="modal-dialog modal-lg">
       <form id="newPostForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Yeni GÃ¶nderi OluÅŸtur</h5>
+          <h5 class="modal-title">Yeni Gönderi Oluştur</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input id="postTitle" name="title" class="form-control mb-2" placeholder="BaÅŸlÄ±k" required>
+          <input id="postTitle" name="title" class="form-control mb-2" placeholder="Başlık" required>
           <select id="postCategory" name="category" class="form-select mb-2">
-            <option value="yenimuzik">Yeni MÃ¼zik</option>
-            <option value="endustri">EndÃ¼stri Haberleri</option>
-            <option value="degerlendirme">DeÄŸerlendirme</option>
-            <option value="album">AlbÃ¼m Ä°nceleme</option>
-            <option value="roportaj">RÃ¶portajlar</option>
+            <option value="album">Albüm İnceleme</option>
+            <option value="yenimuzik">Yeni Müzik</option>
+            <option value="endustri">Endüstri Haberleri</option>
+            <option value="degerlendirme">Değerlendirme</option>
+            <option value="roportaj">Röportajlar</option>
             <option value="etkinlik">Etkinlikler</option>
-            <option value="dizifilm">Dizi &amp; Filmler</option>
+            <option value="dizifilm">Dizi & Filmler</option>
           </select>
-          <div class="btn-toolbar mb-2" role="toolbar" aria-label="Editor toolbar">
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="bold"><strong>B</strong></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="italic"><em>I</em></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="strike">S</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="h2">H2</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="h3">H3</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="quote">â€œâ€</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="ul">â€¢ List</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="ol">1. List</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="task">[ ]</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="link">Link</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="image">ðŸ–¼ï¸</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="code"><code>{}</code></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="codeblock">```</button>
-            </div>
-          </div>
-          <div id="emojiPicker" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:300px;">
-            <div class="card-body py-2">
-              <input type="text" class="form-control form-control-sm mb-2" id="emojiSearch" placeholder="Emoji araâ€¦">
-              <div id="emojiGrid" class="d-flex flex-wrap gap-1" style="max-height:200px; overflow:auto"></div>
-            </div>
-          </div>
-          <div id="urlPopover" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:320px;">
-            <div class="card-body py-2">
-              <div class="mb-2 small text-muted" id="urlPopoverTitle">BaÄŸlantÄ± ekle</div>
-              <input type="url" class="form-control form-control-sm mb-2" id="urlPopoverInput" placeholder="https://...">
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="urlPopoverCancel">Ä°ptal</button>
-                <button type="button" class="btn btn-sm btn-primary" id="urlPopoverOk">Ekle</button>
-              </div>
-            </div>
-          </div>
-          <div class="row g-2">
-            <div class="col-md-6">
-              <textarea id="postContent" name="content" rows="10" class="form-control" placeholder="Ä°Ã§erik (Markdown destekli)" required></textarea>
-            </div>
-            <div class="col-md-6">
-              <div class="form-control" style="height:100%; overflow:auto; background: var(--input-bg); border-color: var(--border)">
-                <div class="small text-muted mb-1">Ã–nizleme</div>
-                <div id="postPreview" class="markdown-body"></div>
-              </div>
-            </div>
-          </div>
-          <div class="row g-2 mt-1">
-            <div class="col-md-6">
-              <input id="postMediaUrl" name="mediaUrl" type="url" class="form-control" placeholder="FotoÄŸraf/GIF URL (opsiyonel)">
-            </div>
-            <div class="col-md-6">
-              <input id="postLinkUrl" name="linkUrl" type="url" class="form-control" placeholder="Harici Link (opsiyonel)">
-            </div>
-          </div>
+          <textarea id="postContent" name="content" rows="6" class="form-control" placeholder="İçerik"></textarea>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">PaylaÅŸ</button>
+          <button type="submit" class="btn btn-primary w-100">Paylaş</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Language files -->
-  <script>
-    // Load Turkish translations directly
-    window.translations = {
-      "home": "Ana Sayfa",
-      "about": "HakkÄ±nda",
-      "contact": "Ä°letiÅŸim",
-      "welcome": "Bloguma HoÅŸgeldin",
-      "subtitle": "MÃ¼zik, sanat ve kÃ¼ltÃ¼r Ã¼zerine",
-      "login": "GiriÅŸ",
-      "register": "KayÄ±t",
-      "logout": "Ã‡Ä±kÄ±ÅŸ",
-      "profile": "Profil",
-      "newPost": "Yeni GÃ¶nderi",
-      "search": "Ara...",
-      "notifications": "Bildirimler",
-      "saved": "Kaydedilenler",
-      "mod": "Mod",
-      "submit": "GÃ¶nder",
-      "title": "BaÅŸlÄ±k",
-      "content": "Ä°Ã§erik",
-      "category": "Kategori",
-      "mediaUrl": "FotoÄŸraf/GIF URL (opsiyonel)",
-      "linkUrl": "Harici Link (opsiyonel)",
-      "share": "PaylaÅŸ",
-      "popular": "En PopÃ¼ler",
-      "latest": "En Son Eklenenler",
-      "comments": "Yorumlar",
-      "like": "BeÄŸen",
-      "bookmark": "Kaydet",
-      "report": "Raporla",
-      "edit": "DÃ¼zenle",
-      "delete": "Sil",
-      "pin": "Sabitle",
-      "lock": "Kilitle",
-      "newMusic": "Yeni MÃ¼zik",
-      "industry": "EndÃ¼stri Haberleri",
-      "review": "DeÄŸerlendirme",
-      "album": "AlbÃ¼m Ä°nceleme",
-      "interview": "RÃ¶portajlar",
-      "event": "Etkinlikler",
-      "series": "Dizi & Filmler",
-      "loading": "YÃ¼kleniyor...",
-      "error": "Hata",
-      "success": "BaÅŸarÄ±lÄ±",
-      "cancel": "Ä°ptal",
-      "save": "Kaydet",
-      "close": "Kapat",
-      "send": "GÃ¶nder",
-      "name": "AdÄ±nÄ±z",
-      "email": "Email",
-      "password": "Parola",
-      "username": "KullanÄ±cÄ± AdÄ±",
-      "message": "MesajÄ±nÄ±z",
-      "writeComment": "Yorum yaz...",
-      "noPosts": "HenÃ¼z gÃ¶nderi yok",
-      "noComments": "HenÃ¼z yorum yok",
-      "loadMore": "Daha Fazla",
-      "allRightsReserved": "TÃ¼m haklarÄ± saklÄ±dÄ±r",
-      "avatarUrl": "Avatar URL",
-      "avatarUrlPlaceholder": "https://... (fotoÄŸraf/gif)",
-      "avatarUrlHelp": "URL boÅŸ kaydedilirse avatar kaldÄ±rÄ±lÄ±r.",
-      "uploadFile": "Veya dosya yÃ¼kle",
-      "upload": "YÃ¼kle",
-      "myPosts": "GÃ¶nderilerim",
-      "noPostsYet": "HenÃ¼z gÃ¶nderi yok",
-      "createFirstPost": "Ä°lk gÃ¶nderinizi oluÅŸturun",
-      "welcomeMessage": "Nara MÃ¼zik'e hoÅŸ geldiniz!",
-      "profileSettings": "Profil AyarlarÄ±",
-      "accountInfo": "Hesap Bilgileri",
-      "contactMessage": "Bize mesaj bÄ±rakÄ±n; evencreed hesabÄ±nÄ±n gelen kutusuna dÃ¼ÅŸecek.",
-      "popularAlbums": "PopÃ¼ler AlbÃ¼mler",
-      "popularAlbumsDesc": "En Ã§ok dinlenen ve tartÄ±ÅŸÄ±lan albÃ¼mleri keÅŸfedin",
-      "addComment": "Ekle",
-      "albumSearch": "AlbÃ¼m Ara",
-      "searchAlbum": "AlbÃ¼m adÄ± yazÄ±n...",
-      "searchResults": "Arama SonuÃ§larÄ±",
-      "myFavorites": "Favori AlbÃ¼mlerim",
-      "loadingFavorites": "Favori albÃ¼mleriniz yÃ¼kleniyor...",
-      "noFavorites": "HenÃ¼z favori albÃ¼mÃ¼nÃ¼z yok.",
-      "addFavorites": "AlbÃ¼m inceleme sayfasÄ±ndan favori albÃ¼mlerinizi ekleyebilirsiniz."
-    };
-  </script>
-  <!-- Common app helpers (BACKEND_BASE, auth UI, theme, etc.) -->
-  <script src="../js/app.js"></script>
-    <!-- Language files -->
-  <script>
-    // Load Turkish translations directly
-    window.translations = {
-      "home": "Ana Sayfa",
-      "about": "HakkÄ±nda",
-      "contact": "Ä°letiÅŸim",
-      "welcome": "Bloguma HoÅŸgeldin",
-      "subtitle": "MÃ¼zik, sanat ve kÃ¼ltÃ¼r Ã¼zerine",
-      "login": "GiriÅŸ",
-      "register": "KayÄ±t",
-      "logout": "Ã‡Ä±kÄ±ÅŸ",
-      "profile": "Profil",
-      "newPost": "Yeni GÃ¶nderi",
-      "search": "Ara...",
-      "notifications": "Bildirimler",
-      "saved": "Kaydedilenler",
-      "mod": "Mod",
-      "submit": "GÃ¶nder",
-      "title": "BaÅŸlÄ±k",
-      "content": "Ä°Ã§erik",
-      "category": "Kategori",
-      "mediaUrl": "FotoÄŸraf/GIF URL (opsiyonel)",
-      "linkUrl": "Harici Link (opsiyonel)",
-      "share": "PaylaÅŸ",
-      "popular": "En PopÃ¼ler",
-      "latest": "En Son Eklenenler",
-      "comments": "Yorumlar",
-      "like": "BeÄŸen",
-      "bookmark": "Kaydet",
-      "report": "Raporla",
-      "edit": "DÃ¼zenle",
-      "delete": "Sil",
-      "pin": "Sabitle",
-      "lock": "Kilitle",
-      "newMusic": "Yeni MÃ¼zik",
-      "industry": "EndÃ¼stri Haberleri",
-      "review": "DeÄŸerlendirme",
-      "album": "AlbÃ¼m Ä°nceleme",
-      "interview": "RÃ¶portajlar",
-      "event": "Etkinlikler",
-      "series": "Dizi & Filmler",
-      "loading": "YÃ¼kleniyor...",
-      "error": "Hata",
-      "success": "BaÅŸarÄ±lÄ±",
-      "cancel": "Ä°ptal",
-      "save": "Kaydet",
-      "close": "Kapat",
-      "send": "GÃ¶nder",
-      "name": "AdÄ±nÄ±z",
-      "email": "Email",
-      "password": "Parola",
-      "username": "KullanÄ±cÄ± AdÄ±",
-      "message": "MesajÄ±nÄ±z",
-      "writeComment": "Yorum yaz...",
-      "noPosts": "HenÃ¼z gÃ¶nderi yok",
-      "noComments": "HenÃ¼z yorum yok",
-      "loadMore": "Daha Fazla",
-      "allRightsReserved": "TÃ¼m haklarÄ± saklÄ±dÄ±r",
-      "avatarUrl": "Avatar URL",
-      "avatarUrlPlaceholder": "https://... (fotoÄŸraf/gif)",
-      "avatarUrlHelp": "URL boÅŸ kaydedilirse avatar kaldÄ±rÄ±lÄ±r.",
-      "uploadFile": "Veya dosya yÃ¼kle",
-      "upload": "YÃ¼kle",
-      "myPosts": "GÃ¶nderilerim",
-      "noPostsYet": "HenÃ¼z gÃ¶nderi yok",
-      "createFirstPost": "Ä°lk gÃ¶nderinizi oluÅŸturun",
-      "welcomeMessage": "Nara MÃ¼zik'e hoÅŸ geldiniz!",
-      "profileSettings": "Profil AyarlarÄ±",
-      "accountInfo": "Hesap Bilgileri",
-      "contactMessage": "Bize mesaj bÄ±rakÄ±n; evencreed hesabÄ±nÄ±n gelen kutusuna dÃ¼ÅŸecek.",
-      "popularAlbums": "PopÃ¼ler AlbÃ¼mler",
-      "popularAlbumsDesc": "En Ã§ok dinlenen ve tartÄ±ÅŸÄ±lan albÃ¼mleri keÅŸfedin",
-      "addComment": "Ekle",
-      "albumSearch": "AlbÃ¼m Ara",
-      "searchAlbum": "AlbÃ¼m adÄ± yazÄ±n...",
-      "searchResults": "Arama SonuÃ§larÄ±",
-      "myFavorites": "Favori AlbÃ¼mlerim",
-      "loadingFavorites": "Favori albÃ¼mleriniz yÃ¼kleniyor...",
-      "noFavorites": "HenÃ¼z favori albÃ¼mÃ¼nÃ¼z yok.",
-      "addFavorites": "AlbÃ¼m inceleme sayfasÄ±ndan favori albÃ¼mlerinizi ekleyebilirsiniz."
-    };
-  </script>
-  <script src="../js/lang.js"></script>
+  <!-- Album Details Modal -->
+  <div class="modal fade" id="albumModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="albumModalTitle">Albüm Detayları</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="albumModalBody">
+          <!-- Album details will be loaded here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+          <button type="button" class="btn btn-primary" id="addToFavoritesBtn">Favorilere Ekle</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <!-- Page inline logic -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/lang.js"></script>
   <script>
-    (function(){
+  (async function(){
       'use strict';
-      // year
       document.getElementById('year').textContent = new Date().getFullYear();
 
-      // Theme align with index
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
       const root = document.documentElement;
-      const themeToggle = document.getElementById('themeToggle');
       function applyTheme(theme){
         const nav = document.getElementById('mainNavbar');
         if(theme === 'light'){
           root.setAttribute('data-theme','light');
-          nav.classList.remove('navbar-dark');
-          nav.classList.add('navbar-light');
-          themeToggle.textContent = 'ðŸŒ™';
+        themeToggle.textContent = '🌙';
+        nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light');
         } else {
           root.removeAttribute('data-theme');
-          nav.classList.remove('navbar-light');
-          nav.classList.add('navbar-dark');
-          themeToggle.textContent = 'â˜€ï¸';
-        }
+        themeToggle.textContent = '☀️';
+        nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark');
+      }
       }
       const savedTheme = localStorage.getItem('theme') || 'dark';
       applyTheme(savedTheme);
-      themeToggle.addEventListener('click', ()=>{
+    themeToggle.addEventListener('click', () => {
         const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        localStorage.setItem('theme', next);
-        applyTheme(next);
-      });
+      localStorage.setItem('theme', next); applyTheme(next);
+    });
 
-      // Elements
-      const loadingState = document.getElementById('loadingState');
-      const albumsSection = document.getElementById('albumsSection');
-      const albumsGrid = document.getElementById('albumsGrid');
-      const errorBox = document.getElementById('errorBox');
-      const loadMoreBtn = document.getElementById('loadMoreBtn');
+    // Mock album data
+    const mockAlbums = [
+      { id: 1, title: 'Midnight Memories', artist: 'One Direction', cover: 'https://picsum.photos/300/300?random=1', plays: 12500, rating: 4.5 },
+      { id: 2, title: 'Red (Taylor\'s Version)', artist: 'Taylor Swift', cover: 'https://picsum.photos/300/300?random=2', plays: 23400, rating: 4.8 },
+      { id: 3, title: 'After Hours', artist: 'The Weeknd', cover: 'https://picsum.photos/300/300?random=3', plays: 18900, rating: 4.6 },
+      { id: 4, title: 'Fine Line', artist: 'Harry Styles', cover: 'https://picsum.photos/300/300?random=4', plays: 15600, rating: 4.4 },
+      { id: 5, title: 'Folklore', artist: 'Taylor Swift', cover: 'https://picsum.photos/300/300?random=5', plays: 21200, rating: 4.9 },
+      { id: 6, title: 'Future Nostalgia', artist: 'Dua Lipa', cover: 'https://picsum.photos/300/300?random=6', plays: 17800, rating: 4.7 }
+    ];
 
-      // State
-      let currentPage = 1;
-      let isLoading = false;
-      let hasMore = true;
+    let favorites = JSON.parse(localStorage.getItem('albumFavorites') || '[]');
 
-      // Last.fm API Key
-      const LASTFM_API_KEY = 'd7fb4c5c6efa6075b6ff1f4a080ac024';
-      const LASTFM_BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
-
-      // Load popular albums from Last.fm
-      async function loadPopularAlbums(page = 1) {
-        if (isLoading) return;
-        isLoading = true;
-
-        try {
-          // Show loading state on first load
-          if (page === 1) {
-            loadingState.classList.remove('d-none');
-            albumsSection.classList.add('d-none');
-            errorBox.classList.add('d-none');
-          }
-
-          // Simulate API delay
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
-          // Generate new albums for each page
-          const generateNewAlbums = (page) => {
-            const albumTemplates = [
-              { name: "Midnights", artist: "Taylor Swift", playcount: "1250000" },
-              { name: "SOS", artist: "SZA", playcount: "980000" },
-              { name: "Harry's House", artist: "Harry Styles", playcount: "1100000" },
-              { name: "Renaissance", artist: "BeyoncÃ©", playcount: "850000" },
-              { name: "Un Verano Sin Ti", artist: "Bad Bunny", playcount: "1200000" },
-              { name: "30", artist: "Adele", playcount: "950000" },
-              { name: "Planet Her", artist: "Doja Cat", playcount: "780000" },
-              { name: "Happier Than Ever", artist: "Billie Eilish", playcount: "920000" },
-              { name: "Donda", artist: "Kanye West", playcount: "880000" },
-              { name: "Future Nostalgia", artist: "Dua Lipa", playcount: "1050000" },
-              { name: "Folklore", artist: "Taylor Swift", playcount: "1150000" },
-              { name: "Positions", artist: "Ariana Grande", playcount: "890000" },
-              { name: "After Hours", artist: "The Weeknd", playcount: "1020000" },
-              { name: "Chromatica", artist: "Lady Gaga", playcount: "760000" },
-              { name: "Evermore", artist: "Taylor Swift", playcount: "940000" },
-              { name: "Justice", artist: "Justin Bieber", playcount: "870000" },
-              { name: "Certified Lover Boy", artist: "Drake", playcount: "1130000" },
-              { name: "Sour", artist: "Olivia Rodrigo", playcount: "1080000" },
-              { name: "Red (Taylor's Version)", artist: "Taylor Swift", playcount: "960000" },
-              { name: "Montero", artist: "Lil Nas X", playcount: "820000" },
-              { name: "Call Me If You Get Lost", artist: "Tyler, The Creator", playcount: "740000" },
-              { name: "Donda 2", artist: "Kanye West", playcount: "910000" },
-              { name: "The Melodic Blue", artist: "Baby Keem", playcount: "680000" },
-              { name: "An Evening With Silk Sonic", artist: "Silk Sonic", playcount: "790000" },
-              { name: "Invasion of Privacy", artist: "Cardi B", playcount: "850000" },
-              { name: "Sweetener", artist: "Ariana Grande", playcount: "920000" },
-              { name: "thank u, next", artist: "Ariana Grande", playcount: "980000" },
-              { name: "Lover", artist: "Taylor Swift", playcount: "1100000" },
-              { name: "reputation", artist: "Taylor Swift", playcount: "1200000" },
-              { name: "1989", artist: "Taylor Swift", playcount: "1300000" },
-              { name: "Speak Now", artist: "Taylor Swift", playcount: "1000000" },
-              { name: "Fearless", artist: "Taylor Swift", playcount: "950000" },
-              { name: "Taylor Swift", artist: "Taylor Swift", playcount: "900000" },
-              { name: "GUTS", artist: "Olivia Rodrigo", playcount: "850000" },
-              { name: "SOUR", artist: "Olivia Rodrigo", playcount: "800000" },
-              { name: "Future Nostalgia", artist: "Dua Lipa", playcount: "750000" },
-              { name: "Dua Lipa", artist: "Dua Lipa", playcount: "700000" },
-              { name: "After Hours", artist: "The Weeknd", playcount: "1200000" },
-              { name: "Dawn FM", artist: "The Weeknd", playcount: "1100000" },
-              { name: "Fine Line", artist: "Harry Styles", playcount: "1000000" },
-              { name: "Harry Styles", artist: "Harry Styles", playcount: "950000" },
-              { name: "MONTERO", artist: "Lil Nas X", playcount: "900000" },
-              { name: "7", artist: "Lil Nas X", playcount: "850000" },
-              { name: "When We All Fall Asleep, Where Do We Go?", artist: "Billie Eilish", playcount: "800000" },
-              { name: "Don't Smile at Me", artist: "Billie Eilish", playcount: "750000" },
-              { name: "Invasion of Privacy", artist: "Cardi B", playcount: "700000" },
-              { name: "Gangsta Bitch Music, Vol. 1", artist: "Cardi B", playcount: "650000" },
-              { name: "Scorpion", artist: "Drake", playcount: "1200000" },
-              { name: "Views", artist: "Drake", playcount: "1100000" },
-              { name: "Nothing Was the Same", artist: "Drake", playcount: "1000000" },
-              { name: "Take Care", artist: "Drake", playcount: "950000" },
-              { name: "Ã· (Divide)", artist: "Ed Sheeran", playcount: "1300000" },
-              { name: "x (Multiply)", artist: "Ed Sheeran", playcount: "1200000" },
-              { name: "+ (Plus)", artist: "Ed Sheeran", playcount: "1100000" },
-              { name: "No.6 Collaborations Project", artist: "Ed Sheeran", playcount: "1000000" },
-              { name: "Despacito", artist: "Luis Fonsi", playcount: "1500000" },
-              { name: "Vida", artist: "Luis Fonsi", playcount: "1000000" },
-              { name: "Vibras", artist: "J Balvin", playcount: "900000" },
-              { name: "Colores", artist: "J Balvin", playcount: "800000" },
-              { name: "Con Calma", artist: "Daddy Yankee", playcount: "900000" },
-              { name: "El Disco Duro", artist: "Daddy Yankee", playcount: "800000" },
-              { name: "Carte Blanche", artist: "DJ Snake", playcount: "800000" },
-              { name: "Encore", artist: "DJ Snake", playcount: "700000" },
-              { name: "Wonder", artist: "Shawn Mendes", playcount: "1200000" },
-              { name: "Shawn Mendes", artist: "Shawn Mendes", playcount: "1000000" },
-              { name: "Illuminate", artist: "Shawn Mendes", playcount: "900000" },
-              { name: "Handwritten", artist: "Shawn Mendes", playcount: "800000" },
-              { name: "Sick Boy", artist: "The Chainsmokers", playcount: "1100000" },
-              { name: "Memories...Do Not Open", artist: "The Chainsmokers", playcount: "1000000" },
-              { name: "Collage", artist: "The Chainsmokers", playcount: "900000" },
-              { name: "Bouquet", artist: "The Chainsmokers", playcount: "800000" },
-              { name: "Romance", artist: "Camila Cabello", playcount: "1000000" },
-              { name: "Camila", artist: "Camila Cabello", playcount: "1200000" },
-              { name: "Familia", artist: "Camila Cabello", playcount: "900000" },
-              { name: "Crying in the Club", artist: "Camila Cabello", playcount: "800000" },
-              { name: "1989", artist: "Taylor Swift", playcount: "1200000" },
-              { name: "Red", artist: "Taylor Swift", playcount: "1100000" },
-              { name: "Speak Now", artist: "Taylor Swift", playcount: "1000000" },
-              { name: "Fearless", artist: "Taylor Swift", playcount: "900000" },
-              { name: "Taylor Swift", artist: "Taylor Swift", playcount: "800000" },
-              { name: "Lover", artist: "Taylor Swift", playcount: "700000" },
-              { name: "reputation", artist: "Taylor Swift", playcount: "1300000" },
-              { name: "1989", artist: "Taylor Swift", playcount: "1200000" },
-              { name: "Red", artist: "Taylor Swift", playcount: "1100000" },
-              { name: "Speak Now", artist: "Taylor Swift", playcount: "1000000" },
-              { name: "Fearless", artist: "Taylor Swift", playcount: "900000" },
-              { name: "Taylor Swift", artist: "Taylor Swift", playcount: "800000" }
-            ];
-
-            // Generate 10 new albums for this page
-            const newAlbums = [];
-            for (let i = 0; i < 10; i++) {
-              const templateIndex = ((page - 1) * 10 + i) % albumTemplates.length;
-              const template = albumTemplates[templateIndex];
-              newAlbums.push({
-                name: template.name,
-                artist: template.artist,
-                playcount: (parseInt(template.playcount) + (page * 10000) + (i * 1000)).toString()
-              });
-            }
-            return newAlbums;
-          };
-
-          const mockAlbums = generateNewAlbums(page);
-
-          // Fetch real album info with cover art for each album
-          const albums = [];
-          for (const album of mockAlbums) {
-            try {
-              const response = await fetch(`${LASTFM_BASE_URL}?method=album.getinfo&api_key=${LASTFM_API_KEY}&artist=${encodeURIComponent(album.artist)}&album=${encodeURIComponent(album.name)}&format=json`);
-              const data = await response.json();
-              
-              if (data.album) {
-                albums.push({
-                  name: data.album.name || album.name,
-                  artist: { name: data.album.artist || album.artist },
-                  image: data.album.image || [{ "#text": "https://via.placeholder.com/300x300/333333/ffffff?text=No+Image" }],
-                  playcount: album.playcount
-                });
-              } else {
-                // Fallback if album not found
-                albums.push({
-                  name: album.name,
-                  artist: { name: album.artist },
-                  image: [{ "#text": "https://via.placeholder.com/300x300/333333/ffffff?text=No+Image" }],
-                  playcount: album.playcount
-                });
-              }
-            } catch (error) {
-              console.error(`Error fetching album info for ${album.name}:`, error);
-              // Fallback if API call fails
-              albums.push({
-                name: album.name,
-                artist: { name: album.artist },
-                image: [{ "#text": "https://via.placeholder.com/300x300/333333/ffffff?text=No+Image" }],
-                playcount: album.playcount
-              });
-            }
-          }
-          
-          if (page === 1) {
-            loadingState.classList.add('d-none');
-            albumsSection.classList.remove('d-none');
-            albumsGrid.innerHTML = '';
-          }
-
-          // Render albums
-          albums.forEach(album => {
-            renderAlbumCard(album);
-          });
-
-          // Update pagination
-          currentPage = page;
-          hasMore = true; // Always show more button for demo purposes
-          
-          if (!hasMore) {
-            loadMoreBtn.style.display = 'none';
-          }
-
-        } catch (error) {
-          console.error('Error loading albums:', error);
-          loadingState.classList.add('d-none');
-          errorBox.classList.remove('d-none');
-          errorBox.textContent = 'AlbÃ¼mler yÃ¼klenirken hata oluÅŸtu: ' + error.message;
-        } finally {
-          isLoading = false;
-        }
-      }
-
-      // Render individual album card
-      function renderAlbumCard(album) {
-        const col = document.createElement('div');
-        col.className = 'col-md-6 col-lg-4';
-        
-        const imageUrl = album.image?.[3]?.['#text'] || album.image?.[2]?.['#text'] || album.image?.[1]?.['#text'] || '';
-        const albumName = album.name || 'Bilinmeyen AlbÃ¼m';
-        const artistName = album.artist?.name || 'Bilinmeyen SanatÃ§Ä±';
-        const playCount = album.playcount || '0';
-        
-        // Create unique album ID
-        const albumId = `album_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
-        col.innerHTML = `
+    function renderAlbums(albums) {
+      const grid = document.getElementById('albumsGrid');
+      grid.innerHTML = albums.map(album => `
+        <div class="col-md-6 col-lg-4">
           <div class="card album-card h-100">
-            <img src="${imageUrl}" class="album-cover" alt="${albumName}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
-            <div class="album-info">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <h5 class="album-title">${albumName}</h5>
-                  <div class="album-artist">${artistName}</div>
-                  <div class="album-year">${playCount} dinlenme</div>
-                </div>
-                <button class="btn btn-outline-primary btn-sm add-to-favorites" data-album-id="${albumId}" data-album-name="${albumName}" data-artist-name="${artistName}" title="Favorilere Ekle">
-                  â¤ï¸
+            <img src="${album.cover}" class="album-cover" alt="${album.title}">
+            <div class="card-body">
+              <h6 class="card-title">${album.title}</h6>
+              <p class="card-text text-muted">${album.artist}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="play-count">${album.plays.toLocaleString()} dinlenme</span>
+                <div class="btn-group">
+                  <button class="btn btn-sm btn-outline-primary" onclick="viewAlbum(${album.id})">Görüntüle</button>
+                  <button class="btn btn-sm ${favorites.includes(album.id) ? 'btn-danger' : 'btn-outline-danger'}" onclick="toggleFavorite(${album.id})">
+                    ${favorites.includes(album.id) ? '❤️' : '🤍'}
                 </button>
-              </div>
-            </div>
-            <div class="comment-section">
-              <div class="mb-3">
-                <h6 class="mb-2" data-lang="comments">Yorumlar</h6>
-                <div class="comments-list" id="comments-${albumId}">
-                  <!-- Comments will be loaded here -->
                 </div>
               </div>
-              <div class="comment-form">
-                <div class="input-group">
-                  <input type="text" class="form-control comment-input" placeholder="Yorumunuzu yazÄ±n..." data-placeholder-lang="writeComment">
-                  <button class="btn btn-primary add-comment-btn" type="button" data-album-id="${albumId}" data-album-name="${albumName}" data-artist-name="${artistName}" data-lang="addComment">Ekle</button>
-                </div>
+              <div class="mt-2">
+                <span class="badge bg-warning">★ ${album.rating}</span>
               </div>
             </div>
           </div>
-        `;
-        
-        albumsGrid.appendChild(col);
-      }
-
-      // Add comment function
-      function addComment(albumId, albumName, artistName) {
-        const input = document.querySelector(`button[data-album-id="${albumId}"]`).parentElement.querySelector('.comment-input');
-        const commentText = input.value.trim();
-        
-        console.log('Adding comment for album:', albumId, 'Text:', commentText);
-        
-        if (!commentText) return;
-        
-        // Get current user (you can implement proper auth later)
-        const currentUser = localStorage.getItem('username') || 'Anonim KullanÄ±cÄ±';
-        
-        // Create comment element
-        const commentDiv = document.createElement('div');
-        commentDiv.className = 'comment-item';
-        commentDiv.innerHTML = `
-          <div class="d-flex justify-content-between align-items-start">
-            <div class="comment-author">${currentUser}</div>
-            <div class="comment-date">${new Date().toLocaleDateString('tr-TR')}</div>
           </div>
-          <div class="comment-text">${commentText}</div>
-        `;
-        
-        // Add to comments list
-        const commentsList = document.getElementById(`comments-${albumId}`);
-        commentsList.appendChild(commentDiv);
-        
-        // Clear input
-        input.value = '';
-        
-        // Save to localStorage (you can implement proper backend later)
-        const commentsKey = `comments_${albumId}`;
-        const existingComments = JSON.parse(localStorage.getItem(commentsKey) || '[]');
-        existingComments.push({
-          user: currentUser,
-          text: commentText,
-          date: new Date().toISOString()
-        });
-        localStorage.setItem(commentsKey, JSON.stringify(existingComments));
-      }
+      `).join('');
+    }
 
-      // Add event listeners for comment buttons
-      function addCommentEventListeners() {
-        document.addEventListener('click', function(e) {
-          if (e.target.classList.contains('add-comment-btn')) {
-            const albumId = e.target.getAttribute('data-album-id');
-            const albumName = e.target.getAttribute('data-album-name');
-            const artistName = e.target.getAttribute('data-artist-name');
-            addComment(albumId, albumName, artistName);
-          }
-        });
-      }
-
-      // Add event listeners for favorites
-      function addFavoritesEventListeners() {
-        document.addEventListener('click', function(e) {
-          if (e.target.classList.contains('add-to-favorites')) {
-            const albumId = e.target.getAttribute('data-album-id');
-            const albumName = e.target.getAttribute('data-album-name');
-            const artistName = e.target.getAttribute('data-artist-name');
-            addToFavorites(albumId, albumName, artistName);
-          }
-        });
-      }
-
-      // Add album to favorites
-      function addToFavorites(albumId, albumName, artistName) {
-        const favorites = JSON.parse(localStorage.getItem('favoriteAlbums') || '[]');
-        
-        // Check if already in favorites
-        const exists = favorites.find(fav => fav.albumId === albumId);
-        if (exists) {
-          alert('Bu albÃ¼m zaten favorilerinizde!');
-            return;
-          }
-
-        // Add to favorites
-        favorites.push({
-          albumId: albumId,
-          albumName: albumName,
-          artistName: artistName,
-          addedDate: new Date().toISOString()
-        });
-
-        localStorage.setItem('favoriteAlbums', JSON.stringify(favorites));
-        loadFavorites();
-        
-        // Update button appearance
-        const button = document.querySelector(`button[data-album-id="${albumId}"]`);
-        if (button) {
-          button.innerHTML = 'â¤ï¸';
-          button.classList.remove('btn-outline-primary');
-          button.classList.add('btn-danger');
-          button.title = 'Favorilerden Ã‡Ä±kar';
-        }
-        
-        alert('AlbÃ¼m favorilerinize eklendi!');
-      }
-
-      // Load favorites from localStorage
-      function loadFavorites() {
-        const favorites = JSON.parse(localStorage.getItem('favoriteAlbums') || '[]');
-        const favoritesList = document.getElementById('favoritesList');
-        
-        if (favorites.length === 0) {
-          favoritesList.innerHTML = '<p class="text-muted small">HenÃ¼z favori albÃ¼mÃ¼nÃ¼z yok.</p>';
-          return;
-        }
-
-        favoritesList.innerHTML = favorites.map(fav => `
-          <div class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-              <div class="fw-bold">${fav.albumName}</div>
-              <small class="text-muted">${fav.artistName}</small>
+    function renderFavorites() {
+      const favoriteAlbums = mockAlbums.filter(album => favorites.includes(album.id));
+      const grid = document.getElementById('favoritesGrid');
+      const section = document.getElementById('favoritesSection');
+      
+      if (favoriteAlbums.length > 0) {
+        section.style.display = 'block';
+        grid.innerHTML = favoriteAlbums.map(album => `
+          <div class="col-md-6 col-lg-4">
+            <div class="card album-card h-100">
+              <img src="${album.cover}" class="album-cover" alt="${album.title}">
+              <div class="card-body">
+                <h6 class="card-title">${album.title}</h6>
+                <p class="card-text text-muted">${album.artist}</p>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewAlbum(${album.id})">Görüntüle</button>
+              </div>
             </div>
-            <button class="btn btn-sm btn-outline-danger remove-favorite" data-album-id="${fav.albumId}">
-              âœ•
-            </button>
           </div>
         `).join('');
+      } else {
+        section.style.display = 'none';
       }
+    }
 
-      // Search albums using Last.fm API
-      async function searchAlbums(query) {
-        if (!query.trim()) return;
-
-        try {
-          const response = await fetch(`${LASTFM_BASE_URL}?method=album.search&api_key=${LASTFM_API_KEY}&album=${encodeURIComponent(query)}&format=json`);
-          const data = await response.json();
-
-          if (data.error) {
-            throw new Error(data.message || 'Search error');
-          }
-
-          const albums = data.results?.albummatches?.album || [];
-          displaySearchResults(albums);
-        } catch (error) {
-          console.error('Search error:', error);
-          alert('Arama sÄ±rasÄ±nda hata oluÅŸtu: ' + error.message);
-        }
-      }
-
-      // Display search results
-      function displaySearchResults(albums) {
-        const searchResults = document.getElementById('searchResults');
-        const searchResultsList = document.getElementById('searchResultsList');
-
-        if (albums.length === 0) {
-          searchResultsList.innerHTML = '<p class="text-muted">SonuÃ§ bulunamadÄ±.</p>';
-        } else {
-          searchResultsList.innerHTML = albums.slice(0, 10).map(album => {
-            const albumId = `search_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            return `
-              <div class="list-group-item">
-                <div class="d-flex align-items-center">
-                  <img src="${album.image?.[2]?.['#text'] || ''}" class="me-3" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.style.display='none'">
-                  <div class="flex-grow-1">
-                    <div class="fw-bold">${album.name}</div>
-                    <small class="text-muted">${album.artist}</small>
+    window.viewAlbum = function(id) {
+      const album = mockAlbums.find(a => a.id === id);
+      if (!album) return;
+      
+      document.getElementById('albumModalTitle').textContent = album.title;
+      document.getElementById('albumModalBody').innerHTML = `
+        <div class="row">
+          <div class="col-md-4">
+            <img src="${album.cover}" class="img-fluid rounded" alt="${album.title}">
                   </div>
-                  <button class="btn btn-sm btn-outline-primary add-to-favorites" 
-                          data-album-id="${albumId}" 
-                          data-album-name="${album.name}" 
-                          data-artist-name="${album.artist}">
-                    â¤ï¸
-                  </button>
+          <div class="col-md-8">
+            <h5>${album.title}</h5>
+            <p class="text-muted">${album.artist}</p>
+            <p><strong>Dinlenme:</strong> ${album.plays.toLocaleString()}</p>
+            <p><strong>Puan:</strong> ★ ${album.rating}/5</p>
+            <div class="mt-3">
+              <h6>Yorumlar</h6>
+              <div class="comment-item">
+                <strong>Müzik Sever:</strong> Harika bir albüm, her şarkısı ayrı bir başyapıt!
+              </div>
+              <div class="comment-item">
+                <strong>Rock Fan:</strong> Bu sanatçının en iyi çalışması olmuş.
+              </div>
+            </div>
                 </div>
               </div>
             `;
-          }).join('');
-        }
+      
+      new bootstrap.Modal(document.getElementById('albumModal')).show();
+    };
 
-        searchResults.classList.remove('d-none');
+    window.toggleFavorite = function(id) {
+      const index = favorites.indexOf(id);
+      if (index > -1) {
+        favorites.splice(index, 1);
+      } else {
+        favorites.push(id);
       }
+      localStorage.setItem('albumFavorites', JSON.stringify(favorites));
+      renderAlbums(mockAlbums);
+      renderFavorites();
+    };
 
-      // Load existing comments
-      function loadComments(albumId) {
-        const commentsKey = `comments_${albumId}`;
-        const comments = JSON.parse(localStorage.getItem(commentsKey) || '[]');
-        const commentsList = document.getElementById(`comments-${albumId}`);
+    // Album search
+    document.getElementById('searchButton').addEventListener('click', () => {
+      const query = document.getElementById('albumSearchInput').value.trim();
+      const results = document.getElementById('albumSearchResults');
+      
+      if (query) {
+        const filtered = mockAlbums.filter(album => 
+          album.title.toLowerCase().includes(query.toLowerCase()) ||
+          album.artist.toLowerCase().includes(query.toLowerCase())
+        );
         
-        if (commentsList) {
-          commentsList.innerHTML = comments.map(comment => `
-            <div class="comment-item">
-              <div class="d-flex justify-content-between align-items-start">
-                <div class="comment-author">${comment.user}</div>
-                <div class="comment-date">${new Date(comment.date).toLocaleDateString('tr-TR')}</div>
+        if (filtered.length > 0) {
+          results.innerHTML = filtered.map(album => `
+            <div class="d-flex align-items-center mb-2 p-2 border rounded">
+              <img src="${album.cover}" width="50" height="50" class="rounded me-2" alt="${album.title}">
+              <div class="flex-grow-1">
+                <div class="fw-bold">${album.title}</div>
+                <small class="text-muted">${album.artist}</small>
               </div>
-              <div class="comment-text">${comment.text}</div>
+              <button class="btn btn-sm btn-outline-primary" onclick="viewAlbum(${album.id})">Görüntüle</button>
             </div>
           `).join('');
+        } else {
+          results.innerHTML = '<p class="text-muted">Sonuç bulunamadı.</p>';
         }
+      } else {
+        results.innerHTML = '';
       }
+    });
 
-      // Load more albums
-      loadMoreBtn.addEventListener('click', () => {
-        if (hasMore && !isLoading) {
-          loadPopularAlbums(currentPage + 1);
+    // Sort options
+    document.querySelectorAll('input[name="sortOptions"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        let sorted = [...mockAlbums];
+        switch(e.target.id) {
+          case 'sortByPopular':
+            sorted.sort((a, b) => b.plays - a.plays);
+            break;
+          case 'sortByRecent':
+            sorted.reverse(); // Assume newer albums are at the end
+            break;
+          case 'sortByRating':
+            sorted.sort((a, b) => b.rating - a.rating);
+            break;
         }
+        renderAlbums(sorted);
       });
+    });
 
-      // Initialize
-      addCommentEventListeners();
-      addFavoritesEventListeners();
-      loadPopularAlbums(1);
-      loadFavorites();
-
-      // Search functionality
-      document.getElementById('searchAlbumBtn').addEventListener('click', function() {
-        const query = document.getElementById('albumSearchInput').value.trim();
-        if (query) {
-          searchAlbums(query);
-        }
-      });
-
-      // Search on Enter key
-      document.getElementById('albumSearchInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-          const query = this.value.trim();
-          if (query) {
-            searchAlbums(query);
-          }
-        }
-      });
-
-      // Load comments after a short delay to ensure DOM is ready
-      setTimeout(() => {
-        const albumCards = document.querySelectorAll('.album-card');
-        albumCards.forEach(card => {
-          const albumName = card.querySelector('.album-title').textContent;
-          const albumId = albumName.replace(/[^a-zA-Z0-9]/g, '');
-          loadComments(albumId);
-        });
-      }, 1000);
+    // Initial render
+    renderAlbums(mockAlbums);
+    renderFavorites();
+    
     })();
   </script>
 </body>
 </html>
-

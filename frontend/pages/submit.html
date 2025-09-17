@@ -1,144 +1,231 @@
-﻿<!doctype html>
-<html lang="tr">
+﻿<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Submit â€” Nara MÃ¼zik</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>İçerik Gönder - Nara Müzik</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/styles.css">
-  <style>
-    :root{ --bg:#0b0b0b; --text:#eaeaea; --border: rgba(255,255,255,0.06); }
-    :root[data-theme="light"]{ --bg:#f8fafc; --text:#0f172a; --border: rgba(15,23,42,0.08); }
-    body{ background:var(--bg); color:var(--text); padding-top:72px; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; }
-    .mainnav{ position:fixed; top:0; left:0; right:0; border-bottom:1px solid var(--border); }
-    /* Dark theme navbar styles */
-    :root:not([data-theme="light"]) .mainnav {
-      background: #000000 !important;
-    }
-    :root:not([data-theme="light"]) .mainnav .navbar-brand,
-    :root:not([data-theme="light"]) .mainnav .nav-link,
-    :root:not([data-theme="light"]) .mainnav a,
-    :root:not([data-theme="light"]) .mainnav .btn,
-    :root:not([data-theme="light"]) .mainnav .form-control,
-    :root:not([data-theme="light"]) .mainnav .form-select {
-      color: #ffffff !important;
-    }
-    :root:not([data-theme="light"]) .mainnav .navbar-brand:hover,
-    :root:not([data-theme="light"]) .mainnav .nav-link:hover,
-    :root:not([data-theme="light"]) .mainnav a:hover {
-      color: #cccccc !important;
-    }
-  </style>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="../css/styles.css" rel="stylesheet">
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="../index.html" data-lang="home">Nara MÃ¼zik</a>
-      <div class="ms-auto d-flex align-items-center gap-2">
-        <select id="language-toggle">
-          <option value="en">EN</option>
-          <option value="tr">TR</option>
-        </select>
-        <button id="themeToggle" class="btn btn-outline-light btn-sm">â˜€ï¸</button>
+  <!-- Topbar -->
+  <div class="topbar d-none d-lg-block">
+    <div class="container d-flex justify-content-between align-items-center py-1">
+      <div class="small">
+        <span>🎵 Nara Müzik Forum</span>
+      </div>
+      <div class="d-flex gap-3 small">
+        <span id="currentTime"></span>
+        <button id="themeToggle" class="btn btn-sm btn-outline-secondary">🌙</button>
+        <button id="languageToggle" class="btn btn-sm btn-outline-secondary">TR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg mainnav">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title">Menü</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" href="../index.html">Ana Sayfa</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="yenimuzik.html">Yeni Müzik</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="album.html">Albümler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="etkinlik.html">Etkinlikler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="playlists.html">Oynatma Listeleri</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="haberler.html">Haberler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="listeler.html">Listeler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="sosyal.html">Sosyal</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="analitik.html">Analitikler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="search.html">Arama</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">İletişim</a>
+            </li>
+          </ul>
+          <div class="d-flex gap-2" id="authButtons">
+            <!-- Auth buttons will be populated by JavaScript -->
+          </div>
+        </div>
       </div>
     </div>
   </nav>
 
+  <!-- Main Content -->
   <main class="container mt-4">
-    <div class="card p-4">
-      <h5 class="mb-2" data-lang="submit">Submit</h5>
-      <p class="text-muted mb-0" data-lang="submitMessage">YakÄ±nda burada yeni iÃ§erik gÃ¶nderimiyle ilgili yÃ¶nergeler olacak.</p>
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h1 class="h3 mb-0">
+              <i class="fas fa-plus-circle me-2"></i>İçerik Gönder
+            </h1>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                  <div class="card-body text-center">
+                    <i class="fas fa-music fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Müzik Önerisi</h5>
+                    <p class="card-text">Yeni keşfettiğiniz müzikleri toplulukla paylaşın.</p>
+                    <a href="../index.html#newPostModal" class="btn btn-primary" data-bs-toggle="modal">
+                      <i class="fas fa-plus me-1"></i>Müzik Paylaş
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                  <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Etkinlik Duyurusu</h5>
+                    <p class="card-text">Müzik etkinliklerini ve konserleri duyurun.</p>
+                    <a href="etkinlik.html" class="btn btn-success">
+                      <i class="fas fa-calendar-plus me-1"></i>Etkinlik Oluştur
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                  <div class="card-body text-center">
+                    <i class="fas fa-list fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Oynatma Listesi</h5>
+                    <p class="card-text">Kişisel oynatma listelerinizi oluşturun ve paylaşın.</p>
+                    <a href="playlists.html" class="btn btn-info">
+                      <i class="fas fa-list-ul me-1"></i>Liste Oluştur
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                  <div class="card-body text-center">
+                    <i class="fas fa-newspaper fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Haber Paylaşımı</h5>
+                    <p class="card-text">Müzik dünyasından haberleri paylaşın.</p>
+                    <a href="haberler.html" class="btn btn-warning">
+                      <i class="fas fa-newspaper me-1"></i>Haber Paylaş
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                  <div class="card-body text-center">
+                    <i class="fas fa-comments fa-3x text-secondary mb-3"></i>
+                    <h5 class="card-title">Forum Gönderisi</h5>
+                    <p class="card-text">Müzik hakkında tartışma başlatın.</p>
+                    <a href="../index.html#newPostModal" class="btn btn-secondary" data-bs-toggle="modal">
+                      <i class="fas fa-comment-dots me-1"></i>Gönderi Oluştur
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                  <div class="card-body text-center">
+                    <i class="fas fa-bug fa-3x text-danger mb-3"></i>
+                    <h5 class="card-title">Hata Bildirimi</h5>
+                    <p class="card-text">Karşılaştığınız hataları bildirin.</p>
+                    <a href="contact.html" class="btn btn-danger">
+                      <i class="fas fa-bug me-1"></i>Hata Bildir
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-4">
+              <h5>İçerik Gönderme Kuralları</h5>
+              <div class="row">
+                <div class="col-md-6">
+                  <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i>Müzik ile ilgili içerikler paylaşın</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Uygun dil kullanın</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Telif hakkı ihlali yapmayın</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Spam içerik göndermeyin</li>
+                  </ul>
+                </div>
+                <div class="col-md-6">
+                  <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i>Kişisel saldırı yapmayın</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Uygunsuz içerik paylaşmayın</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Topluluk kurallarına uyun</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Moderatörlere saygı gösterin</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
+  <!-- Footer -->
+  <footer class="text-center py-4 mt-5">
+    <div class="container">
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../js/app.js"></script>
-    <!-- Language files -->
-  <script>
-    // Load Turkish translations directly
-    window.translations = {
-      "home": "Ana Sayfa",
-      "about": "HakkÄ±nda",
-      "contact": "Ä°letiÅŸim",
-      "welcome": "Bloguma HoÅŸgeldin",
-      "subtitle": "MÃ¼zik, sanat ve kÃ¼ltÃ¼r Ã¼zerine",
-      "login": "GiriÅŸ",
-      "register": "KayÄ±t",
-      "logout": "Ã‡Ä±kÄ±ÅŸ",
-      "profile": "Profil",
-      "newPost": "Yeni GÃ¶nderi",
-      "search": "Ara...",
-      "notifications": "Bildirimler",
-      "saved": "Kaydedilenler",
-      "mod": "Mod",
-      "submit": "GÃ¶nder",
-      "title": "BaÅŸlÄ±k",
-      "content": "Ä°Ã§erik",
-      "category": "Kategori",
-      "mediaUrl": "FotoÄŸraf/GIF URL (opsiyonel)",
-      "linkUrl": "Harici Link (opsiyonel)",
-      "share": "PaylaÅŸ",
-      "popular": "En PopÃ¼ler",
-      "latest": "En Son Eklenenler",
-      "comments": "Yorumlar",
-      "like": "BeÄŸen",
-      "bookmark": "Kaydet",
-      "report": "Raporla",
-      "edit": "DÃ¼zenle",
-      "delete": "Sil",
-      "pin": "Sabitle",
-      "lock": "Kilitle",
-      "newMusic": "Yeni MÃ¼zik",
-      "industry": "EndÃ¼stri Haberleri",
-      "review": "DeÄŸerlendirme",
-      "album": "AlbÃ¼m Ä°nceleme",
-      "interview": "RÃ¶portajlar",
-      "event": "Etkinlikler",
-      "series": "Dizi & Filmler",
-      "loading": "YÃ¼kleniyor...",
-      "error": "Hata",
-      "success": "BaÅŸarÄ±lÄ±",
-      "cancel": "Ä°ptal",
-      "save": "Kaydet",
-      "close": "Kapat",
-      "send": "GÃ¶nder",
-      "name": "AdÄ±nÄ±z",
-      "email": "Email",
-      "password": "Parola",
-      "username": "KullanÄ±cÄ± AdÄ±",
-      "message": "MesajÄ±nÄ±z",
-      "writeComment": "Yorum yaz...",
-      "noPosts": "HenÃ¼z gÃ¶nderi yok",
-      "noComments": "HenÃ¼z yorum yok",
-      "loadMore": "Daha Fazla",
-      "allRightsReserved": "TÃ¼m haklarÄ± saklÄ±dÄ±r",
-      "avatarUrl": "Avatar URL",
-      "avatarUrlPlaceholder": "https://... (fotoÄŸraf/gif)",
-      "avatarUrlHelp": "URL boÅŸ kaydedilirse avatar kaldÄ±rÄ±lÄ±r.",
-      "uploadFile": "Veya dosya yÃ¼kle",
-      "upload": "YÃ¼kle",
-      "myPosts": "GÃ¶nderilerim",
-      "noPostsYet": "HenÃ¼z gÃ¶nderi yok",
-      "createFirstPost": "Ä°lk gÃ¶nderinizi oluÅŸturun",
-      "welcomeMessage": "Nara MÃ¼zik'e hoÅŸ geldiniz!",
-      "profileSettings": "Profil AyarlarÄ±",
-      "accountInfo": "Hesap Bilgileri",
-      "contactMessage": "Bize mesaj bÄ±rakÄ±n; evencreed hesabÄ±nÄ±n gelen kutusuna dÃ¼ÅŸecek.",
-      "popularAlbums": "PopÃ¼ler AlbÃ¼mler",
-      "popularAlbumsDesc": "En Ã§ok dinlenen ve tartÄ±ÅŸÄ±lan albÃ¼mleri keÅŸfedin",
-      "addComment": "Ekle",
-      "albumSearch": "AlbÃ¼m Ara",
-      "searchAlbum": "AlbÃ¼m adÄ± yazÄ±n...",
-      "searchResults": "Arama SonuÃ§larÄ±",
-      "myFavorites": "Favori AlbÃ¼mlerim",
-      "loadingFavorites": "Favori albÃ¼mleriniz yÃ¼kleniyor...",
-      "noFavorites": "HenÃ¼z favori albÃ¼mÃ¼nÃ¼z yok.",
-      "addFavorites": "AlbÃ¼m inceleme sayfasÄ±ndan favori albÃ¼mlerinizi ekleyebilirsiniz."
-    };
-  </script>
   <script src="../js/lang.js"></script>
+  <script>
+    // Update current time
+    function updateTime() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('tr-TR');
+      const timeElement = document.getElementById('currentTime');
+      if (timeElement) {
+        timeElement.textContent = timeString;
+      }
+    }
+    
+    updateTime();
+    setInterval(updateTime, 1000);
+    
+    // Update year
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
-
-
-

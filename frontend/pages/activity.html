@@ -3,229 +3,182 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Aktivite AkÄ±ÅŸÄ± â€” Nara MÃ¼zik</title>
+  <title>Aktivite Akışı — Nara Müzik</title>
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
   <!-- Site CSS -->
   <link rel="stylesheet" href="../css/styles.css">
 
   <style>
-    :root{
-      --bg:#0b0b0b;
-      --text:#eaeaea;
-      --panel:#121214;
-      --muted:#9aa3ae;
-      --accent:#77c2ff;
-      --accent-contrast:#0a1118;
-      --border: rgba(255,255,255,0.06);
-      --elev-1: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      --input-bg:#0f1113;
+    .activity-section { margin-bottom: 2rem; }
+    .activity-item { 
+      padding: 1rem; 
+      border-bottom: 1px solid var(--border); 
+      transition: background-color 0.2s ease;
     }
-    :root[data-theme="light"]{
-      --bg:#f8fafc;
-      --text:#0f172a;
-      --panel:#ffffff;
-      --muted:#5b6778;
-      --accent:#2563eb;
-      --accent-contrast:#ffffff;
-      --border: rgba(15,23,42,0.08);
-      --elev-1: linear-gradient(180deg, rgba(2,6,23,0.02), rgba(2,6,23,0.01));
-      --input-bg:#f1f5f9;
-    }
-    :root[data-theme="light"] .text-light{ color: var(--text) !important; }
-    :root[data-theme="light"] .bg-dark{ background-color: var(--input-bg) !important; }
-    :root[data-theme="light"] .form-control.bg-dark,
-    :root[data-theme="light"] .form-select.bg-dark{ background-color: var(--input-bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
-    :root[data-theme="light"] .btn-outline-light{ color: var(--text) !important; border-color: var(--border) !important; }
-    :root[data-theme="light"] .btn-outline-light:hover{ background: var(--text) !important; color: var(--accent-contrast) !important; }
-    :root[data-theme="light"] .badge.bg-secondary{ background-color: color-mix(in oklab, var(--text) 10%, transparent) !important; color: var(--text) !important; }
-
-    html,body{height:100%}
-    body{
-      background:var(--bg);
-      color:var(--text);
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
-      padding-top:72px;
-    }
-    .topbar{
-      position:fixed; top:0; left:0; right:0; height:40px;
-      background:var(--panel); z-index:1040;
-      border-bottom:1px solid var(--border);
-    }
-    .topbar .container{height:100%; display:flex; align-items:center; gap:12px; font-size:13px}
-    .mainnav{
-      position:fixed; top:40px; left:0; right:0; z-index:1039;
-      border-bottom:1px solid var(--border);
-      background:transparent;
-    }
-    .navbar-brand{font-weight:800; letter-spacing:.6px}
-    .nav-link{color:color-mix(in oklab, var(--text) 85%, transparent)}
-    .nav-link:hover{color:var(--accent)}
-
-    main.container{max-width:1150px}
-    .card{background:var(--elev-1); border:1px solid var(--border)}
-    .post-thumb{height:120px; object-fit:cover; width:100%; border-radius:.25rem}
-    .section-header{display:flex; align-items:center; justify-content:space-between}
-    .collapse-toggle{all:unset; cursor:pointer}
-
-    @media (max-width:991px){
-      .mainnav{top:0}
-      body{padding-top:56px}
-      .topbar{display:none}
+    .activity-item:hover { background-color: var(--glass); }
+    .activity-time { font-size: 0.85rem; color: var(--muted); }
+    .notification-badge { 
+      position: absolute; 
+      top: -5px; 
+      right: -5px; 
+      background: var(--accent); 
+      color: var(--accent-contrast); 
+      border-radius: 50%; 
+      width: 20px; 
+      height: 20px; 
+      font-size: 0.75rem; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
     }
   </style>
 </head>
 <body>
-  <!-- Ãœst ince bar -->
-  <div class="topbar d-none d-lg-block">
-    <div class="container">
-      <div class="me-auto small text-muted">Nara MÃ¼zik â€” MÃ¼zik tartÄ±ÅŸma topluluÄŸu</div>
-      <div class="d-flex gap-3">
-        <a href="../index.html#about" class="text-muted">About</a>
-        <a href="contact.html" class="text-muted">Contact</a>
-        <a href="submit.html" class="text-muted">Submit</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- NAVBAR -->
-  <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
+  <nav class="navbar navbar-dark mainnav" id="mainNavbar">
     <div class="container-fluid">
       <div class="d-flex align-items-center">
-        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">â˜°</button>
-        <a class="navbar-brand me-3" href="../index.html" data-lang="home">Nara MÃ¼zik</a>
-
-        <!-- desktop links -->
+        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">☰</button>
+        <a class="navbar-brand me-3" href="../index.html">Nara Müzik</a>
         <div class="d-none d-lg-flex align-items-center gap-2">
-          <a class="nav-link px-2" href="yenimuzik.html" data-lang="newMusic">Yeni MÃ¼zik</a>
-          <a class="nav-link px-2" href="endustri.html" data-lang="industry">EndÃ¼stri Haberleri</a>
-          <a class="nav-link px-2" href="degerlendirme.html" data-lang="review">DeÄŸerlendirme</a>
-          <a class="nav-link px-2" href="album.html" data-lang="album">AlbÃ¼m Ä°nceleme</a>
-          <a class="nav-link px-2" href="roportaj.html" data-lang="interview">RÃ¶portajlar</a>
-          <a class="nav-link px-2" href="etkinlik.html" data-lang="event">Etkinlikler</a>
-          <a class="nav-link px-2" href="dizifilm.html" data-lang="series">Dizi & Filmler</a>
+          <a class="nav-link px-2" href="yenimuzik.html">Yeni Müzik</a>
+          <a class="nav-link px-2" href="endustri.html">Endüstri Haberleri</a>
+          <a class="nav-link px-2" href="degerlendirme.html">Değerlendirme</a>
+          <a class="nav-link px-2" href="album.html">Albüm İnceleme</a>
+          <a class="nav-link px-2" href="roportaj.html">Röportajlar</a>
+          <a class="nav-link px-2" href="etkinlik.html">Etkinlikler</a>
+          <a class="nav-link px-2" href="dizifilm.html">Dizi & Filmler</a>
         </div>
       </div>
-
       <div class="d-flex ms-auto align-items-center gap-2">
         <div class="d-none d-md-block">
-          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" data-placeholder-lang="search" placeholder="Ara...">
+          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
         </div>
         <select id="language-toggle">
           <option value="en">EN</option>
           <option value="tr">TR</option>
         </select>
-        <button id="themeToggle" class="btn btn-outline-light btn-sm">â˜€ï¸</button>
-        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal" data-lang="newPost">Yeni GÃ¶nderi</button>
+        <button id="themeToggle" class="btn btn-outline-light btn-sm">🌙</button>
+        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">Yeni Gönderi</button>
         <div id="authButtons" class="d-flex gap-1">
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">GiriÅŸ</button>
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">KayÄ±t</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
         </div>
-        <div class="dropdown">
-          <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">ðŸ”” Bildirimler</button>
-          <ul class="dropdown-menu dropdown-menu-end" style="min-width: 320px; max-height: 360px; overflow:auto" aria-labelledby="notifDropdownBtn" id="notifMenu">
-            <li class="px-3 py-2 text-muted small">Oturum aÃ§Ä±n veya bildiriminiz yok.</li>
-          </ul>
-        </div>
-        <a href="submit.html" class="btn btn-outline-light btn-sm d-none d-md-inline" id="savedLink">Kaydedilenler</a>
-        <a href="mod.html" class="btn btn-outline-warning btn-sm d-none d-md-inline" id="modLink">Mod</a>
       </div>
     </div>
   </nav>
 
-  <!-- Mobil offcanvas menÃ¼ -->
-  <div class="offcanvas offcanvas-start" tabindex="-1" id="sideMenu">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title">Kategoriler</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-    </div>
-    <div class="offcanvas-body">
-      <ul class="list-unstyled mb-0">
-        <li><a href="yenimuzik.html">Yeni MÃ¼zik</a></li>
-        <li><a href="endustri.html">EndÃ¼stri Haberleri</a></li>
-        <li><a href="degerlendirme.html">DeÄŸerlendirme</a></li>
-        <li><a href="album.html">AlbÃ¼m Ä°nceleme</a></li>
-        <li><a href="roportaj.html">RÃ¶portajlar</a></li>
-        <li><a href="etkinlik.html">Etkinlikler</a></li>
-        <li><a href="dizifilm.html">Dizi ve Filmler</a></li>
-      </ul>
-    </div>
-  </div>
-
   <main class="container mt-4" id="activityMain">
-    <h4 class="mb-3">Aktivite AkÄ±ÅŸÄ±</h4>
-
-    <!-- Bildirilerim -->
-    <div class="card mb-3">
-      <div class="card-header section-header">
-        <span>ðŸ”” Bildirilerim</span>
-        <button class="collapse-toggle small text-muted" data-bs-toggle="collapse" data-bs-target="#collapseNotifications" aria-expanded="true" aria-controls="collapseNotifications">Gizle/GÃ¶ster</button>
+    <div class="d-flex align-items-center justify-content-center" style="min-height:50vh">
+      <div class="card shadow-sm" style="max-width:520px">
+        <div class="card-body text-center">
+          <h5 class="mb-2">Aktivite akışını görmek için giriş yapın.</h5>
+          <p class="text-muted small mb-3">Kişisel bildirimlerinizi ve aktivitelerinizi görüntülemek için oturum açın.</p>
+          <div class="d-flex justify-content-center gap-2">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş Yap</button>
+            <a class="btn btn-outline-light" href="../index.html">Ana sayfa</a>
       </div>
-      <div id="collapseNotifications" class="collapse show">
-        <div class="card-body">
-          <div id="activityNotifications" class="list-group small"></div>
         </div>
       </div>
     </div>
-
-    <!-- Kaydedilenler -->
-   <div class="card mb-3">
-     <div class="card-header section-header">
-       <span>ðŸ”– Kaydedilenler</span>
-       <button class="collapse-toggle small text-muted" data-bs-toggle="collapse" data-bs-target="#collapseBookmarks" aria-expanded="true" aria-controls="collapseBookmarks">Gizle/GÃ¶ster</button>
-     </div>
-     <div id="collapseBookmarks" class="collapse show">
-       <div class="card-body">
-         <div id="activityBookmarks" class="row g-3"></div>
-       </div>
-     </div>
-   </div>
-
-    <!-- GÃ¶nderilerim -->
-   <div class="card mb-3">
-     <div class="card-header section-header">
-       <span>âœï¸ GÃ¶nderilerim</span>
-       <button class="collapse-toggle small text-muted" data-bs-toggle="collapse" data-bs-target="#collapseMyPosts" aria-expanded="true" aria-controls="collapseMyPosts">Gizle/GÃ¶ster</button>
-     </div>
-     <div id="collapseMyPosts" class="collapse show">
-       <div class="card-body">
-         <div id="activityMyPosts" class="row g-3"></div>
-       </div>
-     </div>
-   </div>
-
-    <!-- Sitede En Son -->
-   <div class="card mb-3">
-     <div class="card-header section-header">
-       <span>ðŸ†• Sitede En Son</span>
-       <div class="d-flex align-items-center gap-2">
-         <small><a class="text-decoration-none" href="../index.html">Daha fazla</a></small>
-         <button class="collapse-toggle small text-muted" data-bs-toggle="collapse" data-bs-target="#collapseLatest" aria-expanded="true" aria-controls="collapseLatest">Gizle/GÃ¶ster</button>
-       </div>
-     </div>
-     <div id="collapseLatest" class="collapse show">
-       <div class="card-body">
-         <div id="activityLatest" class="row g-3"></div>
-       </div>
-     </div>
-   </div>
   </main>
 
-  <!-- Footer -->
+  <template id="activityTpl">
+    <div class="row">
+      <div class="col-lg-8">
+        <h2 class="mb-4">Aktivite Akışı</h2>
+        
+        <!-- Notifications -->
+        <div class="activity-section">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5>Bildirimler</h5>
+            <span class="badge bg-primary" id="notificationCount">0</span>
+          </div>
+          <div class="card">
+            <div id="notificationsList" class="list-group list-group-flush">
+              <!-- Notifications will be loaded here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Bookmarks -->
+        <div class="activity-section">
+          <h5 class="mb-3">Kaydedilen Gönderiler</h5>
+          <div id="bookmarksList">
+            <!-- Bookmarks will be loaded here -->
+      </div>
+    </div>
+
+        <!-- My Posts -->
+        <div class="activity-section">
+          <h5 class="mb-3">Gönderilerim</h5>
+          <div id="myPostsList">
+            <!-- User's posts will be loaded here -->
+          </div>
+     </div>
+
+        <!-- Latest Posts -->
+        <div class="activity-section">
+          <h5 class="mb-3">Son Gönderiler</h5>
+          <div id="latestPostsList">
+            <!-- Latest posts will be loaded here -->
+       </div>
+     </div>
+   </div>
+
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">Hızlı Erişim</h6>
+     </div>
+       <div class="card-body">
+            <div class="d-grid gap-2">
+              <a href="profil.html" class="btn btn-outline-primary">Profilim</a>
+              <a href="messages.html" class="btn btn-outline-secondary">Mesajlar</a>
+              <a href="playlists.html" class="btn btn-outline-info">Çalma Listelerim</a>
+              <a href="analitik.html" class="btn btn-outline-warning">Analitiklerim</a>
+       </div>
+     </div>
+   </div>
+
+        <div class="card mt-3">
+          <div class="card-header">
+            <h6 class="mb-0">İstatistikler</h6>
+          </div>
+          <div class="card-body">
+            <div class="row text-center">
+              <div class="col-4">
+                <div class="h5 mb-0" id="totalPosts">0</div>
+                <small class="text-muted">Gönderi</small>
+              </div>
+              <div class="col-4">
+                <div class="h5 mb-0" id="totalComments">0</div>
+                <small class="text-muted">Yorum</small>
+              </div>
+              <div class="col-4">
+                <div class="h5 mb-0" id="totalLikes">0</div>
+                <small class="text-muted">Beğeni</small>
+              </div>
+       </div>
+     </div>
+       </div>
+     </div>
+   </div>
+  </template>
+
   <footer class="text-center py-4 mt-5">
     <div class="container">
-      <small class="text-muted">Â© <span id="year"></span> Nara MÃ¼zik â€” TÃ¼m haklarÄ± saklÄ±dÄ±r.</small>
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
     </div>
   </footer>
 
-  <!-- Modals (Login / Register / Create Post) -->
+  <!-- Modals -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <form id="loginForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">GiriÅŸ Yap</h5>
+          <h5 class="modal-title">Giriş Yap</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -233,7 +186,7 @@
           <input name="password" type="password" class="form-control" placeholder="Parola" required>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">GiriÅŸ</button>
+          <button type="submit" class="btn btn-primary w-100">Giriş</button>
         </div>
       </form>
     </div>
@@ -243,16 +196,16 @@
     <div class="modal-dialog">
       <form id="registerForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">KayÄ±t Ol</h5>
+          <h5 class="modal-title">Kayıt Ol</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input name="username" class="form-control mb-2" placeholder="KullanÄ±cÄ± AdÄ±" required>
+          <input name="username" class="form-control mb-2" placeholder="Kullanıcı Adı" required>
           <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
           <input name="password" type="password" class="form-control" placeholder="Parola" required>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success w-100">KayÄ±t Ol</button>
+          <button type="submit" class="btn btn-success w-100">Kayıt Ol</button>
         </div>
       </form>
     </div>
@@ -262,371 +215,149 @@
     <div class="modal-dialog modal-lg">
       <form id="newPostForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Yeni GÃ¶nderi OluÅŸtur</h5>
+          <h5 class="modal-title">Yeni Gönderi Oluştur</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input id="postTitle" name="title" class="form-control mb-2" placeholder="BaÅŸlÄ±k" required>
+          <input id="postTitle" name="title" class="form-control mb-2" placeholder="Başlık" required>
           <select id="postCategory" name="category" class="form-select mb-2">
-            <option value="yenimuzik">Yeni MÃ¼zik</option>
-            <option value="endustri">EndÃ¼stri Haberleri</option>
-            <option value="degerlendirme">DeÄŸerlendirme</option>
-            <option value="album">AlbÃ¼m Ä°nceleme</option>
-            <option value="roportaj">RÃ¶portajlar</option>
+            <option value="yenimuzik">Yeni Müzik</option>
+            <option value="endustri">Endüstri Haberleri</option>
+            <option value="degerlendirme">Değerlendirme</option>
+            <option value="album">Albüm İnceleme</option>
+            <option value="roportaj">Röportajlar</option>
             <option value="etkinlik">Etkinlikler</option>
             <option value="dizifilm">Dizi & Filmler</option>
           </select>
-          <div class="btn-toolbar mb-2" role="toolbar" aria-label="Editor toolbar">
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="bold" title="KalÄ±n (Ctrl+B)"><strong>B</strong></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="italic" title="Ä°talik (Ctrl+I)"><em>I</em></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="strike" title="ÃœstÃ¼ Ã§izili">S</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="h2" title="BaÅŸlÄ±k H2">H2</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="h3" title="BaÅŸlÄ±k H3">H3</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="quote" title="AlÄ±ntÄ±">â€œâ€</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="ul" title="Madde iÅŸaretli liste">â€¢ List</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="ol" title="NumaralÄ± liste">1. List</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="task" title="GÃ¶rev listesi">[ ]</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="link" title="BaÄŸlantÄ± (Ctrl+K)">Link</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="image" title="Resim">ðŸ–¼ï¸</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="code" title="Kod satÄ±rÄ±"><code>{}</code></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="codeblock" title="Kod bloÄŸu">```</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="table" title="Tablo">â–¦</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="hr" title="Yatay Ã§izgi">â€•</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="emoji" title="Emoji">ðŸ˜Š</button>
-            </div>
-          </div>
-          <div id="emojiPicker" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:300px;">
-            <div class="card-body py-2">
-              <input type="text" class="form-control form-control-sm mb-2" id="emojiSearch" placeholder="Emoji araâ€¦">
-              <div id="emojiGrid" class="d-flex flex-wrap gap-1" style="max-height:200px; overflow:auto"></div>
-            </div>
-          </div>
-          <div id="urlPopover" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:320px;">
-            <div class="card-body py-2">
-              <div class="mb-2 small text-muted" id="urlPopoverTitle">BaÄŸlantÄ± ekle</div>
-              <input type="url" class="form-control form-control-sm mb-2" id="urlPopoverInput" placeholder="https://...">
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="urlPopoverCancel">Ä°ptal</button>
-                <button type="button" class="btn btn-sm btn-primary" id="urlPopoverOk">Ekle</button>
-              </div>
-            </div>
-          </div>
-          <div class="row g-2">
-            <div class="col-md-6">
-              <textarea id="postContent" name="content" rows="12" class="form-control" placeholder="Ä°Ã§erik (Markdown destekli)" required></textarea>
-            </div>
-            <div class="col-md-6">
-              <div class="form-control" style="height:100%; overflow:auto; background: var(--input-bg); border-color: var(--border)">
-                <div class="small text-muted mb-1">Ã–nizleme</div>
-                <div id="postPreview" class="markdown-body"></div>
-              </div>
-            </div>
-          </div>
-          <div class="row g-2">
-            <div class="col-md-6">
-              <input id="postMediaUrl" name="mediaUrl" type="url" class="form-control" placeholder="FotoÄŸraf/GIF URL (opsiyonel)">
-            </div>
-            <div class="col-md-6">
-              <input id="postLinkUrl" name="linkUrl" type="url" class="form-control" placeholder="Harici Link (opsiyonel)">
-            </div>
-          </div>
+          <textarea id="postContent" name="content" rows="6" class="form-control" placeholder="İçerik"></textarea>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">PaylaÅŸ</button>
+          <button type="submit" class="btn btn-primary w-100">Paylaş</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Post Detail Modal -->
-  <div class="modal fade" id="postDetailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="postDetailTitle">GÃ¶nderi</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="small text-muted mb-2" id="postDetailMeta"></div>
-          <div id="postDetailContent"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="../js/app.js"></script>
-    <!-- Language files -->
-  <script>
-    // Load Turkish translations directly
-    window.translations = {
-      "home": "Ana Sayfa",
-      "about": "HakkÄ±nda",
-      "contact": "Ä°letiÅŸim",
-      "welcome": "Bloguma HoÅŸgeldin",
-      "subtitle": "MÃ¼zik, sanat ve kÃ¼ltÃ¼r Ã¼zerine",
-      "login": "GiriÅŸ",
-      "register": "KayÄ±t",
-      "logout": "Ã‡Ä±kÄ±ÅŸ",
-      "profile": "Profil",
-      "newPost": "Yeni GÃ¶nderi",
-      "search": "Ara...",
-      "notifications": "Bildirimler",
-      "saved": "Kaydedilenler",
-      "mod": "Mod",
-      "submit": "GÃ¶nder",
-      "title": "BaÅŸlÄ±k",
-      "content": "Ä°Ã§erik",
-      "category": "Kategori",
-      "mediaUrl": "FotoÄŸraf/GIF URL (opsiyonel)",
-      "linkUrl": "Harici Link (opsiyonel)",
-      "share": "PaylaÅŸ",
-      "popular": "En PopÃ¼ler",
-      "latest": "En Son Eklenenler",
-      "comments": "Yorumlar",
-      "like": "BeÄŸen",
-      "bookmark": "Kaydet",
-      "report": "Raporla",
-      "edit": "DÃ¼zenle",
-      "delete": "Sil",
-      "pin": "Sabitle",
-      "lock": "Kilitle",
-      "newMusic": "Yeni MÃ¼zik",
-      "industry": "EndÃ¼stri Haberleri",
-      "review": "DeÄŸerlendirme",
-      "album": "AlbÃ¼m Ä°nceleme",
-      "interview": "RÃ¶portajlar",
-      "event": "Etkinlikler",
-      "series": "Dizi & Filmler",
-      "loading": "YÃ¼kleniyor...",
-      "error": "Hata",
-      "success": "BaÅŸarÄ±lÄ±",
-      "cancel": "Ä°ptal",
-      "save": "Kaydet",
-      "close": "Kapat",
-      "send": "GÃ¶nder",
-      "name": "AdÄ±nÄ±z",
-      "email": "Email",
-      "password": "Parola",
-      "username": "KullanÄ±cÄ± AdÄ±",
-      "message": "MesajÄ±nÄ±z",
-      "writeComment": "Yorum yaz...",
-      "noPosts": "HenÃ¼z gÃ¶nderi yok",
-      "noComments": "HenÃ¼z yorum yok",
-      "loadMore": "Daha Fazla",
-      "allRightsReserved": "TÃ¼m haklarÄ± saklÄ±dÄ±r",
-      "avatarUrl": "Avatar URL",
-      "avatarUrlPlaceholder": "https://... (fotoÄŸraf/gif)",
-      "avatarUrlHelp": "URL boÅŸ kaydedilirse avatar kaldÄ±rÄ±lÄ±r.",
-      "uploadFile": "Veya dosya yÃ¼kle",
-      "upload": "YÃ¼kle",
-      "myPosts": "GÃ¶nderilerim",
-      "noPostsYet": "HenÃ¼z gÃ¶nderi yok",
-      "createFirstPost": "Ä°lk gÃ¶nderinizi oluÅŸturun",
-      "welcomeMessage": "Nara MÃ¼zik'e hoÅŸ geldiniz!",
-      "profileSettings": "Profil AyarlarÄ±",
-      "accountInfo": "Hesap Bilgileri",
-      "contactMessage": "Bize mesaj bÄ±rakÄ±n; evencreed hesabÄ±nÄ±n gelen kutusuna dÃ¼ÅŸecek.",
-      "popularAlbums": "PopÃ¼ler AlbÃ¼mler",
-      "popularAlbumsDesc": "En Ã§ok dinlenen ve tartÄ±ÅŸÄ±lan albÃ¼mleri keÅŸfedin",
-      "addComment": "Ekle",
-      "albumSearch": "AlbÃ¼m Ara",
-      "searchAlbum": "AlbÃ¼m adÄ± yazÄ±n...",
-      "searchResults": "Arama SonuÃ§larÄ±",
-      "myFavorites": "Favori AlbÃ¼mlerim",
-      "loadingFavorites": "Favori albÃ¼mleriniz yÃ¼kleniyor...",
-      "noFavorites": "HenÃ¼z favori albÃ¼mÃ¼nÃ¼z yok.",
-      "addFavorites": "AlbÃ¼m inceleme sayfasÄ±ndan favori albÃ¼mlerinizi ekleyebilirsiniz."
-    };
-  </script>
   <script src="../js/lang.js"></script>
   <script>
-    (function(){
+  (async function(){
       'use strict';
       document.getElementById('year').textContent = new Date().getFullYear();
 
-      // Tema uygulamasÄ± (index/diÄŸer sayfalarla aynÄ± mantÄ±k)
+    // Theme toggle
       const themeToggle = document.getElementById('themeToggle');
       const root = document.documentElement;
       function applyTheme(theme){
         const nav = document.getElementById('mainNavbar');
         if(theme === 'light'){
           root.setAttribute('data-theme','light');
-          themeToggle.textContent = 'ðŸŒ™';
-          nav.classList.remove('navbar-dark');
-          nav.classList.add('navbar-light');
+        themeToggle.textContent = '🌙';
+        nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light');
         } else {
           root.removeAttribute('data-theme');
-          themeToggle.textContent = 'â˜€ï¸';
-          nav.classList.remove('navbar-light');
-          nav.classList.add('navbar-dark');
-        }
+        themeToggle.textContent = '☀️';
+        nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark');
+      }
       }
       const savedTheme = localStorage.getItem('theme') || 'dark';
       applyTheme(savedTheme);
       themeToggle.addEventListener('click', () => {
         const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        localStorage.setItem('theme', next);
-        applyTheme(next);
-      });
+      localStorage.setItem('theme', next); applyTheme(next);
+    });
 
-      // Auth gate
-      const user = JSON.parse(localStorage.getItem('user') || 'null');
-      const token = localStorage.getItem('token') || null;
+    // Auth gate - check if user is logged in
+    let CURRENT_USER = null;
+    try{ CURRENT_USER = JSON.parse(localStorage.getItem('user')||'null'); }catch(_){}
+    
+    if (!CURRENT_USER){
+      // Show login prompt (already in HTML)
+      return;
+    }
+
+    // Load activity template
       const main = document.getElementById('activityMain');
-      if (!user || !token){
-        main.innerHTML = `
-          <div class="d-flex align-items-center justify-content-center" style="min-height:50vh">
-            <div class="card shadow-sm" style="max-width:520px">
-              <div class="card-body text-center">
-                <h5 class="mb-2">Aktivite akÄ±ÅŸÄ±nÄ± gÃ¶rmek iÃ§in giriÅŸ yapÄ±n.</h5>
-                <p class="text-muted small mb-3">Bildirimleriniz, kaydedilenleriniz ve kendi gÃ¶nderileriniz burada gÃ¶rÃ¼necek.</p>
-                <div class="d-flex justify-content-center gap-2">
-                  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">GiriÅŸ</button>
-                  <a class="btn btn-outline-light" href="../index.html">Ana sayfa</a>
+    const template = document.getElementById('activityTpl');
+    main.innerHTML = template.innerHTML;
+    
+    // Mock data for demo
+    document.getElementById('notificationCount').textContent = '3';
+    document.getElementById('totalPosts').textContent = '12';
+    document.getElementById('totalComments').textContent = '45';
+    document.getElementById('totalLikes').textContent = '128';
+    
+    // Mock notifications
+    document.getElementById('notificationsList').innerHTML = `
+      <div class="list-group-item activity-item">
+        <div class="d-flex justify-content-between">
+          <div>
+            <strong>Yeni Beğeni</strong>
+            <p class="mb-1">"En İyi Albümler 2024" gönderiniz beğenildi</p>
+            <small class="activity-time">2 saat önce</small>
+          </div>
+        </div>
+      </div>
+      <div class="list-group-item activity-item">
+        <div class="d-flex justify-content-between">
+          <div>
+            <strong>Yeni Yorum</strong>
+            <p class="mb-1">"Taylor Swift Röportajı" gönderinize yorum yapıldı</p>
+            <small class="activity-time">5 saat önce</small>
                 </div>
+        </div>
+      </div>
+      <div class="list-group-item activity-item">
+        <div class="d-flex justify-content-between">
+          <div>
+            <strong>Takip Bildirimi</strong>
+            <p class="mb-1">@muziksever sizi takip etmeye başladı</p>
+            <small class="activity-time">1 gün önce</small>
               </div>
             </div>
           </div>
         `;
-        return;
-      }
-
-      // Helpers
-      const BASE = (typeof BACKEND_BASE !== 'undefined' && BACKEND_BASE) ? BACKEND_BASE : (location.hostname.includes('localhost') ? 'http://localhost:4000' : 'https://naramusic.onrender.com');
-      const authHeaders = { 'Authorization': 'Bearer ' + token };
-      const basePath = location.pathname.includes('/pages/') ? '' : 'pages/';
-
-      const elNotif = document.getElementById('activityNotifications');
-      const elBmk = document.getElementById('activityBookmarks');
-      const elMine = document.getElementById('activityMyPosts');
-      const elLatest = document.getElementById('activityLatest');
-
-      function fmtDate(d){ try{ return new Date(d).toLocaleString('tr-TR'); }catch(_){ return ''; } }
-      function postCardHtml(p){
-        const thumb = p.mediaUrl ? `<img src="${p.mediaUrl}" alt="" class="post-thumb mb-2">` : '';
-        const linkBtn = p.linkUrl ? `<a href="${p.linkUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">BaÄŸlantÄ±</a>` : '';
-        const tags = Array.isArray(p.tags) ? p.tags.map(t=>`<span class="badge bg-dark ms-1">#${t}</span>`).join('') : '';
-        return `
-          <div class="col-md-6">
-            <div class="card h-100 shadow-sm" data-post-id="${p.id}">
+    
+    // Mock bookmarks
+    document.getElementById('bookmarksList').innerHTML = `
+      <div class="card mb-2">
               <div class="card-body">
-                ${p.pinned?'<span class="badge bg-warning text-dark me-1">ðŸ“Œ Sabit</span>':''}${p.locked?'<span class="badge bg-secondary me-1">ðŸ”’ Kilitli</span>':''}
-                ${thumb}
-                <h5 class="card-title">${p.title||''}</h5>
-                <div class="mb-2">
-                  <span class="badge bg-secondary">${p.category||''}</span>
-                  ${tags}
-                </div>
-                <p class="card-text">${(p.content||'').substring(0,150)}...</p>
-                <div class="small text-muted">${fmtDate(p.createdAt||0)} â€¢ ${p.authorName||''}</div>
-                ${linkBtn ? `<div class="mt-2">${linkBtn}</div>` : ''}
-                <div class="mt-2 d-flex gap-2">
-                  <button class="btn btn-sm btn-outline-light like-btn" data-id="${p.id}">ðŸ‘ ${p.likes||0}</button>
-                  <button class="btn btn-sm btn-outline-light bookmark-btn" data-id="${p.id}">ðŸ”– Kaydet</button>
+          <h6 class="card-title">En İyi Rock Albümleri 2024</h6>
+          <p class="card-text text-muted small">Bu yıl çıkan en iyi rock albümlerini inceliyoruz...</p>
+          <small class="text-muted">3 gün önce kaydedildi</small>
+        </div>
+      </div>
+    `;
+    
+    // Mock my posts
+    document.getElementById('myPostsList').innerHTML = `
+      <div class="card mb-2">
+        <div class="card-body">
+          <h6 class="card-title">Taylor Swift - Midnights İncelemesi</h6>
+          <p class="card-text text-muted small">Taylor Swift'in yeni albümü hakkında düşüncelerim...</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">2 gün önce</small>
+            <div>
+              <span class="badge bg-primary me-1">12 beğeni</span>
+              <span class="badge bg-secondary">5 yorum</span>
                 </div>
               </div>
             </div>
           </div>
         `;
-      }
-
-      function renderNotifications(items){
-        if (!Array.isArray(items) || !items.length){
-          const el = document.getElementById('activityNotifications');
-          el.innerHTML = '<div class="text-muted">Bildiriminiz yok.</div>';
-          return;
-        }
-        elNotif.innerHTML = items.map(n=>{
-          const type = n.type==='mention' ? 'Bahsetme' : (n.type || 'Bildirim');
-          const from = n.fromUser ? ('@'+n.fromUser) : '';
-          const badge = n.read ? '' : '<span class="badge bg-primary ms-2">Yeni</span>';
-          return `
-            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-              <div>
-                <strong>${type}</strong> ${from ? 'â€¢ '+from : ''} <small class="text-muted">â€¢ ${fmtDate(n.createdAt)}</small>
+    
+    // Mock latest posts
+    document.getElementById('latestPostsList').innerHTML = `
+      <div class="card mb-2">
+        <div class="card-body">
+          <h6 class="card-title">Yeni Çıkan Albümler - Bu Hafta</h6>
+          <p class="card-text text-muted small">Bu hafta çıkan dikkat çeken albümler...</p>
+          <small class="text-muted">1 saat önce • @muziksever</small>
+        </div>
               </div>
-              <div>${badge}</div>
-            </a>
-          `;
-        }).join('');
-      }
-
-      function renderPosts(list, into){
-        if (!Array.isArray(list) || !list.length){
-          into.innerHTML = '<div class="col-12"><div class="text-muted">Ä°Ã§erik yok.</div></div>';
-          return;
-        }
-        into.innerHTML = list.map(postCardHtml).join('');
-        if (typeof window.attachPostCardHandlers === 'function'){
-          attachPostCardHandlers(into);
-        }
-      }
-
-      (async ()=>{
-        try{
-          const latestUrl = new URL(BASE.replace(/\/$/, '') + '/api/posts');
-          latestUrl.searchParams.set('limit','10');
-          const requests = [
-            fetch(BASE + '/api/notifications', { headers: authHeaders }),
-            fetch(BASE + '/api/users/me/bookmarks', { headers: authHeaders }),
-            fetch(BASE + '/api/users/' + encodeURIComponent(user.id) + '/posts'),
-            fetch(latestUrl.toString())
-          ];
-          const [rN, rB, rM, rL] = await Promise.allSettled(requests);
-
-          // Notifications
-          if (rN.status === 'fulfilled'){
-            const items = await rN.value.json();
-            renderNotifications(Array.isArray(items) ? items : []);
-          } else {
-            elNotif.innerHTML = '<div class="text-danger small">Bildiriler yÃ¼klenemedi.</div>';
-          }
-
-          // Bookmarks
-          if (rB.status === 'fulfilled'){
-            const items = await rB.value.json();
-            renderPosts(Array.isArray(items) ? items : [], elBmk);
-          } else {
-            elBmk.innerHTML = '<div class="col-12"><div class="text-danger small">Kaydedilenler yÃ¼klenemedi.</div></div>';
-          }
-
-          // My posts
-          if (rM.status === 'fulfilled'){
-            const items = await rM.value.json();
-            renderPosts(Array.isArray(items) ? items : [], elMine);
-          } else {
-            elMine.innerHTML = '<div class="col-12"><div class="text-danger small">GÃ¶nderileriniz yÃ¼klenemedi.</div></div>';
-          }
-
-          // Latest
-          if (rL.status === 'fulfilled'){
-            const data = await rL.value.json();
-            const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data)?data:[]);
-            renderPosts(items, elLatest);
-          } else {
-            elLatest.innerHTML = '<div class="col-12"><div class="text-danger small">En son gÃ¶nderiler yÃ¼klenemedi.</div></div>';
-          }
-
-        }catch(err){
-          console.error('Activity load error', err);
-          elNotif.innerHTML = '<div class="text-danger small">Bildiriler yÃ¼klenemedi.</div>';
-          elBmk.innerHTML = '<div class="col-12"><div class="text-danger small">Kaydedilenler yÃ¼klenemedi.</div></div>';
-          elMine.innerHTML = '<div class="col-12"><div class="text-danger small">GÃ¶nderileriniz yÃ¼klenemedi.</div></div>';
-          elLatest.innerHTML = '<div class="col-12"><div class="text-danger small">En son gÃ¶nderiler yÃ¼klenemedi.</div></div>';
-        }
-      })();
+    `;
+    
     })();
   </script>
 </body>

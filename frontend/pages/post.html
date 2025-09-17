@@ -3,616 +3,391 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GÃ¶nderi</title>
+  <title>Gönderi — Nara Müzik</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
   <style>
-    body{ background:#0b0b0b; color:#eaeaea; padding-top:64px; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial }
-    .card{ background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.06) }
-    /* Dark theme navbar styles */
-    :root:not([data-theme="light"]) .mainnav {
-      background: #000000 !important;
+    .post-content { line-height: 1.7; }
+    .post-meta { font-size: 0.9rem; color: var(--muted); }
+    .comment-item { 
+      border-bottom: 1px solid var(--border); 
+      padding: 1rem 0; 
+      transition: background-color 0.2s ease;
     }
-    :root:not([data-theme="light"]) .mainnav .navbar-brand,
-    :root:not([data-theme="light"]) .mainnav .nav-link,
-    :root:not([data-theme="light"]) .mainnav a,
-    :root:not([data-theme="light"]) .mainnav .btn,
-    :root:not([data-theme="light"]) .mainnav .form-control,
-    :root:not([data-theme="light"]) .mainnav .form-select {
-      color: #ffffff !important;
-    }
-    :root:not([data-theme="light"]) .mainnav .navbar-brand:hover,
-    :root:not([data-theme="light"]) .mainnav .nav-link:hover,
-    :root:not([data-theme="light"]) .mainnav a:hover {
-      color: #cccccc !important;
-    }
+    .comment-item:hover { background-color: var(--glass); }
+    .comment-item:last-child { border-bottom: none; }
+    .like-btn, .bookmark-btn { transition: all 0.2s ease; }
+    .like-btn.liked { color: #ff6b6b; }
+    .bookmark-btn.bookmarked { color: #ffd93d; }
+    .author-avatar { width: 40px; height: 40px; border-radius: 50%; }
+    .comment-avatar { width: 32px; height: 32px; border-radius: 50%; }
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
+  <nav class="navbar navbar-dark mainnav" id="mainNavbar">
     <div class="container-fluid">
-      <a class="navbar-brand" href="../index.html" data-lang="home">Nara MÃ¼zik</a>
-      <div class="ms-auto d-flex align-items-center gap-2">
+      <div class="d-flex align-items-center">
+        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">☰</button>
+        <a class="navbar-brand me-3" href="../index.html">Nara Müzik</a>
+        <div class="d-none d-lg-flex align-items-center gap-2">
+          <a class="nav-link px-2" href="yenimuzik.html">Yeni Müzik</a>
+          <a class="nav-link px-2" href="endustri.html">Endüstri Haberleri</a>
+          <a class="nav-link px-2" href="degerlendirme.html">Değerlendirme</a>
+          <a class="nav-link px-2" href="album.html">Albüm İnceleme</a>
+          <a class="nav-link px-2" href="roportaj.html">Röportajlar</a>
+          <a class="nav-link px-2" href="etkinlik.html">Etkinlikler</a>
+          <a class="nav-link px-2" href="dizifilm.html">Dizi & Filmler</a>
+        </div>
+      </div>
+      <div class="d-flex ms-auto align-items-center gap-2">
+        <div class="d-none d-md-block">
+          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
+        </div>
         <select id="language-toggle">
           <option value="en">EN</option>
           <option value="tr">TR</option>
         </select>
-        <button id="themeToggle" class="btn btn-outline-light btn-sm">â˜€ï¸</button>
-        <div id="authButtons" class="d-flex gap-1"></div>
+        <button id="themeToggle" class="btn btn-outline-light btn-sm">🌙</button>
+        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">Yeni Gönderi</button>
+        <div id="authButtons" class="d-flex gap-1">
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
+          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
+        </div>
       </div>
     </div>
   </nav>
-  <main class="container mt-4">
-    <article class="card p-3 mb-4">
-      <div class="d-flex gap-2 mb-2" id="postActions">
-        <button class="btn btn-sm btn-outline-light" id="likePostBtn">ðŸ‘ <span id="likeCount">0</span></button>
-        <button class="btn btn-sm btn-outline-warning d-none" id="editPostBtn" data-lang="edit">DÃ¼zenle</button>
-        <button class="btn btn-sm btn-outline-danger d-none" id="deletePostBtn" data-lang="delete">Sil</button>
-        <button class="btn btn-sm btn-outline-secondary" id="reportPostBtn">Raporla</button>
-      </div>
-      <h4 id="pTitle">GÃ¶nderi <span id="pBadges" class="ms-2"></span></h4>
-      <div class="text-muted small mb-2" id="pMeta"></div>
-      <div id="pMedia" class="mb-3"></div>
-      <div id="pContent" class="mb-3"></div>
-      <div id="pLink"></div>
-    </article>
 
-    <section class="card p-3">
-      <h6 class="mb-3">Yorumlar</h6>
-      <div id="comments"></div>
-      <form id="commentForm" class="mt-3">
-        <div class="input-group">
-          <input id="commentText" class="form-control" placeholder="Yorum yaz..." required>
-          <button class="btn btn-primary" type="submit">GÃ¶nder</button>
+  <main class="container mt-4">
+    <div class="row">
+      <div class="col-lg-8">
+        <!-- Post Content -->
+        <article class="card mb-4">
+          <div class="card-body">
+            <!-- Post Header -->
+            <div class="d-flex align-items-start mb-3">
+              <img src="https://picsum.photos/40/40?random=1" alt="Avatar" class="author-avatar me-3">
+              <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h5 class="mb-1">@muziksever</h5>
+                    <div class="post-meta">
+                      <span>2 gün önce</span>
+                      <span class="mx-2">•</span>
+                      <span class="badge bg-primary">Yeni Müzik</span>
+                    </div>
+                  </div>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                      ⋮
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" href="#">Paylaş</a></li>
+                      <li><a class="dropdown-item" href="#">Raporla</a></li>
+                    </ul>
+      </div>
         </div>
-        <div class="form-text">Yorum yapabilmek iÃ§in giriÅŸ yapmÄ±ÅŸ olmanÄ±z gerekir.</div>
-      </form>
-    </section>
+        </div>
+            </div>
+
+            <!-- Post Title -->
+            <h1 class="h3 mb-3">Taylor Swift - Midnights Albümü Hakkında Düşüncelerim</h1>
+
+            <!-- Post Content -->
+            <div class="post-content mb-4">
+              <p>Taylor Swift'in yeni albümü Midnights'ı dinledim ve gerçekten etkilendim. Bu albümde Swift'in müzikal yolculuğunda yeni bir döneme girdiğini görebiliyorum.</p>
+              
+              <p>Özellikle "Anti-Hero" ve "Lavender Haze" şarkıları çok dikkat çekici. Swift'in söz yazımındaki ustalığı bu albümde de kendini gösteriyor.</p>
+              
+              <p>Albümün prodüksiyonu da oldukça başarılı. Jack Antonoff ile çalışması her zamanki gibi mükemmel sonuçlar vermiş.</p>
+              
+              <div class="alert alert-info mt-3">
+                <strong>Not:</strong> Bu albümü dinlemek isteyenler Spotify'da bulabilir.
+              </div>
+            </div>
+
+            <!-- Post Actions -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div class="d-flex gap-3">
+                <button class="btn btn-outline-primary like-btn" id="likeBtn">
+                  <i class="fas fa-heart me-1"></i>
+                  <span id="likeCount">24</span> Beğen
+                </button>
+                <button class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#commentsSection">
+                  <i class="fas fa-comment me-1"></i>
+                  <span id="commentCount">8</span> Yorum
+                </button>
+                <button class="btn btn-outline-secondary">
+                  <i class="fas fa-share me-1"></i> Paylaş
+                </button>
+              </div>
+              <button class="btn btn-outline-warning bookmark-btn" id="bookmarkBtn">
+                <i class="fas fa-bookmark"></i>
+              </button>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="collapse" id="commentsSection">
+              <div class="border-top pt-3">
+                <h6 class="mb-3">Yorumlar (8)</h6>
+                
+                <!-- Comment Form -->
+                <div class="mb-4">
+                  <div class="d-flex gap-2">
+                    <img src="https://picsum.photos/32/32?random=2" alt="Avatar" class="comment-avatar">
+                    <div class="flex-grow-1">
+                      <textarea class="form-control" rows="2" placeholder="Yorumunuzu yazın..."></textarea>
+                      <div class="d-flex justify-content-end mt-2">
+                        <button class="btn btn-primary btn-sm">Yorum Yap</button>
+                      </div>
+            </div>
+            </div>
+          </div>
+
+                <!-- Comments List -->
+                <div id="commentsList">
+                  <div class="comment-item">
+                    <div class="d-flex gap-2">
+                      <img src="https://picsum.photos/32/32?random=3" alt="Avatar" class="comment-avatar">
+                      <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div>
+                            <strong>@muzikfan</strong>
+                            <div class="post-meta">1 gün önce</div>
+                          </div>
+                          <button class="btn btn-sm btn-outline-danger">Raporla</button>
+                        </div>
+                        <p class="mt-2 mb-0">Kesinlikle katılıyorum! Anti-Hero gerçekten çok güzel bir şarkı. Swift'in söz yazımındaki derinlik her geçen gün artıyor.</p>
+                        <div class="mt-2">
+                          <button class="btn btn-sm btn-outline-primary">Beğen (5)</button>
+                          <button class="btn btn-sm btn-outline-secondary">Yanıtla</button>
+                        </div>
+                      </div>
+            </div>
+          </div>
+
+                  <div class="comment-item">
+                    <div class="d-flex gap-2">
+                      <img src="https://picsum.photos/32/32?random=4" alt="Avatar" class="comment-avatar">
+                      <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div>
+                            <strong>@swiftie</strong>
+                            <div class="post-meta">2 gün önce</div>
+                          </div>
+                          <button class="btn btn-sm btn-outline-danger">Raporla</button>
+                        </div>
+                        <p class="mt-2 mb-0">Bu albümde Swift'in pop müzikteki yerini bir kez daha kanıtladığını düşünüyorum. Her şarkı ayrı bir hikaye anlatıyor.</p>
+                        <div class="mt-2">
+                          <button class="btn btn-sm btn-outline-primary">Beğen (3)</button>
+                          <button class="btn btn-sm btn-outline-secondary">Yanıtla</button>
+                        </div>
+              </div>
+            </div>
+          </div>
+
+                  <div class="comment-item">
+                    <div class="d-flex gap-2">
+                      <img src="https://picsum.photos/32/32?random=5" alt="Avatar" class="comment-avatar">
+                      <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div>
+                            <strong>@muzikcritic</strong>
+                            <div class="post-meta">2 gün önce</div>
+                          </div>
+                          <button class="btn btn-sm btn-outline-danger">Raporla</button>
+                        </div>
+                        <p class="mt-2 mb-0">Prodüksiyon açısından da çok başarılı. Jack Antonoff ile çalışması gerçekten iyi sonuçlar vermiş. Özellikle synthesizer kullanımı çok etkileyici.</p>
+                        <div class="mt-2">
+                          <button class="btn btn-sm btn-outline-primary">Beğen (7)</button>
+                          <button class="btn btn-sm btn-outline-secondary">Yanıtla</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+            </div>
+              </div>
+            </div>
+          </div>
+        </article>
+          </div>
+
+      <div class="col-lg-4">
+        <!-- Sidebar -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h6 class="mb-0">İlgili Gönderiler</h6>
+            </div>
+          <div class="card-body">
+            <div class="list-group list-group-flush">
+              <a href="#" class="list-group-item list-group-item-action">
+                <h6 class="mb-1">Pop Müziğin Geleceği</h6>
+                <p class="mb-1 text-muted small">Pop müziğin 2024'teki trendleri...</p>
+                <small class="text-muted">1 gün önce</small>
+              </a>
+              <a href="#" class="list-group-item list-group-item-action">
+                <h6 class="mb-1">En İyi Albümler 2024</h6>
+                <p class="mb-1 text-muted small">Bu yıl çıkan en dikkat çeken albümler...</p>
+                <small class="text-muted">3 gün önce</small>
+              </a>
+              <a href="#" class="list-group-item list-group-item-action">
+                <h6 class="mb-1">Müzik Prodüksiyonu İpuçları</h6>
+                <p class="mb-1 text-muted small">Ev stüdyosunda müzik yapmanın püf noktaları...</p>
+                <small class="text-muted">1 hafta önce</small>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">Kategori: Yeni Müzik</h6>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">Bu gönderi "Yeni Müzik" kategorisinde yer alıyor. Benzer içerikleri görmek için kategori sayfasını ziyaret edebilirsiniz.</p>
+            <a href="yenimuzik.html" class="btn btn-outline-primary btn-sm">Kategoriye Git</a>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
-  <!-- Edit Post Modal -->
-  <div class="modal fade" id="editPostModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <form id="editPostForm" class="modal-content">
+  <footer class="text-center py-4 mt-5">
+    <div class="container">
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
+    </div>
+  </footer>
+
+  <!-- Modals -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="loginForm" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">GÃ¶nderiyi DÃ¼zenle</h5>
+          <h5 class="modal-title">Giriş Yap</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input id="editTitle" class="form-control mb-2" placeholder="BaÅŸlÄ±k" required>
-          <select id="editCategory" class="form-select mb-2">
-            <option value="yenimuzik">Yeni MÃ¼zik</option>
-            <option value="endustri">EndÃ¼stri Haberleri</option>
-            <option value="degerlendirme">DeÄŸerlendirme</option>
-            <option value="album">AlbÃ¼m Ä°nceleme</option>
-            <option value="roportaj">RÃ¶portajlar</option>
+          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
+          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary w-100">Giriş</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="registerForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Kayıt Ol</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input name="username" class="form-control mb-2" placeholder="Kullanıcı Adı" required>
+          <input name="email" type="email" class="form-control mb-2" placeholder="Email" required>
+          <input name="password" type="password" class="form-control" placeholder="Parola" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success w-100">Kayıt Ol</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form id="newPostForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Yeni Gönderi Oluştur</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input id="postTitle" name="title" class="form-control mb-2" placeholder="Başlık" required>
+          <select id="postCategory" name="category" class="form-select mb-2">
+            <option value="yenimuzik">Yeni Müzik</option>
+            <option value="endustri">Endüstri Haberleri</option>
+            <option value="degerlendirme">Değerlendirme</option>
+            <option value="album">Albüm İnceleme</option>
+            <option value="roportaj">Röportajlar</option>
             <option value="etkinlik">Etkinlikler</option>
             <option value="dizifilm">Dizi & Filmler</option>
           </select>
-
-          <!-- Markdown toolbar (same structure as index) -->
-          <div class="btn-toolbar mb-2" role="toolbar" aria-label="Editor toolbar">
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="bold" title="KalÄ±n (Ctrl+B)"><strong>B</strong></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="italic" title="Ä°talik (Ctrl+I)"><em>I</em></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="strike" title="ÃœstÃ¼ Ã§izili">S</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="h2" title="BaÅŸlÄ±k H2">H2</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="h3" title="BaÅŸlÄ±k H3">H3</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="quote" title="AlÄ±ntÄ±">â€œâ€</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="ul" title="Madde iÅŸaretli liste">â€¢ List</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="ol" title="NumaralÄ± liste">1. List</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="task" title="GÃ¶rev listesi">[ ]</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="link" title="BaÄŸlantÄ± (Ctrl+K)">Link</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="image" title="Resim">ðŸ–¼ï¸</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="code" title="Kod satÄ±rÄ±"><code>{}</code></button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="codeblock" title="Kod bloÄŸu">```</button>
-            </div>
-            <div class="btn-group btn-group-sm me-1" role="group">
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="table" title="Tablo">â–¦</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="hr" title="Yatay Ã§izgi">â€•</button>
-              <button type="button" class="btn btn-outline-secondary" data-md-btn="emoji" title="Emoji">ðŸ˜Š</button>
-            </div>
-          </div>
-
-          <!-- Emoji picker and URL popover (same IDs so app.js hooks work) -->
-          <div id="emojiPicker" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:300px;">
-            <div class="card-body py-2">
-              <input type="text" class="form-control form-control-sm mb-2" id="emojiSearch" placeholder="Emoji araâ€¦">
-              <div id="emojiGrid" class="d-flex flex-wrap gap-1" style="max-height:200px; overflow:auto"></div>
-            </div>
-          </div>
-          <div id="urlPopover" class="card shadow-sm mb-2" style="display:none; position:absolute; z-index:2000; width:320px;">
-            <div class="card-body py-2">
-              <div class="mb-2 small text-muted" id="urlPopoverTitle">BaÄŸlantÄ± ekle</div>
-              <input type="url" class="form-control form-control-sm mb-2" id="urlPopoverInput" placeholder="https://...">
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="urlPopoverCancel">Ä°ptal</button>
-                <button type="button" class="btn btn-sm btn-primary" id="urlPopoverOk">Ekle</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-2">
-            <div class="col-md-6">
-              <textarea id="postContent" rows="12" class="form-control" placeholder="Ä°Ã§erik (Markdown destekli)" required></textarea>
-            </div>
-            <div class="col-md-6">
-              <div class="form-control" style="height:100%; overflow:auto;">
-                <div class="small text-muted mb-1">Ã–nizleme</div>
-                <div id="postPreview" class="markdown-body"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-2 mt-2">
-            <div class="col-md-6">
-              <input id="editMediaUrl" type="url" class="form-control" placeholder="FotoÄŸraf/GIF URL (opsiyonel)">
-            </div>
-            <div class="col-md-6">
-              <input id="editLinkUrl" type="url" class="form-control" placeholder="Harici Link (opsiyonel)">
-            </div>
-          </div>
-
-          <input id="editTags" class="form-control mt-2" placeholder="Etiketler (virgÃ¼lle ayÄ±rÄ±n)">
+          <textarea id="postContent" name="content" rows="6" class="form-control" placeholder="İçerik"></textarea>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-warning w-100">Kaydet</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Edit Comment Modal -->
-  <div class="modal fade" id="editCommentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <form id="editCommentForm" class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Yorumu DÃ¼zenle</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <textarea id="editCommentText" class="form-control" rows="5" required placeholder="Yorum"></textarea>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ä°ptal</button>
-          <button id="editCommentSubmitBtn" type="submit" class="btn btn-primary">Kaydet</button>
-        </div>
-      </form>
-    </div>
-  </div>
-  <!-- Report Modal -->
-  <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <form id="reportForm" class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Raporla</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <textarea id="reportReason" class="form-control" rows="5" placeholder="Rapor nedeni (opsiyonel)"></textarea>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ä°ptal</button>
-          <button id="reportSubmitBtn" type="submit" class="btn btn-primary">GÃ¶nder</button>
+          <button type="submit" class="btn btn-primary w-100">Paylaş</button>
         </div>
       </form>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="../js/app.js"></script>
-    <!-- Language files -->
-  <script>
-    // Load Turkish translations directly
-    window.translations = {
-      "home": "Ana Sayfa",
-      "about": "HakkÄ±nda",
-      "contact": "Ä°letiÅŸim",
-      "welcome": "Bloguma HoÅŸgeldin",
-      "subtitle": "MÃ¼zik, sanat ve kÃ¼ltÃ¼r Ã¼zerine",
-      "login": "GiriÅŸ",
-      "register": "KayÄ±t",
-      "logout": "Ã‡Ä±kÄ±ÅŸ",
-      "profile": "Profil",
-      "newPost": "Yeni GÃ¶nderi",
-      "search": "Ara...",
-      "notifications": "Bildirimler",
-      "saved": "Kaydedilenler",
-      "mod": "Mod",
-      "submit": "GÃ¶nder",
-      "title": "BaÅŸlÄ±k",
-      "content": "Ä°Ã§erik",
-      "category": "Kategori",
-      "mediaUrl": "FotoÄŸraf/GIF URL (opsiyonel)",
-      "linkUrl": "Harici Link (opsiyonel)",
-      "share": "PaylaÅŸ",
-      "popular": "En PopÃ¼ler",
-      "latest": "En Son Eklenenler",
-      "comments": "Yorumlar",
-      "like": "BeÄŸen",
-      "bookmark": "Kaydet",
-      "report": "Raporla",
-      "edit": "DÃ¼zenle",
-      "delete": "Sil",
-      "pin": "Sabitle",
-      "lock": "Kilitle",
-      "newMusic": "Yeni MÃ¼zik",
-      "industry": "EndÃ¼stri Haberleri",
-      "review": "DeÄŸerlendirme",
-      "album": "AlbÃ¼m Ä°nceleme",
-      "interview": "RÃ¶portajlar",
-      "event": "Etkinlikler",
-      "series": "Dizi & Filmler",
-      "loading": "YÃ¼kleniyor...",
-      "error": "Hata",
-      "success": "BaÅŸarÄ±lÄ±",
-      "cancel": "Ä°ptal",
-      "save": "Kaydet",
-      "close": "Kapat",
-      "send": "GÃ¶nder",
-      "name": "AdÄ±nÄ±z",
-      "email": "Email",
-      "password": "Parola",
-      "username": "KullanÄ±cÄ± AdÄ±",
-      "message": "MesajÄ±nÄ±z",
-      "writeComment": "Yorum yaz...",
-      "noPosts": "HenÃ¼z gÃ¶nderi yok",
-      "noComments": "HenÃ¼z yorum yok",
-      "loadMore": "Daha Fazla",
-      "allRightsReserved": "TÃ¼m haklarÄ± saklÄ±dÄ±r",
-      "avatarUrl": "Avatar URL",
-      "avatarUrlPlaceholder": "https://... (fotoÄŸraf/gif)",
-      "avatarUrlHelp": "URL boÅŸ kaydedilirse avatar kaldÄ±rÄ±lÄ±r.",
-      "uploadFile": "Veya dosya yÃ¼kle",
-      "upload": "YÃ¼kle",
-      "myPosts": "GÃ¶nderilerim",
-      "noPostsYet": "HenÃ¼z gÃ¶nderi yok",
-      "createFirstPost": "Ä°lk gÃ¶nderinizi oluÅŸturun",
-      "welcomeMessage": "Nara MÃ¼zik'e hoÅŸ geldiniz!",
-      "profileSettings": "Profil AyarlarÄ±",
-      "accountInfo": "Hesap Bilgileri",
-      "contactMessage": "Bize mesaj bÄ±rakÄ±n; evencreed hesabÄ±nÄ±n gelen kutusuna dÃ¼ÅŸecek.",
-      "popularAlbums": "PopÃ¼ler AlbÃ¼mler",
-      "popularAlbumsDesc": "En Ã§ok dinlenen ve tartÄ±ÅŸÄ±lan albÃ¼mleri keÅŸfedin",
-      "addComment": "Ekle",
-      "albumSearch": "AlbÃ¼m Ara",
-      "searchAlbum": "AlbÃ¼m adÄ± yazÄ±n...",
-      "searchResults": "Arama SonuÃ§larÄ±",
-      "myFavorites": "Favori AlbÃ¼mlerim",
-      "loadingFavorites": "Favori albÃ¼mleriniz yÃ¼kleniyor...",
-      "noFavorites": "HenÃ¼z favori albÃ¼mÃ¼nÃ¼z yok.",
-      "addFavorites": "AlbÃ¼m inceleme sayfasÄ±ndan favori albÃ¼mlerinizi ekleyebilirsiniz."
-    };
-  </script>
   <script src="../js/lang.js"></script>
   <script>
-    // theme setup
+  (async function(){
+    'use strict';
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
     const root = document.documentElement;
-    const savedTheme = localStorage.getItem('theme') || 'dark';
     function applyTheme(theme){
       const nav = document.getElementById('mainNavbar');
-      if(theme==='light'){
+      if(theme === 'light'){
         root.setAttribute('data-theme','light');
-        if (nav){ nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light'); }
-        const tbtn = document.getElementById('themeToggle'); if (tbtn) tbtn.textContent='ðŸŒ™';
+        themeToggle.textContent = '🌙';
+        nav.classList.remove('navbar-dark'); nav.classList.add('navbar-light');
       } else {
         root.removeAttribute('data-theme');
-        if (nav){ nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark'); }
-        const tbtn = document.getElementById('themeToggle'); if (tbtn) tbtn.textContent='â˜€ï¸';
+        themeToggle.textContent = '☀️';
+        nav.classList.remove('navbar-light'); nav.classList.add('navbar-dark');
       }
     }
+    const savedTheme = localStorage.getItem('theme') || 'dark';
     applyTheme(savedTheme);
-    document.getElementById('themeToggle').addEventListener('click',()=>{
-      const next = root.getAttribute('data-theme')==='light' ? 'dark':'light';
-      localStorage.setItem('theme', next);
-      applyTheme(next);
-    });
-    const BACKEND_BASE = location.hostname.includes('localhost')? 'http://localhost:4000':'https://naramusic.onrender.com';
-    const params = new URLSearchParams(location.search);
-    const postId = params.get('id');
-    const user = JSON.parse(localStorage.getItem('user')||'null');
-    const token = localStorage.getItem('token')||null;
-
-    // Report Modal: setup and submit
-    const reportModalEl = document.getElementById('reportModal');
-    const reportForm = document.getElementById('reportForm');
-    const reportReasonEl = document.getElementById('reportReason');
-    const reportSubmitBtn = document.getElementById('reportSubmitBtn');
-    let reportModal = null;
-    if (reportModalEl){
-      reportModal = bootstrap.Modal.getOrCreateInstance(reportModalEl);
-    }
-    if (reportForm){
-      reportForm.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        if(!user || !token){ alert('Raporlamak iÃ§in giriÅŸ yapÄ±n'); return; }
-
-        const btn = reportSubmitBtn || reportForm.querySelector('button[type="submit"]');
-        if (btn){
-          btn.disabled = true;
-          btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>GÃ¶nderiliyor...';
-        }
-
-        const type = (reportForm.dataset.type === 'comment') ? 'comment' : 'post';
-        const payload = {
-          type,
-          postId,
-          reason: (reportReasonEl?.value || '')
-        };
-        if (type === 'comment' && reportForm.dataset.cid){
-          payload.commentId = reportForm.dataset.cid;
-        }
-
-        try{
-          const r = await fetch(`${BACKEND_BASE}/api/report`, {
-            method:'POST',
-            headers:{
-              'Content-Type':'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-          });
-          const data = await r.json().catch(()=> ({}));
-          if (!r.ok || data.error){
-            alert(data.error || 'Rapor gÃ¶nderilemedi');
-            return;
-          }
-          try { reportModal?.hide(); } catch(_){}
-          alert('RaporlandÄ±');
-          // clear context after submit
-          reportForm.dataset.type = '';
-          reportForm.dataset.cid = '';
-          if (reportReasonEl) reportReasonEl.value = '';
-        } catch(err){
-          console.error(err);
-          alert('Rapor gÃ¶nderilemedi');
-        } finally {
-          if (btn){
-            btn.disabled = false;
-            btn.textContent = 'GÃ¶nder';
-          }
-        }
-      });
-    }
-
-    let POST_DATA = null;
-    async function loadPost(){
-      const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}`);
-      const p = await r.json();
-      POST_DATA = p;
-      const titleEl = document.getElementById('pTitle');
-      if (titleEl && titleEl.firstChild){ titleEl.firstChild.nodeValue = p.title + ' '; }
-      const badgeEl = document.getElementById('pBadges');
-      if (badgeEl){ badgeEl.innerHTML = `${p.pinned?'<span class=\'badge bg-warning text-dark me-1\'>ðŸ“Œ Sabit</span>':''}${p.locked?'<span class=\'badge bg-secondary\'>ðŸ”’ Kilitli</span>':''}`; }
-      document.getElementById('pMeta').textContent = `${p.authorName||'Anonim'} â€¢ ${new Date(p.createdAt).toLocaleString()} â€¢ ${p.category||''}`;
-      document.getElementById('pContent').innerHTML = p.contentHtml || (p.content||'').replace(/\n/g,'<br>');
-      { const cEl = document.getElementById('pContent'); if (window.enhanceYouTubeEmbeds) window.enhanceYouTubeEmbeds(cEl); }
-      if (p.mediaUrl){ document.getElementById('pMedia').innerHTML = `<img src="${p.mediaUrl}" class="img-fluid rounded">`; }
-      if (p.linkUrl){ document.getElementById('pLink').innerHTML = `<a class="btn btn-sm btn-outline-secondary" target="_blank" href="${p.linkUrl}">BaÄŸlantÄ±yÄ± AÃ§</a>`; }
-      document.getElementById('likeCount').textContent = p.likes || 0;
-      const canEdit = user && (user.id===p.authorId || (user.role==='admin' || user.role==='moderator'));
-      if (canEdit){ document.getElementById('editPostBtn').classList.remove('d-none'); document.getElementById('deletePostBtn').classList.remove('d-none'); }
-    }
-
-    async function loadComments(){
-      const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments`);
-      const items = await r.json();
-      const el = document.getElementById('comments');
-      if(!items.length){ el.innerHTML = '<div class="text-muted">HenÃ¼z yorum yok.</div>'; return; }
-      el.innerHTML = items.map(c=>{
-        const canEdit = user && (user.id===c.userId || (user.role==='admin'||user.role==='moderator'));
-        return `<div class="mb-3" data-cid="${c.id}">
-          <div class="small text-muted">${c.username||'KullanÄ±cÄ±'} â€¢ ${new Date(c.createdAt).toLocaleString()}</div>
-          <div class="mb-1">${c.text}</div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-outline-light c-like">ðŸ‘ ${c.likes||0}</button>
-            <button class="btn btn-sm btn-outline-secondary c-report">Raporla</button>
-            ${canEdit?'<button class="btn btn-sm btn-outline-warning c-edit">DÃ¼zenle</button><button class="btn btn-sm btn-outline-danger c-del">Sil</button>':''}
-          </div>
-        </div>`;
-      }).join('');
-    }
-
-    const cForm = document.getElementById('commentForm');
-    if (POST_DATA && POST_DATA.locked){ cForm.querySelector('button[type="submit"]').disabled = true; cForm.querySelector('.form-text').textContent = 'Bu gÃ¶nderi kilitli; yorum yapÄ±lamaz.'; }
-    cForm.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      if(!user){ alert('Yorum yapmak iÃ§in giriÅŸ yapÄ±n.'); return; }
-      const text = document.getElementById('commentText').value.trim();
-      if(!text) return;
-      try{
-        const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments`, { method:'POST', headers:{'Content-Type':'application/json', 'Authorization': `Bearer ${token}`}, body: JSON.stringify({ text }) });
-        const data = await r.json();
-        if(data.error){ alert(data.error); return; }
-        document.getElementById('commentText').value='';
-        loadComments();
-      }catch(err){ console.error(err); alert('Yorum gÃ¶nderilemedi'); }
+    themeToggle.addEventListener('click', () => {
+      const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      localStorage.setItem('theme', next); applyTheme(next);
     });
 
-    // Actions
-    document.getElementById('likePostBtn').addEventListener('click', async ()=>{
-      if(!user){ alert('BeÄŸenmek iÃ§in giriÅŸ yapÄ±n'); return; }
-      const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/like`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` } });
-      const data = await r.json(); if(!data.error){ document.getElementById('likeCount').textContent = data.likes; }
-    });
-    document.getElementById('deletePostBtn').addEventListener('click', async ()=>{
-      if (!confirm('Silinsin mi?')) return;
-      const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}`, { method:'DELETE', headers:{ 'Authorization': `Bearer ${token}` } });
-      const d = await r.json(); if (d.error){ alert(d.error); return; } location.href = '../index.html';
-    });
-    document.getElementById('reportPostBtn').addEventListener('click', async ()=>{
-      if(!user || !token){ alert('Raporlamak iÃ§in giriÅŸ yapÄ±n'); return; }
-      if (!reportModal) { reportModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('reportModal')); }
-      if (reportForm && reportReasonEl){
-        reportForm.dataset.type = 'post';
-        delete reportForm.dataset.cid;
-        reportReasonEl.value = '';
-        reportModal.show();
+    // Like functionality
+    const likeBtn = document.getElementById('likeBtn');
+    const likeCount = document.getElementById('likeCount');
+    let isLiked = false;
+    let likes = 24;
+
+    likeBtn.addEventListener('click', () => {
+      isLiked = !isLiked;
+      likes += isLiked ? 1 : -1;
+      
+      likeCount.textContent = likes;
+      likeBtn.classList.toggle('liked', isLiked);
+      
+      if (isLiked) {
+        likeBtn.innerHTML = '<i class="fas fa-heart me-1"></i><span>' + likes + '</span> Beğenildi';
+      } else {
+        likeBtn.innerHTML = '<i class="fas fa-heart me-1"></i><span>' + likes + '</span> Beğen';
       }
     });
 
-    // Edit Post Modal: open, prefill, submit
-    const editBtn = document.getElementById('editPostBtn');
-    const editModalEl = document.getElementById('editPostModal');
-    const editForm = document.getElementById('editPostForm');
-    let editModal = null;
+    // Bookmark functionality
+    const bookmarkBtn = document.getElementById('bookmarkBtn');
+    let isBookmarked = false;
 
-    if (editBtn && editModalEl){
-      editModal = bootstrap.Modal.getOrCreateInstance(editModalEl);
-      editBtn.addEventListener('click', ()=>{
-        if (!POST_DATA){ alert('GÃ¶nderi yÃ¼kleniyor...'); return; }
-        const cat = (POST_DATA.category || '').toLowerCase();
-        const tagsArr = Array.isArray(POST_DATA.tags) ? POST_DATA.tags : [];
-
-        const tEl = document.getElementById('editTitle');
-        const cEl = document.getElementById('editCategory');
-        const contentEl = document.getElementById('postContent');
-        const mEl = document.getElementById('editMediaUrl');
-        const lEl = document.getElementById('editLinkUrl');
-        const tgEl = document.getElementById('editTags');
-
-        if (tEl) tEl.value = POST_DATA.title || '';
-        if (cEl) cEl.value = cat || 'yenimuzik';
-        if (contentEl) { contentEl.value = POST_DATA.content || ''; contentEl.dispatchEvent(new Event('input')); }
-        if (mEl) mEl.value = POST_DATA.mediaUrl || '';
-        if (lEl) lEl.value = POST_DATA.linkUrl || '';
-        if (tgEl) tgEl.value = tagsArr.join(', ');
-
-        editModal.show();
-      });
-    }
-
-    if (editForm){
-      editForm.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        if (!user || !token){ alert('DÃ¼zenlemek iÃ§in giriÅŸ yapÄ±n.'); return; }
-
-        const title = (document.getElementById('editTitle')?.value || '').trim();
-        const category = (document.getElementById('editCategory')?.value || '').trim();
-        const content = document.getElementById('postContent')?.value || '';
-        const mediaUrl = (document.getElementById('editMediaUrl')?.value || '').trim();
-        const linkUrl = (document.getElementById('editLinkUrl')?.value || '').trim();
-        const tags = (document.getElementById('editTags')?.value || '')
-          .split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
-
-        if (!title || !content){ alert('BaÅŸlÄ±k ve iÃ§erik zorunludur.'); return; }
-
-        try{
-          const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}`, {
-            method:'PUT',
-            headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ title, content, category, mediaUrl, linkUrl, tags })
-          });
-          const data = await r.json();
-          if (data.error){ alert(data.error); return; }
-
-          try { editModal?.hide(); } catch(_){}
-          // Simplicity: reload to reflect updates everywhere
-          location.reload();
-
-          // Optionally keep state in memory
-          // POST_DATA = data;
-        } catch(err){
-          console.error(err);
-          alert('GÃ¶nderi gÃ¼ncellenemedi');
-        }
-      });
-    }
-
-    // Edit Comment Modal: setup and submit
-    const editCommentModalEl = document.getElementById('editCommentModal');
-    const editCommentForm = document.getElementById('editCommentForm');
-    const editCommentTextEl = document.getElementById('editCommentText');
-    const editCommentSubmitBtn = document.getElementById('editCommentSubmitBtn');
-    let editCommentModal = null;
-    if (editCommentModalEl){
-      editCommentModal = bootstrap.Modal.getOrCreateInstance(editCommentModalEl);
-      if (editCommentForm){
-        editCommentForm.addEventListener('submit', async (ev)=>{
-          ev.preventDefault();
-          if(!user || !token){ alert('DÃ¼zenlemek iÃ§in giriÅŸ yapÄ±n.'); return; }
-          const cid = editCommentForm.dataset.cid;
-          const newText = (editCommentTextEl?.value || '').trim();
-          if(!newText){ editCommentTextEl?.focus(); return; }
-          const btn = editCommentSubmitBtn || editCommentForm.querySelector('button[type="submit"]');
-          if (btn){
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Kaydediliyor...';
-          }
-          try{
-            const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments/${cid}`, {
-              method:'PUT',
-              headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
-              body: JSON.stringify({ text: newText })
-            });
-            const d = await r.json();
-            if(d.error){ alert(d.error); return; }
-            const targetTextEl = document.querySelector(`[data-cid="${cid}"] .mb-1`);
-            if (targetTextEl){ targetTextEl.textContent = newText; }
-            try { editCommentModal.hide(); } catch(_){}
-            editCommentForm.dataset.cid = '';
-          } catch(err){
-            console.error(err);
-            alert('Yorum gÃ¼ncellenemedi');
-          } finally {
-            if (btn){
-              btn.disabled = false;
-              btn.textContent = 'Kaydet';
-            }
-          }
-        });
-      }
-    }
-
-    // Comment controls (like/edit/delete/report)
-    document.getElementById('comments').addEventListener('click', async (e)=>{
-      const wrap = e.target.closest('[data-cid]'); if (!wrap) return;
-      const cid = wrap.getAttribute('data-cid');
-      if (e.target.closest('.c-like')){
-        if(!user){ alert('GiriÅŸ yapÄ±n'); return; }
-        const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments/${cid}/like`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` }});
-        const d = await r.json(); if(!d.error){ e.target.textContent = `ðŸ‘ ${d.likes}`; }
-      } else if (e.target.closest('.c-del')){
-        if (!confirm('Yorum silinsin mi?')) return;
-        const r = await fetch(`${BACKEND_BASE}/api/posts/${postId}/comments/${cid}`, { method:'DELETE', headers:{ 'Authorization': `Bearer ${token}` }});
-        const d = await r.json(); if(d.error){ alert(d.error); return; } loadComments();
-      } else if (e.target.closest('.c-edit')){
-        if(!user || !token){ alert('DÃ¼zenlemek iÃ§in giriÅŸ yapÄ±n.'); return; }
-        const current = wrap.querySelector('.mb-1')?.textContent || '';
-        if (!editCommentModal){
-          editCommentModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editCommentModal'));
-        }
-        if (editCommentForm && editCommentTextEl){
-          editCommentForm.dataset.cid = cid;
-          editCommentTextEl.value = current;
-          editCommentTextEl.focus();
-          editCommentModal.show();
-        }
-      } else if (e.target.closest('.c-report')){
-        if(!user || !token){ alert('GiriÅŸ yapÄ±n'); return; }
-        if (!reportModal) { reportModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('reportModal')); }
-        if (reportForm && reportReasonEl){
-          reportForm.dataset.type = 'comment';
-          reportForm.dataset.cid = cid;
-          reportReasonEl.value = '';
-          reportModal.show();
-        }
+    bookmarkBtn.addEventListener('click', () => {
+      isBookmarked = !isBookmarked;
+      bookmarkBtn.classList.toggle('bookmarked', isBookmarked);
+      
+      if (isBookmarked) {
+        bookmarkBtn.innerHTML = '<i class="fas fa-bookmark"></i> Kaydedildi';
+      } else {
+        bookmarkBtn.innerHTML = '<i class="fas fa-bookmark"></i>';
       }
     });
 
-    // bootstrap: load
-    (async ()=>{ await loadPost(); await loadComments(); fetch(`${BACKEND_BASE}/api/posts/${postId}/view`,{method:'POST'}).catch(()=>{}); })();
+  })();
   </script>
 </body>
 </html>
-
-
-
-

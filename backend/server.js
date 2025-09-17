@@ -529,6 +529,96 @@ app.get("/api/spotify/album", async (req, res) => {
   }
 });
 
+// Get single track details
+app.get("/api/spotify/track/:id", async (req, res) => {
+  try {
+    const trackId = req.params.id;
+    if (!trackId) return res.status(400).json({ error: "Missing track id" });
+
+    const token = await getSpotifyAccessToken();
+    const fetch = (await import("node-fetch")).default;
+    const r = await fetch(`https://api.spotify.com/v1/tracks/${encodeURIComponent(trackId)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      return res
+        .status(r.status)
+        .json({ error: data.error?.message || data.message || "spotify error", status: r.status, details: data });
+    }
+
+    const simplified = {
+      id: data.id,
+      name: data.name,
+      preview_url: data.preview_url,
+      duration_ms: data.duration_ms,
+      external_urls: data.external_urls,
+      artists: (data.artists || []).map((a) => ({
+        id: a.id,
+        name: a.name,
+        external_urls: a.external_urls,
+      })),
+      album: data.album ? {
+        id: data.album.id,
+        name: data.album.name,
+        images: data.album.images,
+        release_date: data.album.release_date,
+      } : null,
+    };
+
+    res.json(simplified);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Search tracks
+app.get("/api/spotify/search", async (req, res) => {
+  try {
+    const { q, type = "track", limit = 20, market = "TR" } = req.query;
+    if (!q) return res.status(400).json({ error: "Missing query" });
+
+    const token = await getSpotifyAccessToken();
+    const fetch = (await import("node-fetch")).default;
+    const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=${type}&limit=${limit}&market=${market}`;
+    const r = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      return res
+        .status(r.status)
+        .json({ error: data.error?.message || data.message || "spotify error", status: r.status, details: data });
+    }
+
+    // Simplify tracks
+    if (data.tracks && data.tracks.items) {
+      data.tracks.items = data.tracks.items.map(track => ({
+        id: track.id,
+        name: track.name,
+        preview_url: track.preview_url,
+        duration_ms: track.duration_ms,
+        external_urls: track.external_urls,
+        artists: (track.artists || []).map(a => ({
+          id: a.id,
+          name: a.name,
+          external_urls: a.external_urls,
+        })),
+        album: track.album ? {
+          id: track.album.id,
+          name: track.album.name,
+          images: track.album.images,
+          release_date: track.album.release_date,
+        } : null,
+      }));
+    }
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 //
 // 6) Auth endpoints
 //
@@ -718,7 +808,7 @@ app.get("/api/messages/inbox", authMiddleware, async (req, res) => {
 //
 app.post("/api/posts", authMiddleware, writeLimiter, async (req, res) => {
   try {
-    const { title, content, category, mediaUrl, linkUrl, tags } = req.body;
+    const { title, content, category, mediaUrl, linkUrl, tags, musicData } = req.body;
     const { id: authorId, username: authorName, avatarUrl: authorAvatar } = req.user;
 
     const safeContent = String(content || "");
@@ -750,6 +840,7 @@ app.post("/api/posts", authMiddleware, writeLimiter, async (req, res) => {
       pinned: false,
       locked: false,
       reports: 0,
+      musicData: musicData || null, // Store music track data
     };
 
     const docRef = await db.collection("posts").add(newPost);
@@ -1461,15 +1552,26 @@ app.get("/api/users/:id", async (req, res) => {
 // Update own profile (avatarUrl, username optional)
 app.put("/api/users/me", authMiddleware, async (req, res) => {
   try {
-    const { avatarUrl, username } = req.body || {};
+    const { avatarUrl, username, bio, location, website } = req.body || {};
     const update = {};
     if (typeof avatarUrl !== "undefined") update.avatarUrl = avatarUrl || null;
     if (typeof username === "string" && username.trim()) update.username = username.trim();
+    if (typeof bio === "string") update.bio = bio.trim();
+    if (typeof location === "string") update.location = location.trim();
+    if (typeof website === "string") update.website = website.trim();
     if (!Object.keys(update).length) return res.status(400).json({ error: "Nothing to update" });
     await db.collection("users").doc(req.user.id).update(update);
     const doc = await db.collection("users").doc(req.user.id).get();
     const d = doc.data();
-    const user = { id: doc.id, username: d.username, email: d.email, avatarUrl: d.avatarUrl || null };
+    const user = { 
+      id: doc.id, 
+      username: d.username, 
+      email: d.email, 
+      avatarUrl: d.avatarUrl || null,
+      bio: d.bio || null,
+      location: d.location || null,
+      website: d.website || null
+    };
     res.json({ user });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1492,6 +1594,3228 @@ app.put("/api/users/me/profile", authMiddleware, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Get user music preferences
+app.get("/api/users/:id/music-preferences", async (req, res) => {
+  try {
+    const doc = await db.collection("users").doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: "User not found" });
+    
+    const userData = doc.data();
+    const musicPreferences = {
+      favoriteGenres: userData.favoriteGenres || [],
+      musicMood: userData.musicMood || [],
+      favoriteArtist: userData.favoriteArtist || '',
+      favoriteSong: userData.favoriteSong || '',
+      totalListened: userData.totalListened || 0,
+      mostListened: userData.mostListened || '',
+      listeningStats: userData.listeningStats || {}
+    };
+    
+    res.json(musicPreferences);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update user music preferences
+app.put("/api/users/me/music-preferences", authMiddleware, async (req, res) => {
+  try {
+    const { favoriteGenres, musicMood, favoriteArtist, favoriteSong } = req.body || {};
+    const update = {};
+    
+    if (Array.isArray(favoriteGenres)) update.favoriteGenres = favoriteGenres.slice(0, 10);
+    if (Array.isArray(musicMood)) update.musicMood = musicMood.slice(0, 10);
+    if (typeof favoriteArtist === "string") update.favoriteArtist = favoriteArtist.trim();
+    if (typeof favoriteSong === "string") update.favoriteSong = favoriteSong.trim();
+    
+    if (!Object.keys(update).length) return res.status(400).json({ error: "Nothing to update" });
+    
+    await db.collection("users").doc(req.user.id).update(update);
+    
+    // Return updated preferences
+    const doc = await db.collection("users").doc(req.user.id).get();
+    const userData = doc.data();
+    const musicPreferences = {
+      favoriteGenres: userData.favoriteGenres || [],
+      musicMood: userData.musicMood || [],
+      favoriteArtist: userData.favoriteArtist || '',
+      favoriteSong: userData.favoriteSong || '',
+      totalListened: userData.totalListened || 0,
+      mostListened: userData.mostListened || '',
+      listeningStats: userData.listeningStats || {}
+    };
+    
+    res.json(musicPreferences);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Music Rating Endpoints
+
+// Rate a music track
+app.post("/api/music/:musicId/rate", authMiddleware, async (req, res) => {
+  try {
+    const { musicId } = req.params;
+    const { rating } = req.body;
+    
+    // Validate rating
+    if (!rating || rating < 1 || rating > 10) {
+      return res.status(400).json({ error: "Rating must be between 1 and 10" });
+    }
+    
+    const userId = req.user.id;
+    const ratingDoc = {
+      userId,
+      musicId,
+      rating: parseInt(rating),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Check if user already rated this music
+    const existingRatingQuery = await db.collection("musicRatings")
+      .where("userId", "==", userId)
+      .where("musicId", "==", musicId)
+      .get();
+    
+    if (!existingRatingQuery.empty) {
+      // Update existing rating
+      const existingRating = existingRatingQuery.docs[0];
+      await existingRating.ref.update({
+        rating: parseInt(rating),
+        updatedAt: new Date().toISOString()
+      });
+    } else {
+      // Create new rating
+      await db.collection("musicRatings").add(ratingDoc);
+    }
+    
+    // Calculate average rating
+    const allRatingsQuery = await db.collection("musicRatings")
+      .where("musicId", "==", musicId)
+      .get();
+    
+    let totalRating = 0;
+    let count = allRatingsQuery.size;
+    
+    allRatingsQuery.forEach(doc => {
+      totalRating += doc.data().rating;
+    });
+    
+    const average = count > 0 ? totalRating / count : 0;
+    
+    res.json({ 
+      message: "Rating saved successfully",
+      average: parseFloat(average.toFixed(1)),
+      count 
+    });
+    
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get rating for a music track
+app.get("/api/music/:musicId/rating", authMiddleware, async (req, res) => {
+  try {
+    const { musicId } = req.params;
+    const userId = req.user.id;
+    
+    // Get user's rating
+    let userRating = 0;
+    const userRatingQuery = await db.collection("musicRatings")
+      .where("userId", "==", userId)
+      .where("musicId", "==", musicId)
+      .get();
+    
+    if (!userRatingQuery.empty) {
+      userRating = userRatingQuery.docs[0].data().rating;
+    }
+    
+    // Get average rating
+    const allRatingsQuery = await db.collection("musicRatings")
+      .where("musicId", "==", musicId)
+      .get();
+    
+    let totalRating = 0;
+    let count = allRatingsQuery.size;
+    
+    allRatingsQuery.forEach(doc => {
+      totalRating += doc.data().rating;
+    });
+    
+    const average = count > 0 ? totalRating / count : 0;
+    
+    res.json({
+      userRating,
+      average: parseFloat(average.toFixed(1)),
+      count
+    });
+    
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get top rated music
+app.get("/api/music/top-rated", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    
+    // Get all ratings grouped by musicId
+    const ratingsQuery = await db.collection("musicRatings").get();
+    const musicRatings = new Map();
+    
+    ratingsQuery.forEach(doc => {
+      const data = doc.data();
+      if (!musicRatings.has(data.musicId)) {
+        musicRatings.set(data.musicId, { totalRating: 0, count: 0, ratings: [] });
+      }
+      const current = musicRatings.get(data.musicId);
+      current.totalRating += data.rating;
+      current.count += 1;
+      current.ratings.push(data.rating);
+    });
+    
+    // Calculate averages and sort
+    const topRated = Array.from(musicRatings.entries())
+      .map(([musicId, data]) => ({
+        musicId,
+        average: data.totalRating / data.count,
+        count: data.count
+      }))
+      .filter(item => item.count >= 3) // Minimum 3 ratings
+      .sort((a, b) => b.average - a.average)
+      .slice(0, limit);
+    
+    res.json(topRated);
+    
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Advanced Search Endpoint
+app.get("/api/search/advanced", async (req, res) => {
+  try {
+    const {
+      query = '',
+      genre = '',
+      artist = '',
+      album = '',
+      year = '',
+      mood = '',
+      rating = '',
+      sortBy = 'relevance',
+      page = 1,
+      limit = 20
+    } = req.query;
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const offset = (pageNum - 1) * limitNum;
+
+    // Build search parameters for Spotify
+    let searchQuery = query;
+    if (artist) searchQuery += ` artist:${artist}`;
+    if (album) searchQuery += ` album:${album}`;
+    if (year) searchQuery += ` year:${year}`;
+    if (genre) searchQuery += ` genre:${genre}`;
+
+    let spotifyResults = [];
+    let total = 0;
+
+    if (searchQuery.trim()) {
+      // Search Spotify
+      const accessToken = await getSpotifyAccessToken();
+      if (accessToken) {
+        const spotifyResponse = await fetch(
+          `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchQuery)}&type=track&limit=${limitNum}&offset=${offset}`,
+          {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          }
+        );
+
+        if (spotifyResponse.ok) {
+          const spotifyData = await spotifyResponse.json();
+          total = spotifyData.tracks.total;
+          
+          // Process Spotify results
+          spotifyResults = await Promise.all(spotifyData.tracks.items.map(async (track) => {
+            const result = {
+              id: track.id,
+              title: track.name,
+              artist: track.artists.map(a => a.name).join(', '),
+              album: track.album.name,
+              year: track.album.release_date ? track.album.release_date.substring(0, 4) : null,
+              image: track.album.images[0]?.url || null,
+              spotifyUrl: track.external_urls.spotify,
+              previewUrl: track.preview_url,
+              musicData: {
+                id: track.id,
+                title: track.name,
+                artist: track.artists.map(a => a.name).join(', '),
+                album: track.album.name,
+                image: track.album.images[0]?.url || null,
+                previewUrl: track.preview_url,
+                spotifyUrl: track.external_urls.spotify
+              }
+            };
+
+            // Get average rating for this track
+            try {
+              const ratingsQuery = await db.collection("musicRatings")
+                .where("musicId", "==", track.id)
+                .get();
+              
+              if (!ratingsQuery.empty) {
+                let totalRating = 0;
+                let count = ratingsQuery.size;
+                
+                ratingsQuery.forEach(doc => {
+                  totalRating += doc.data().rating;
+                });
+                
+                result.averageRating = totalRating / count;
+                result.ratingCount = count;
+              }
+            } catch (error) {
+              console.error('Error getting rating for track:', track.id, error);
+            }
+
+            return result;
+          }));
+        }
+      }
+    } else {
+      // If no search query, get popular tracks from database (posts with music)
+      const postsQuery = db.collection("posts").where("musicData", "!=", null);
+      const postsSnapshot = await postsQuery.get();
+      
+      const musicTracks = new Map();
+      postsSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.musicData && data.musicData.id) {
+          musicTracks.set(data.musicData.id, data.musicData);
+        }
+      });
+
+      spotifyResults = Array.from(musicTracks.values()).slice(offset, offset + limitNum);
+      total = musicTracks.size;
+    }
+
+    // Apply additional filters
+    let filteredResults = spotifyResults;
+
+    // Filter by mood (this would need to be implemented with mood analysis)
+    if (mood) {
+      // For now, this is a placeholder - in real implementation,
+      // you would use audio features from Spotify API or AI mood detection
+      filteredResults = filteredResults.filter(track => {
+        // Placeholder logic
+        return true;
+      });
+    }
+
+    // Filter by rating
+    if (rating) {
+      const minRating = parseFloat(rating);
+      filteredResults = filteredResults.filter(track => {
+        return track.averageRating >= minRating;
+      });
+    }
+
+    // Sort results
+    switch (sortBy) {
+      case 'rating':
+        filteredResults.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
+        break;
+      case 'year':
+        filteredResults.sort((a, b) => (b.year || 0) - (a.year || 0));
+        break;
+      case 'artist':
+        filteredResults.sort((a, b) => a.artist.localeCompare(b.artist));
+        break;
+      case 'title':
+        filteredResults.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case 'relevance':
+      default:
+        // Already sorted by Spotify relevance
+        break;
+    }
+
+    const totalPages = Math.ceil(filteredResults.length / limitNum);
+
+    res.json({
+      results: filteredResults,
+      total: filteredResults.length,
+      page: pageNum,
+      totalPages,
+      hasNext: pageNum < totalPages,
+      hasPrev: pageNum > 1
+    });
+
+  } catch (err) {
+    console.error('Advanced search error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get available genres from Spotify
+app.get("/api/spotify/genres", async (req, res) => {
+  try {
+    const accessToken = await getSpotifyAccessToken();
+    if (!accessToken) {
+      return res.status(500).json({ error: "Failed to get Spotify access token" });
+    }
+
+    const response = await fetch(
+      "https://api.spotify.com/v1/recommendations/available-genre-seeds",
+      {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      res.json(data.genres);
+    } else {
+      // Fallback genres
+      res.json([
+        'rock', 'pop', 'jazz', 'classical', 'electronic', 
+        'hip-hop', 'country', 'blues', 'reggae', 'folk',
+        'metal', 'punk', 'alternative', 'indie', 'world'
+      ]);
+    }
+  } catch (err) {
+    console.error('Error getting genres:', err);
+    // Fallback genres
+    res.json([
+      'rock', 'pop', 'jazz', 'classical', 'electronic', 
+      'hip-hop', 'country', 'blues', 'reggae', 'folk'
+    ]);
+  }
+});
+
+// Playlist Management Endpoints
+
+// Create new playlist
+app.post("/api/playlists", authMiddleware, async (req, res) => {
+  try {
+    const { name, description, genre, mood, isPublic, isCollaborative } = req.body;
+    
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Playlist name is required" });
+    }
+
+    const playlistData = {
+      name: name.trim(),
+      description: description?.trim() || '',
+      genre: genre || '',
+      mood: mood || '',
+      isPublic: Boolean(isPublic),
+      isCollaborative: Boolean(isCollaborative),
+      userId: req.user.id,
+      username: req.user.username,
+      tracks: [],
+      likes: 0,
+      shares: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const docRef = await db.collection("playlists").add(playlistData);
+    
+    res.json({
+      id: docRef.id,
+      ...playlistData
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get user's playlists
+app.get("/api/playlists/my", authMiddleware, async (req, res) => {
+  try {
+    const playlistsQuery = await db.collection("playlists")
+      .where("userId", "==", req.user.id)
+      .orderBy("updatedAt", "desc")
+      .get();
+    
+    const playlists = playlistsQuery.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    res.json(playlists);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get public playlists
+app.get("/api/playlists/public", async (req, res) => {
+  try {
+    const { genre } = req.query;
+    let query = db.collection("playlists").where("isPublic", "==", true);
+    
+    if (genre) {
+      query = query.where("genre", "==", genre);
+    }
+    
+    const playlistsQuery = await query.orderBy("likes", "desc").limit(20).get();
+    
+    const playlists = playlistsQuery.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    res.json(playlists);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get featured playlists
+app.get("/api/playlists/featured", async (req, res) => {
+  try {
+    const playlistsQuery = await db.collection("playlists")
+      .where("isPublic", "==", true)
+      .orderBy("likes", "desc")
+      .limit(10)
+      .get();
+    
+    const playlists = playlistsQuery.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    res.json(playlists);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get single playlist
+app.get("/api/playlists/:id", async (req, res) => {
+  try {
+    const playlistDoc = await db.collection("playlists").doc(req.params.id).get();
+    
+    if (!playlistDoc.exists) {
+      return res.status(404).json({ error: "Playlist not found" });
+    }
+    
+    const playlist = {
+      id: playlistDoc.id,
+      ...playlistDoc.data()
+    };
+    
+    // Check if user can access this playlist
+    if (!playlist.isPublic && playlist.userId !== req.user?.id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    res.json(playlist);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update playlist
+app.put("/api/playlists/:id", authMiddleware, async (req, res) => {
+  try {
+    const { name, description, genre, mood, isPublic, isCollaborative } = req.body;
+    
+    const playlistDoc = await db.collection("playlists").doc(req.params.id).get();
+    
+    if (!playlistDoc.exists) {
+      return res.status(404).json({ error: "Playlist not found" });
+    }
+    
+    const playlist = playlistDoc.data();
+    
+    // Check if user owns this playlist
+    if (playlist.userId !== req.user.id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    const updateData = {
+      updatedAt: new Date().toISOString()
+    };
+    
+    if (name !== undefined) updateData.name = name.trim();
+    if (description !== undefined) updateData.description = description?.trim() || '';
+    if (genre !== undefined) updateData.genre = genre || '';
+    if (mood !== undefined) updateData.mood = mood || '';
+    if (isPublic !== undefined) updateData.isPublic = Boolean(isPublic);
+    if (isCollaborative !== undefined) updateData.isCollaborative = Boolean(isCollaborative);
+    
+    await db.collection("playlists").doc(req.params.id).update(updateData);
+    
+    // Return updated playlist
+    const updatedDoc = await db.collection("playlists").doc(req.params.id).get();
+    res.json({
+      id: updatedDoc.id,
+      ...updatedDoc.data()
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete playlist
+app.delete("/api/playlists/:id", authMiddleware, async (req, res) => {
+  try {
+    const playlistDoc = await db.collection("playlists").doc(req.params.id).get();
+    
+    if (!playlistDoc.exists) {
+      return res.status(404).json({ error: "Playlist not found" });
+    }
+    
+    const playlist = playlistDoc.data();
+    
+    // Check if user owns this playlist
+    if (playlist.userId !== req.user.id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    await db.collection("playlists").doc(req.params.id).delete();
+    
+    res.json({ message: "Playlist deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Add track to playlist
+app.post("/api/playlists/:id/tracks", authMiddleware, async (req, res) => {
+  try {
+    const { trackId } = req.body;
+    
+    if (!trackId) {
+      return res.status(400).json({ error: "Track ID is required" });
+    }
+    
+    const playlistDoc = await db.collection("playlists").doc(req.params.id).get();
+    
+    if (!playlistDoc.exists) {
+      return res.status(404).json({ error: "Playlist not found" });
+    }
+    
+    const playlist = playlistDoc.data();
+    
+    // Check if user can modify this playlist
+    if (playlist.userId !== req.user.id && !playlist.isCollaborative) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    // Get track details from Spotify
+    const accessToken = await getSpotifyAccessToken();
+    if (!accessToken) {
+      return res.status(500).json({ error: "Failed to get Spotify access token" });
+    }
+    
+    const trackResponse = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    
+    if (!trackResponse.ok) {
+      return res.status(400).json({ error: "Invalid track ID" });
+    }
+    
+    const trackData = await trackResponse.json();
+    
+    const track = {
+      id: trackData.id,
+      title: trackData.name,
+      artist: trackData.artists.map(a => a.name).join(', '),
+      album: trackData.album.name,
+      image: trackData.album.images[0]?.url || null,
+      previewUrl: trackData.preview_url,
+      spotifyUrl: trackData.external_urls.spotify,
+      duration: trackData.duration_ms,
+      addedAt: new Date().toISOString(),
+      addedBy: req.user.id
+    };
+    
+    // Check if track already exists in playlist
+    const existingTrack = playlist.tracks?.find(t => t.id === trackId);
+    if (existingTrack) {
+      return res.status(400).json({ error: "Track already exists in playlist" });
+    }
+    
+    // Add track to playlist
+    const updatedTracks = [...(playlist.tracks || []), track];
+    
+    await db.collection("playlists").doc(req.params.id).update({
+      tracks: updatedTracks,
+      updatedAt: new Date().toISOString()
+    });
+    
+    res.json({ message: "Track added to playlist", track });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Remove track from playlist
+app.delete("/api/playlists/:id/tracks/:trackId", authMiddleware, async (req, res) => {
+  try {
+    const { id, trackId } = req.params;
+    
+    const playlistDoc = await db.collection("playlists").doc(id).get();
+    
+    if (!playlistDoc.exists) {
+      return res.status(404).json({ error: "Playlist not found" });
+    }
+    
+    const playlist = playlistDoc.data();
+    
+    // Check if user can modify this playlist
+    if (playlist.userId !== req.user.id && !playlist.isCollaborative) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    // Remove track from playlist
+    const updatedTracks = (playlist.tracks || []).filter(track => track.id !== trackId);
+    
+    await db.collection("playlists").doc(id).update({
+      tracks: updatedTracks,
+      updatedAt: new Date().toISOString()
+    });
+    
+    res.json({ message: "Track removed from playlist" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Like/Unlike playlist
+app.post("/api/playlists/:id/like", authMiddleware, async (req, res) => {
+  try {
+    const playlistId = req.params.id;
+    const userId = req.user.id;
+    
+    // Check if user already liked this playlist
+    const likeQuery = await db.collection("playlistLikes")
+      .where("playlistId", "==", playlistId)
+      .where("userId", "==", userId)
+      .get();
+    
+    if (likeQuery.empty) {
+      // Add like
+      await db.collection("playlistLikes").add({
+        playlistId,
+        userId,
+        createdAt: new Date().toISOString()
+      });
+      
+      // Increment like count
+      await db.collection("playlists").doc(playlistId).update({
+        likes: admin.firestore.FieldValue.increment(1)
+      });
+      
+      res.json({ message: "Playlist liked", liked: true });
+    } else {
+      // Remove like
+      await likeQuery.docs[0].ref.delete();
+      
+      // Decrement like count
+      await db.collection("playlists").doc(playlistId).update({
+        likes: admin.firestore.FieldValue.increment(-1)
+      });
+      
+      res.json({ message: "Playlist unliked", liked: false });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Music Recommendation System Endpoints
+
+// Get music recommendations
+app.get("/api/recommendations", authMiddleware, async (req, res) => {
+  try {
+    const { type = 'basedOnPreferences' } = req.query;
+    const userId = req.user.id;
+    
+    let recommendations = [];
+    
+    switch (type) {
+      case 'basedOnHistory':
+        recommendations = await getRecommendationsBasedOnHistory(userId);
+        break;
+      case 'basedOnPreferences':
+        recommendations = await getRecommendationsBasedOnPreferences(userId);
+        break;
+      case 'basedOnSimilarUsers':
+        recommendations = await getRecommendationsBasedOnSimilarUsers(userId);
+        break;
+      case 'basedOnTrending':
+        recommendations = await getTrendingRecommendations();
+        break;
+      case 'basedOnMood':
+        recommendations = await getMoodBasedRecommendations(userId);
+        break;
+      case 'basedOnGenre':
+        recommendations = await getGenreBasedRecommendations(userId);
+        break;
+      default:
+        recommendations = await getRecommendationsBasedOnPreferences(userId);
+    }
+    
+    res.json({ recommendations });
+  } catch (err) {
+    console.error('Recommendation error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get personalized recommendations
+app.get("/api/recommendations/personalized", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const recommendations = await getPersonalizedRecommendations(userId);
+    res.json(recommendations);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get trending recommendations
+app.get("/api/recommendations/trending", async (req, res) => {
+  try {
+    const recommendations = await getTrendingRecommendations();
+    res.json(recommendations);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get mood-based recommendations
+app.get("/api/recommendations/mood", authMiddleware, async (req, res) => {
+  try {
+    const { mood } = req.query;
+    const userId = req.user.id;
+    const recommendations = await getMoodBasedRecommendations(userId, mood);
+    res.json(recommendations);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get genre-based recommendations
+app.get("/api/recommendations/genre", authMiddleware, async (req, res) => {
+  try {
+    const { genre } = req.query;
+    const userId = req.user.id;
+    const recommendations = await getGenreBasedRecommendations(userId, genre);
+    res.json(recommendations);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Like/Unlike recommendation
+app.post("/api/recommendations/:trackId/like", authMiddleware, async (req, res) => {
+  try {
+    const { trackId } = req.params;
+    const userId = req.user.id;
+    
+    // Check if user already liked this track
+    const likeQuery = await db.collection("trackLikes")
+      .where("trackId", "==", trackId)
+      .where("userId", "==", userId)
+      .get();
+    
+    if (likeQuery.empty) {
+      // Add like
+      await db.collection("trackLikes").add({
+        trackId,
+        userId,
+        createdAt: new Date().toISOString()
+      });
+      
+      res.json({ message: "Track liked", liked: true });
+    } else {
+      // Remove like
+      await likeQuery.docs[0].ref.delete();
+      
+      res.json({ message: "Track unliked", liked: false });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Helper functions for recommendations
+
+// Get recommendations based on user's listening history
+async function getRecommendationsBasedOnHistory(userId) {
+  try {
+    // Get user's liked tracks and playlists
+    const [likedTracks, userPlaylists] = await Promise.all([
+      db.collection("trackLikes").where("userId", "==", userId).get(),
+      db.collection("playlists").where("userId", "==", userId).get()
+    ]);
+    
+    const likedTrackIds = likedTracks.docs.map(doc => doc.data().trackId);
+    const playlistTracks = [];
+    
+    userPlaylists.forEach(doc => {
+      const playlist = doc.data();
+      if (playlist.tracks) {
+        playlistTracks.push(...playlist.tracks.map(t => t.id));
+      }
+    });
+    
+    // Get unique track IDs
+    const allTrackIds = [...new Set([...likedTrackIds, ...playlistTracks])];
+    
+    if (allTrackIds.length === 0) {
+      return await getTrendingRecommendations();
+    }
+    
+    // Get Spotify recommendations based on seed tracks
+    const accessToken = await getSpotifyAccessToken();
+    if (!accessToken) return [];
+    
+    const seedTracks = allTrackIds.slice(0, 5).join(',');
+    const response = await fetch(
+      `https://api.spotify.com/v1/recommendations?seed_tracks=${seedTracks}&limit=20`,
+      {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      }
+    );
+    
+    if (response.ok) {
+      const data = await response.json();
+      return processSpotifyRecommendations(data.tracks, 'basedOnHistory');
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error getting history-based recommendations:', error);
+    return [];
+  }
+}
+
+// Get recommendations based on user preferences
+async function getRecommendationsBasedOnPreferences(userId) {
+  try {
+    // Get user's music preferences
+    const userDoc = await db.collection("users").doc(userId).get();
+    if (!userDoc.exists) return [];
+    
+    const userData = userDoc.data();
+    const favoriteGenres = userData.favoriteGenres || [];
+    const musicMood = userData.musicMood || [];
+    
+    if (favoriteGenres.length === 0) {
+      return await getTrendingRecommendations();
+    }
+    
+    // Get Spotify recommendations based on genres
+    const accessToken = await getSpotifyAccessToken();
+    if (!accessToken) return [];
+    
+    const seedGenres = favoriteGenres.slice(0, 3).join(',');
+    const response = await fetch(
+      `https://api.spotify.com/v1/recommendations?seed_genres=${seedGenres}&limit=20`,
+      {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      }
+    );
+    
+    if (response.ok) {
+      const data = await response.json();
+      return processSpotifyRecommendations(data.tracks, 'basedOnPreferences');
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error getting preference-based recommendations:', error);
+    return [];
+  }
+}
+
+// Get recommendations based on similar users
+async function getRecommendationsBasedOnSimilarUsers(userId) {
+  try {
+    // Get user's preferences
+    const userDoc = await db.collection("users").doc(userId).get();
+    if (!userDoc.exists) return [];
+    
+    const userData = userDoc.data();
+    const favoriteGenres = userData.favoriteGenres || [];
+    
+    if (favoriteGenres.length === 0) {
+      return await getTrendingRecommendations();
+    }
+    
+    // Find users with similar preferences
+    const similarUsersQuery = await db.collection("users")
+      .where("favoriteGenres", "array-contains-any", favoriteGenres)
+      .limit(10)
+      .get();
+    
+    const similarUserIds = similarUsersQuery.docs
+      .map(doc => doc.id)
+      .filter(id => id !== userId);
+    
+    if (similarUserIds.length === 0) {
+      return await getTrendingRecommendations();
+    }
+    
+    // Get tracks liked by similar users
+    const likedTracks = [];
+    for (const similarUserId of similarUserIds) {
+      const userLikes = await db.collection("trackLikes")
+        .where("userId", "==", similarUserId)
+        .limit(5)
+        .get();
+      
+      likedTracks.push(...userLikes.docs.map(doc => doc.data().trackId));
+    }
+    
+    // Get unique track IDs
+    const uniqueTrackIds = [...new Set(likedTracks)];
+    
+    if (uniqueTrackIds.length === 0) {
+      return await getTrendingRecommendations();
+    }
+    
+    // Get Spotify recommendations based on seed tracks
+    const accessToken = await getSpotifyAccessToken();
+    if (!accessToken) return [];
+    
+    const seedTracks = uniqueTrackIds.slice(0, 5).join(',');
+    const response = await fetch(
+      `https://api.spotify.com/v1/recommendations?seed_tracks=${seedTracks}&limit=20`,
+      {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      }
+    );
+    
+    if (response.ok) {
+      const data = await response.json();
+      return processSpotifyRecommendations(data.tracks, 'basedOnSimilarUsers');
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error getting similar users recommendations:', error);
+    return [];
+  }
+}
+
+// Get trending recommendations
+async function getTrendingRecommendations() {
+  try {
+    const accessToken = await getSpotifyAccessToken();
+    if (!accessToken) return [];
+    
+    // Get featured playlists (trending)
+    const response = await fetch(
+      'https://api.spotify.com/v1/browse/featured-playlists?limit=1',
+      {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      }
+    );
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.playlists.items.length > 0) {
+        const playlistId = data.playlists.items[0].id;
+        
+        // Get tracks from featured playlist
+        const tracksResponse = await fetch(
+          `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=20`,
+          {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          }
+        );
+        
+        if (tracksResponse.ok) {
+          const tracksData = await tracksResponse.json();
+          const tracks = tracksData.items.map(item => item.track).filter(track => track);
+          return processSpotifyRecommendations(tracks, 'basedOnTrending');
+        }
+      }
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error getting trending recommendations:', error);
+    return [];
+  }
+}
+
+// Get mood-based recommendations
+async function getMoodBasedRecommendations(userId, mood = null) {
+  try {
+    let targetMood = mood;
+    
+    if (!targetMood) {
+      // Get user's current mood preference
+      const userDoc = await db.collection("users").doc(userId).get();
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        const musicMood = userData.musicMood || [];
+        targetMood = musicMood[Math.floor(Math.random() * musicMood.length)];
+      }
+    }
+    
+    if (!targetMood) {
+      return await getTrendingRecommendations();
+    }
+    
+    // Map mood to audio features
+    const moodFeatures = {
+      'happy': { valence: 0.8, energy: 0.7, danceability: 0.8 },
+      'sad': { valence: 0.2, energy: 0.3, danceability: 0.3 },
+      'energetic': { valence: 0.7, energy: 0.9, danceability: 0.8 },
+      'calm': { valence: 0.5, energy: 0.2, danceability: 0.3 },
+      'romantic': { valence: 0.6, energy: 0.4, danceability: 0.5 },
+      'angry': { valence: 0.1, energy: 0.8, danceability: 0.6 }
+    };
+    
+    const features = moodFeatures[targetMood] || moodFeatures['happy'];
+    
+    const accessToken = await getSpotifyAccessToken();
+    if (!accessToken) return [];
+    
+    const params = new URLSearchParams({
+      limit: '20',
+      target_valence: features.valence.toString(),
+      target_energy: features.energy.toString(),
+      target_danceability: features.danceability.toString()
+    });
+    
+    const response = await fetch(
+      `https://api.spotify.com/v1/recommendations?${params}`,
+      {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      }
+    );
+    
+    if (response.ok) {
+      const data = await response.json();
+      return processSpotifyRecommendations(data.tracks, 'basedOnMood');
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error getting mood-based recommendations:', error);
+    return [];
+  }
+}
+
+// Get genre-based recommendations
+async function getGenreBasedRecommendations(userId, genre = null) {
+  try {
+    let targetGenre = genre;
+    
+    if (!targetGenre) {
+      // Get user's favorite genre
+      const userDoc = await db.collection("users").doc(userId).get();
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        const favoriteGenres = userData.favoriteGenres || [];
+        targetGenre = favoriteGenres[Math.floor(Math.random() * favoriteGenres.length)];
+      }
+    }
+    
+    if (!targetGenre) {
+      return await getTrendingRecommendations();
+    }
+    
+    const accessToken = await getSpotifyAccessToken();
+    if (!accessToken) return [];
+    
+    const response = await fetch(
+      `https://api.spotify.com/v1/recommendations?seed_genres=${targetGenre}&limit=20`,
+      {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      }
+    );
+    
+    if (response.ok) {
+      const data = await response.json();
+      return processSpotifyRecommendations(data.tracks, 'basedOnGenre');
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error getting genre-based recommendations:', error);
+    return [];
+  }
+}
+
+// Get personalized recommendations (combination of all methods)
+async function getPersonalizedRecommendations(userId) {
+  try {
+    const [historyRecs, preferenceRecs, similarUsersRecs, trendingRecs] = await Promise.all([
+      getRecommendationsBasedOnHistory(userId),
+      getRecommendationsBasedOnPreferences(userId),
+      getRecommendationsBasedOnSimilarUsers(userId),
+      getTrendingRecommendations()
+    ]);
+    
+    // Combine and deduplicate recommendations
+    const allRecommendations = [...historyRecs, ...preferenceRecs, ...similarUsersRecs, ...trendingRecs];
+    const uniqueRecommendations = [];
+    const seenIds = new Set();
+    
+    for (const rec of allRecommendations) {
+      if (!seenIds.has(rec.id)) {
+        seenIds.add(rec.id);
+        uniqueRecommendations.push(rec);
+      }
+    }
+    
+    // Sort by confidence and return top 20
+    return uniqueRecommendations
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, 20);
+  } catch (error) {
+    console.error('Error getting personalized recommendations:', error);
+    return [];
+  }
+}
+
+// Process Spotify recommendations
+function processSpotifyRecommendations(tracks, source) {
+  return tracks.map(track => ({
+    id: track.id,
+    title: track.name,
+    artist: track.artists.map(a => a.name).join(', '),
+    album: track.album.name,
+    image: track.album.images[0]?.url || null,
+    previewUrl: track.preview_url,
+    spotifyUrl: track.external_urls.spotify,
+    genre: track.album.genres?.[0] || 'Unknown',
+    confidence: Math.random() * 0.4 + 0.6, // Random confidence between 0.6-1.0
+    source: source,
+    musicData: {
+      id: track.id,
+      title: track.name,
+      artist: track.artists.map(a => a.name).join(', '),
+      album: track.album.name,
+      image: track.album.images[0]?.url || null,
+      previewUrl: track.preview_url,
+      spotifyUrl: track.external_urls.spotify
+    }
+  }));
+}
+
+// Event Management Endpoints
+
+// Create new event
+app.post("/api/events", authMiddleware, async (req, res) => {
+  try {
+    const { title, description, type, date, time, venue, location, price, capacity, image, website } = req.body;
+    
+    if (!title || !type || !date || !time || !venue || !location) {
+      return res.status(400).json({ error: "Required fields missing" });
+    }
+
+    // Combine date and time
+    const eventDateTime = new Date(`${date}T${time}`);
+    
+    const eventData = {
+      title: title.trim(),
+      description: description?.trim() || '',
+      type,
+      date: eventDateTime.toISOString(),
+      venue: venue.trim(),
+      location,
+      price: parseInt(price) || 0,
+      capacity: capacity ? parseInt(capacity) : null,
+      image: image || null,
+      website: website || null,
+      organizerId: req.user.id,
+      organizerName: req.user.username,
+      attendees: [],
+      attendeeCount: 0,
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const docRef = await db.collection("events").add(eventData);
+    
+    res.json({
+      id: docRef.id,
+      ...eventData
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get events with filters
+app.get("/api/events", async (req, res) => {
+  try {
+    const { type, location, date, price, status, period } = req.query;
+    
+    let query = db.collection("events").where("status", "==", "active");
+    
+    // Apply filters
+    if (type) {
+      query = query.where("type", "==", type);
+    }
+    
+    if (location) {
+      query = query.where("location", "==", location);
+    }
+    
+    if (date) {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      query = query.where("date", ">=", startOfDay.toISOString())
+                  .where("date", "<=", endOfDay.toISOString());
+    }
+    
+    if (period === 'thisWeek') {
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+      
+      query = query.where("date", ">=", startOfWeek.toISOString())
+                  .where("date", "<=", endOfWeek.toISOString());
+    }
+    
+    if (status === 'upcoming') {
+      const now = new Date();
+      query = query.where("date", ">=", now.toISOString());
+    }
+    
+    // Order by date
+    query = query.orderBy("date", "asc");
+    
+    const eventsQuery = await query.limit(50).get();
+    
+    let events = eventsQuery.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    // Apply price filter after query (since Firestore doesn't support range queries on different fields easily)
+    if (price) {
+      events = events.filter(event => {
+        switch (price) {
+          case 'free':
+            return event.price === 0;
+          case 'low':
+            return event.price > 0 && event.price <= 100;
+          case 'medium':
+            return event.price > 100 && event.price <= 300;
+          case 'high':
+            return event.price > 300;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get single event
+app.get("/api/events/:id", async (req, res) => {
+  try {
+    const eventDoc = await db.collection("events").doc(req.params.id).get();
+    
+    if (!eventDoc.exists) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+    
+    const event = {
+      id: eventDoc.id,
+      ...eventDoc.data()
+    };
+    
+    res.json(event);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get user's events
+app.get("/api/events/my", authMiddleware, async (req, res) => {
+  try {
+    const eventsQuery = await db.collection("events")
+      .where("organizerId", "==", req.user.id)
+      .orderBy("date", "asc")
+      .get();
+    
+    const events = eventsQuery.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Join event
+app.post("/api/events/:id/join", authMiddleware, async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const userId = req.user.id;
+    
+    const eventDoc = await db.collection("events").doc(eventId).get();
+    
+    if (!eventDoc.exists) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+    
+    const event = eventDoc.data();
+    
+    // Check if event is still active
+    if (event.status !== 'active') {
+      return res.status(400).json({ error: "Event is not active" });
+    }
+    
+    // Check if event date has passed
+    if (new Date(event.date) < new Date()) {
+      return res.status(400).json({ error: "Event date has passed" });
+    }
+    
+    // Check if user already joined
+    if (event.attendees && event.attendees.includes(userId)) {
+      return res.status(400).json({ error: "Already joined this event" });
+    }
+    
+    // Check capacity
+    if (event.capacity && event.attendeeCount >= event.capacity) {
+      return res.status(400).json({ error: "Event is full" });
+    }
+    
+    // Add user to attendees
+    const updatedAttendees = [...(event.attendees || []), userId];
+    
+    await db.collection("events").doc(eventId).update({
+      attendees: updatedAttendees,
+      attendeeCount: updatedAttendees.length,
+      updatedAt: new Date().toISOString()
+    });
+    
+    res.json({ message: "Successfully joined event" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// News Management Endpoints
+
+// Get news with filters
+app.get("/api/news", async (req, res) => {
+  try {
+    const { category = 'all', page = 1, sortBy = 'date' } = req.query;
+    const pageNum = parseInt(page);
+    const limit = 10;
+    const offset = (pageNum - 1) * limit;
+    
+    let query = db.collection("news").where("status", "==", "published");
+    
+    // Apply category filter
+    if (category !== 'all') {
+      query = query.where("category", "==", category);
+    }
+    
+    // Apply sorting
+    switch (sortBy) {
+      case 'popularity':
+        query = query.orderBy("views", "desc");
+        break;
+      case 'date':
+      default:
+        query = query.orderBy("publishedAt", "desc");
+        break;
+    }
+    
+    const newsQuery = await query.limit(limit).offset(offset).get();
+    const news = newsQuery.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    // Get featured news (most popular in the last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const featuredQuery = await db.collection("news")
+      .where("status", "==", "published")
+      .where("publishedAt", ">=", sevenDaysAgo.toISOString())
+      .orderBy("views", "desc")
+      .limit(1)
+      .get();
+    
+    const featuredNews = featuredQuery.empty ? null : {
+      id: featuredQuery.docs[0].id,
+      ...featuredQuery.docs[0].data()
+    };
+    
+    // Get trending news (most viewed in the last 24 hours)
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    
+    const trendingQuery = await db.collection("news")
+      .where("status", "==", "published")
+      .where("publishedAt", ">=", oneDayAgo.toISOString())
+      .orderBy("views", "desc")
+      .limit(5)
+      .get();
+    
+    const trendingNews = trendingQuery.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    // Calculate total pages
+    const totalQuery = await db.collection("news").where("status", "==", "published").get();
+    const totalPages = Math.ceil(totalQuery.size / limit);
+    
+    res.json({
+      news,
+      featuredNews,
+      trendingNews,
+      totalPages,
+      currentPage: pageNum
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get single news article
+app.get("/api/news/:id", async (req, res) => {
+  try {
+    const newsDoc = await db.collection("news").doc(req.params.id).get();
+    
+    if (!newsDoc.exists) {
+      return res.status(404).json({ error: "News article not found" });
+    }
+    
+    const article = {
+      id: newsDoc.id,
+      ...newsDoc.data()
+    };
+    
+    res.json(article);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Like/Unlike news article
+app.post("/api/news/:id/like", authMiddleware, async (req, res) => {
+  try {
+    const newsId = req.params.id;
+    const userId = req.user.id;
+    
+    // Check if user already liked this article
+    const likeQuery = await db.collection("newsLikes")
+      .where("newsId", "==", newsId)
+      .where("userId", "==", userId)
+      .get();
+    
+    if (likeQuery.empty) {
+      // Add like
+      await db.collection("newsLikes").add({
+        newsId,
+        userId,
+        createdAt: new Date().toISOString()
+      });
+      
+      // Increment like count
+      await db.collection("news").doc(newsId).update({
+        likes: admin.firestore.FieldValue.increment(1)
+      });
+      
+      res.json({ message: "News liked", liked: true, likes: 1 });
+    } else {
+      // Remove like
+      await likeQuery.docs[0].ref.delete();
+      
+      // Decrement like count
+      await db.collection("news").doc(newsId).update({
+        likes: admin.firestore.FieldValue.increment(-1)
+      });
+      
+      res.json({ message: "News unliked", liked: false, likes: -1 });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Bookmark/Unbookmark news article
+app.post("/api/news/:id/bookmark", authMiddleware, async (req, res) => {
+  try {
+    const newsId = req.params.id;
+    const userId = req.user.id;
+    
+    // Check if user already bookmarked this article
+    const bookmarkQuery = await db.collection("newsBookmarks")
+      .where("newsId", "==", newsId)
+      .where("userId", "==", userId)
+      .get();
+    
+    if (bookmarkQuery.empty) {
+      // Add bookmark
+      await db.collection("newsBookmarks").add({
+        newsId,
+        userId,
+        createdAt: new Date().toISOString()
+      });
+      
+      res.json({ message: "News bookmarked", bookmarked: true });
+    } else {
+      // Remove bookmark
+      await bookmarkQuery.docs[0].ref.delete();
+      
+      res.json({ message: "News unbookmarked", bookmarked: false });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Subscribe to newsletter
+app.post("/api/newsletter/subscribe", async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: "Valid email required" });
+    }
+    
+    // Check if email already subscribed
+    const existingQuery = await db.collection("newsletterSubscribers")
+      .where("email", "==", email)
+      .get();
+    
+    if (!existingQuery.empty) {
+      return res.status(400).json({ error: "Email already subscribed" });
+    }
+    
+    // Add subscriber
+    await db.collection("newsletterSubscribers").add({
+      email,
+      subscribedAt: new Date().toISOString(),
+      status: 'active'
+    });
+    
+    res.json({ message: "Successfully subscribed to newsletter" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create news article (admin only)
+app.post("/api/news", authMiddleware, async (req, res) => {
+  try {
+    // Check if user is admin
+    const userDoc = await db.collection("users").doc(req.user.id).get();
+    const userData = userDoc.data();
+    
+    if (userData.role !== 'admin' && userData.role !== 'superadmin') {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    const { title, content, excerpt, category, image, tags } = req.body;
+    
+    if (!title || !content || !category) {
+      return res.status(400).json({ error: "Title, content and category are required" });
+    }
+    
+    const newsData = {
+      title: title.trim(),
+      content: content.trim(),
+      excerpt: excerpt?.trim() || content.substring(0, 200) + '...',
+      category,
+      image: image || null,
+      tags: tags || [],
+      authorId: req.user.id,
+      authorName: req.user.username,
+      status: 'published',
+      views: 0,
+      likes: 0,
+      publishedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    const docRef = await db.collection("news").add(newsData);
+    
+    res.json({
+      id: docRef.id,
+      ...newsData
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update news article (admin only)
+app.put("/api/news/:id", authMiddleware, async (req, res) => {
+  try {
+    // Check if user is admin
+    const userDoc = await db.collection("users").doc(req.user.id).get();
+    const userData = userDoc.data();
+    
+    if (userData.role !== 'admin' && userData.role !== 'superadmin') {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    const { title, content, excerpt, category, image, tags, status } = req.body;
+    
+    const updateData = {
+      updatedAt: new Date().toISOString()
+    };
+    
+    if (title !== undefined) updateData.title = title.trim();
+    if (content !== undefined) updateData.content = content.trim();
+    if (excerpt !== undefined) updateData.excerpt = excerpt?.trim() || content.substring(0, 200) + '...';
+    if (category !== undefined) updateData.category = category;
+    if (image !== undefined) updateData.image = image;
+    if (tags !== undefined) updateData.tags = tags;
+    if (status !== undefined) updateData.status = status;
+    
+    await db.collection("news").doc(req.params.id).update(updateData);
+    
+    // Return updated article
+    const updatedDoc = await db.collection("news").doc(req.params.id).get();
+    res.json({
+      id: updatedDoc.id,
+      ...updatedDoc.data()
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete news article (admin only)
+app.delete("/api/news/:id", authMiddleware, async (req, res) => {
+  try {
+    // Check if user is admin
+    const userDoc = await db.collection("users").doc(req.user.id).get();
+    const userData = userDoc.data();
+    
+    if (userData.role !== 'admin' && userData.role !== 'superadmin') {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    await db.collection("news").doc(req.params.id).delete();
+    
+    res.json({ message: "News article deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Charts and Analytics Endpoints
+
+// Get charts data
+app.get("/api/charts", async (req, res) => {
+  try {
+    const { type, period = 'week', genre = '' } = req.query;
+    
+    let data = {};
+    
+    switch (type) {
+      case 'songs':
+        data = await getSongsChartData(period, genre);
+        break;
+      case 'albums':
+        data = await getAlbumsChartData(period, genre);
+        break;
+      case 'artists':
+        data = await getArtistsChartData(period, genre);
+        break;
+      case 'genres':
+        data = await getGenresChartData(period);
+        break;
+      default:
+        return res.status(400).json({ error: "Invalid chart type" });
+    }
+    
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get analytics charts data
+app.get("/api/analytics/charts", async (req, res) => {
+  try {
+    const data = {
+      listeningTrends: await getListeningTrendsData(),
+      userActivity: await getUserActivityData(),
+      popularityOverTime: await getPopularityOverTimeData(),
+      genreEvolution: await getGenreEvolutionData()
+    };
+    
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Helper functions for charts
+
+// Get songs chart data
+async function getSongsChartData(period, genre) {
+  try {
+    // Get date range based on period
+    const dateRange = getDateRange(period);
+    
+    // Query posts with music data
+    let query = db.collection("posts")
+      .where("musicData", "!=", null)
+      .where("createdAt", ">=", dateRange.start)
+      .where("createdAt", "<=", dateRange.end);
+    
+    if (genre) {
+      // This would require genre filtering in posts
+      // For now, we'll filter after query
+    }
+    
+    const postsQuery = await query.orderBy("likes", "desc").limit(50).get();
+    
+    // Process posts to extract song data
+    const songs = [];
+    const songCounts = {};
+    
+    postsQuery.docs.forEach(doc => {
+      const post = doc.data();
+      if (post.musicData) {
+        const songId = post.musicData.id;
+        if (!songCounts[songId]) {
+          songCounts[songId] = {
+            id: songId,
+            title: post.musicData.title,
+            artist: post.musicData.artist,
+            image: post.musicData.image,
+            genre: post.musicData.genre || 'Unknown',
+            views: 0,
+            likes: 0,
+            musicData: post.musicData
+          };
+        }
+        songCounts[songId].views += 1;
+        songCounts[songId].likes += post.likes || 0;
+      }
+    });
+    
+    // Convert to array and sort
+    const songsList = Object.values(songCounts)
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 20);
+    
+    // Filter by genre if specified
+    const filteredSongs = genre ? 
+      songsList.filter(song => song.genre.toLowerCase() === genre.toLowerCase()) :
+      songsList;
+    
+    // Generate stats
+    const stats = {
+      popular: filteredSongs.filter(s => s.views > 10).length,
+      medium: filteredSongs.filter(s => s.views > 5 && s.views <= 10).length,
+      unpopular: filteredSongs.filter(s => s.views <= 5).length
+    };
+    
+    return {
+      songs: filteredSongs,
+      stats: stats
+    };
+  } catch (error) {
+    console.error('Error getting songs chart data:', error);
+    return { songs: [], stats: { popular: 0, medium: 0, unpopular: 0 } };
+  }
+}
+
+// Get albums chart data
+async function getAlbumsChartData(period, genre) {
+  try {
+    const dateRange = getDateRange(period);
+    
+    // Query posts with music data
+    const postsQuery = await db.collection("posts")
+      .where("musicData", "!=", null)
+      .where("createdAt", ">=", dateRange.start)
+      .where("createdAt", "<=", dateRange.end)
+      .orderBy("likes", "desc")
+      .limit(100)
+      .get();
+    
+    // Process posts to extract album data
+    const albums = [];
+    const albumCounts = {};
+    
+    postsQuery.docs.forEach(doc => {
+      const post = doc.data();
+      if (post.musicData && post.musicData.album) {
+        const albumKey = `${post.musicData.album}-${post.musicData.artist}`;
+        if (!albumCounts[albumKey]) {
+          albumCounts[albumKey] = {
+            title: post.musicData.album,
+            artist: post.musicData.artist,
+            image: post.musicData.image,
+            genre: post.musicData.genre || 'Unknown',
+            year: post.musicData.year || null,
+            views: 0,
+            likes: 0
+          };
+        }
+        albumCounts[albumKey].views += 1;
+        albumCounts[albumKey].likes += post.likes || 0;
+      }
+    });
+    
+    // Convert to array and sort
+    const albumsList = Object.values(albumCounts)
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 20);
+    
+    // Filter by genre if specified
+    const filteredAlbums = genre ? 
+      albumsList.filter(album => album.genre.toLowerCase() === genre.toLowerCase()) :
+      albumsList;
+    
+    // Generate stats
+    const stats = {
+      labels: ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran'],
+      data: [12, 19, 3, 5, 2, 3] // Mock data
+    };
+    
+    return {
+      albums: filteredAlbums,
+      stats: stats
+    };
+  } catch (error) {
+    console.error('Error getting albums chart data:', error);
+    return { albums: [], stats: { labels: [], data: [] } };
+  }
+}
+
+// Get artists chart data
+async function getArtistsChartData(period, genre) {
+  try {
+    const dateRange = getDateRange(period);
+    
+    // Query posts with music data
+    const postsQuery = await db.collection("posts")
+      .where("musicData", "!=", null)
+      .where("createdAt", ">=", dateRange.start)
+      .where("createdAt", "<=", dateRange.end)
+      .orderBy("likes", "desc")
+      .limit(100)
+      .get();
+    
+    // Process posts to extract artist data
+    const artists = [];
+    const artistCounts = {};
+    
+    postsQuery.docs.forEach(doc => {
+      const post = doc.data();
+      if (post.musicData && post.musicData.artist) {
+        const artistName = post.musicData.artist;
+        if (!artistCounts[artistName]) {
+          artistCounts[artistName] = {
+            name: artistName,
+            image: post.musicData.image,
+            genre: post.musicData.genre || 'Unknown',
+            tracks: 0,
+            albums: 0,
+            followers: 0
+          };
+        }
+        artistCounts[artistName].tracks += 1;
+        artistCounts[artistName].followers += post.likes || 0;
+      }
+    });
+    
+    // Convert to array and sort
+    const artistsList = Object.values(artistCounts)
+      .sort((a, b) => b.followers - a.followers)
+      .slice(0, 20);
+    
+    // Filter by genre if specified
+    const filteredArtists = genre ? 
+      artistsList.filter(artist => artist.genre.toLowerCase() === genre.toLowerCase()) :
+      artistsList;
+    
+    // Generate stats
+    const stats = {
+      labels: filteredArtists.slice(0, 5).map(a => a.name),
+      data: filteredArtists.slice(0, 5).map(a => a.followers)
+    };
+    
+    return {
+      artists: filteredArtists,
+      stats: stats
+    };
+  } catch (error) {
+    console.error('Error getting artists chart data:', error);
+    return { artists: [], stats: { labels: [], data: [] } };
+  }
+}
+
+// Get genres chart data
+async function getGenresChartData(period) {
+  try {
+    const dateRange = getDateRange(period);
+    
+    // Query posts with music data
+    const postsQuery = await db.collection("posts")
+      .where("musicData", "!=", null)
+      .where("createdAt", ">=", dateRange.start)
+      .where("createdAt", "<=", dateRange.end)
+      .get();
+    
+    // Count genres
+    const genreCounts = {};
+    
+    postsQuery.docs.forEach(doc => {
+      const post = doc.data();
+      if (post.musicData && post.musicData.genre) {
+        const genre = post.musicData.genre;
+        genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+      }
+    });
+    
+    // Convert to array and sort
+    const genres = Object.entries(genreCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+    
+    return { genres };
+  } catch (error) {
+    console.error('Error getting genres chart data:', error);
+    return { genres: [] };
+  }
+}
+
+// Get listening trends data
+async function getListeningTrendsData() {
+  try {
+    // Mock data for listening trends
+    const labels = [];
+    const data = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      labels.push(date.toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' }));
+      data.push(Math.floor(Math.random() * 100) + 50);
+    }
+    
+    return { labels, data };
+  } catch (error) {
+    console.error('Error getting listening trends data:', error);
+    return { labels: [], data: [] };
+  }
+}
+
+// Get user activity data
+async function getUserActivityData() {
+  try {
+    // Mock data for user activity
+    const labels = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+    const data = [65, 59, 80, 81, 56, 55, 40];
+    
+    return { labels, data };
+  } catch (error) {
+    console.error('Error getting user activity data:', error);
+    return { labels: [], data: [] };
+  }
+}
+
+// Get popularity over time data
+async function getPopularityOverTimeData() {
+  try {
+    // Mock data for popularity over time
+    const labels = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran'];
+    const datasets = [
+      {
+        label: 'Rock',
+        data: [12, 19, 3, 5, 2, 3],
+        borderColor: '#FF6384',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)'
+      },
+      {
+        label: 'Pop',
+        data: [2, 3, 20, 5, 1, 4],
+        borderColor: '#36A2EB',
+        backgroundColor: 'rgba(54, 162, 235, 0.2)'
+      },
+      {
+        label: 'Jazz',
+        data: [3, 10, 13, 15, 22, 30],
+        borderColor: '#FFCE56',
+        backgroundColor: 'rgba(255, 206, 86, 0.2)'
+      }
+    ];
+    
+    return { labels, datasets };
+  } catch (error) {
+    console.error('Error getting popularity over time data:', error);
+    return { labels: [], datasets: [] };
+  }
+}
+
+// Get genre evolution data
+async function getGenreEvolutionData() {
+  try {
+    // Mock data for genre evolution
+    const labels = ['2020', '2021', '2022', '2023', '2024'];
+    const datasets = [
+      {
+        label: 'Rock',
+        data: [20, 25, 30, 28, 35],
+        borderColor: '#FF6384',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)'
+      },
+      {
+        label: 'Pop',
+        data: [30, 35, 40, 45, 50],
+        borderColor: '#36A2EB',
+        backgroundColor: 'rgba(54, 162, 235, 0.2)'
+      },
+      {
+        label: 'Electronic',
+        data: [15, 20, 25, 30, 35],
+        borderColor: '#FFCE56',
+        backgroundColor: 'rgba(255, 206, 86, 0.2)'
+      }
+    ];
+    
+    return { labels, datasets };
+  } catch (error) {
+    console.error('Error getting genre evolution data:', error);
+    return { labels: [], datasets: [] };
+  }
+}
+
+// Helper function to get date range
+function getDateRange(period) {
+  const now = new Date();
+  const start = new Date();
+  
+  switch (period) {
+    case 'week':
+      start.setDate(now.getDate() - 7);
+      break;
+    case 'month':
+      start.setMonth(now.getMonth() - 1);
+      break;
+    case 'year':
+      start.setFullYear(now.getFullYear() - 1);
+      break;
+    case 'all':
+    default:
+      start.setFullYear(2020);
+      break;
+  }
+  
+  return {
+    start: start.toISOString(),
+    end: now.toISOString()
+  };
+}
+
+// Social Features Endpoints
+
+// Get social feed
+app.get("/api/social/feed", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Get user's friends
+    const friendsQuery = await db.collection("friendships")
+      .where("userId", "==", userId)
+      .where("status", "==", "accepted")
+      .get();
+    
+    const friendIds = friendsQuery.docs.map(doc => doc.data().friendId);
+    friendIds.push(userId); // Include own activities
+    
+    // Get activities from friends
+    const activitiesQuery = await db.collection("activities")
+      .where("userId", "in", friendIds)
+      .orderBy("createdAt", "desc")
+      .limit(50)
+      .get();
+    
+    const activities = activitiesQuery.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    res.json({ feed: activities });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get friends list
+app.get("/api/social/friends", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const friendsQuery = await db.collection("friendships")
+      .where("userId", "==", userId)
+      .where("status", "==", "accepted")
+      .get();
+    
+    const friendIds = friendsQuery.docs.map(doc => doc.data().friendId);
+    
+    if (friendIds.length === 0) {
+      return res.json([]);
+    }
+    
+    // Get friend details
+    const friendsQuery2 = await db.collection("users")
+      .where(admin.firestore.FieldPath.documentId(), "in", friendIds)
+      .get();
+    
+    const friends = friendsQuery2.docs.map(doc => ({
+      id: doc.id,
+      username: doc.data().username,
+      avatarUrl: doc.data().avatarUrl,
+      isOnline: doc.data().isOnline || false,
+      lastSeen: doc.data().lastSeen,
+      followersCount: doc.data().followersCount || 0,
+      musicCount: doc.data().musicCount || 0
+    }));
+    
+    res.json(friends);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get followers
+app.get("/api/social/followers", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const followersQuery = await db.collection("follows")
+      .where("followingId", "==", userId)
+      .get();
+    
+    const followerIds = followersQuery.docs.map(doc => doc.data().followerId);
+    
+    if (followerIds.length === 0) {
+      return res.json([]);
+    }
+    
+    // Get follower details
+    const followersQuery2 = await db.collection("users")
+      .where(admin.firestore.FieldPath.documentId(), "in", followerIds)
+      .get();
+    
+    const followers = followersQuery2.docs.map(doc => ({
+      id: doc.id,
+      username: doc.data().username,
+      avatarUrl: doc.data().avatarUrl,
+      isOnline: doc.data().isOnline || false,
+      lastSeen: doc.data().lastSeen,
+      followersCount: doc.data().followersCount || 0,
+      musicCount: doc.data().musicCount || 0
+    }));
+    
+    res.json(followers);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get following
+app.get("/api/social/following", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const followingQuery = await db.collection("follows")
+      .where("followerId", "==", userId)
+      .get();
+    
+    const followingIds = followingQuery.docs.map(doc => doc.data().followingId);
+    
+    if (followingIds.length === 0) {
+      return res.json([]);
+    }
+    
+    // Get following details
+    const followingQuery2 = await db.collection("users")
+      .where(admin.firestore.FieldPath.documentId(), "in", followingIds)
+      .get();
+    
+    const following = followingQuery2.docs.map(doc => ({
+      id: doc.id,
+      username: doc.data().username,
+      avatarUrl: doc.data().avatarUrl,
+      isOnline: doc.data().isOnline || false,
+      lastSeen: doc.data().lastSeen,
+      followersCount: doc.data().followersCount || 0,
+      musicCount: doc.data().musicCount || 0
+    }));
+    
+    res.json(following);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get notifications
+app.get("/api/social/notifications", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const notificationsQuery = await db.collection("notifications")
+      .where("userId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .limit(50)
+      .get();
+    
+    const notifications = notificationsQuery.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    // Count unread notifications
+    const unreadQuery = await db.collection("notifications")
+      .where("userId", "==", userId)
+      .where("isRead", "==", false)
+      .get();
+    
+    res.json({
+      notifications,
+      unreadCount: unreadQuery.size
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Follow user
+app.post("/api/social/follow/:id", authMiddleware, async (req, res) => {
+  try {
+    const followerId = req.user.id;
+    const followingId = req.params.id;
+    
+    if (followerId === followingId) {
+      return res.status(400).json({ error: "Cannot follow yourself" });
+    }
+    
+    // Check if already following
+    const existingFollow = await db.collection("follows")
+      .where("followerId", "==", followerId)
+      .where("followingId", "==", followingId)
+      .get();
+    
+    if (!existingFollow.empty) {
+      return res.status(400).json({ error: "Already following this user" });
+    }
+    
+    // Add follow relationship
+    await db.collection("follows").add({
+      followerId,
+      followingId,
+      createdAt: new Date().toISOString()
+    });
+    
+    // Update follower counts
+    await db.collection("users").doc(followingId).update({
+      followersCount: admin.firestore.FieldValue.increment(1)
+    });
+    
+    await db.collection("users").doc(followerId).update({
+      followingCount: admin.firestore.FieldValue.increment(1)
+    });
+    
+    // Create notification
+    await db.collection("notifications").add({
+      userId: followingId,
+      type: "follow",
+      title: "Yeni Takipçi",
+      message: `${req.user.username} sizi takip etmeye başladı`,
+      isRead: false,
+      createdAt: new Date().toISOString()
+    });
+    
+    res.json({ message: "Successfully followed user" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Unfollow user
+app.delete("/api/social/unfollow/:id", authMiddleware, async (req, res) => {
+  try {
+    const followerId = req.user.id;
+    const followingId = req.params.id;
+    
+    // Find and delete follow relationship
+    const followQuery = await db.collection("follows")
+      .where("followerId", "==", followerId)
+      .where("followingId", "==", followingId)
+      .get();
+    
+    if (followQuery.empty) {
+      return res.status(400).json({ error: "Not following this user" });
+    }
+    
+    await followQuery.docs[0].ref.delete();
+    
+    // Update follower counts
+    await db.collection("users").doc(followingId).update({
+      followersCount: admin.firestore.FieldValue.increment(-1)
+    });
+    
+    await db.collection("users").doc(followerId).update({
+      followingCount: admin.firestore.FieldValue.increment(-1)
+    });
+    
+    res.json({ message: "Successfully unfollowed user" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Add friend
+app.post("/api/social/add-friend/:id", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const friendId = req.params.id;
+    
+    if (userId === friendId) {
+      return res.status(400).json({ error: "Cannot add yourself as friend" });
+    }
+    
+    // Check if already friends
+    const existingFriendship = await db.collection("friendships")
+      .where("userId", "==", userId)
+      .where("friendId", "==", friendId)
+      .get();
+    
+    if (!existingFriendship.empty) {
+      return res.status(400).json({ error: "Already friends or request pending" });
+    }
+    
+    // Add friendship request
+    await db.collection("friendships").add({
+      userId,
+      friendId,
+      status: "pending",
+      createdAt: new Date().toISOString()
+    });
+    
+    // Create notification
+    await db.collection("notifications").add({
+      userId: friendId,
+      type: "friend_request",
+      title: "Arkadaşlık İsteği",
+      message: `${req.user.username} size arkadaşlık isteği gönderdi`,
+      isRead: false,
+      createdAt: new Date().toISOString()
+    });
+    
+    res.json({ message: "Friend request sent" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Remove friend
+app.delete("/api/social/remove-friend/:id", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const friendId = req.params.id;
+    
+    // Find and delete friendship
+    const friendshipQuery = await db.collection("friendships")
+      .where("userId", "==", userId)
+      .where("friendId", "==", friendId)
+      .get();
+    
+    if (friendshipQuery.empty) {
+      return res.status(400).json({ error: "Not friends with this user" });
+    }
+    
+    await friendshipQuery.docs[0].ref.delete();
+    
+    res.json({ message: "Successfully removed friend" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Search users
+app.get("/api/social/search-users", authMiddleware, async (req, res) => {
+  try {
+    const { q } = req.query;
+    
+    if (!q || q.trim().length < 2) {
+      return res.json([]);
+    }
+    
+    // Search by username
+    const usersQuery = await db.collection("users")
+      .where("username", ">=", q)
+      .where("username", "<=", q + "\uf8ff")
+      .limit(10)
+      .get();
+    
+    const users = usersQuery.docs.map(doc => ({
+      id: doc.id,
+      username: doc.data().username,
+      avatarUrl: doc.data().avatarUrl,
+      followersCount: doc.data().followersCount || 0
+    }));
+    
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get user profile
+app.get("/api/social/user/:id", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    
+    const userDoc = await db.collection("users").doc(userId).get();
+    
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    const userData = userDoc.data();
+    
+    // Get follower and following counts
+    const [followersQuery, followingQuery] = await Promise.all([
+      db.collection("follows").where("followingId", "==", userId).get(),
+      db.collection("follows").where("followerId", "==", userId).get()
+    ]);
+    
+    const user = {
+      id: userDoc.id,
+      username: userData.username,
+      avatarUrl: userData.avatarUrl,
+      bio: userData.bio,
+      followersCount: followersQuery.size,
+      followingCount: followingQuery.size,
+      musicCount: userData.musicCount || 0
+    };
+    
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mark notification as read
+app.post("/api/social/notifications/:id/read", authMiddleware, async (req, res) => {
+  try {
+    const notificationId = req.params.id;
+    const userId = req.user.id;
+    
+    const notificationDoc = await db.collection("notifications").doc(notificationId).get();
+    
+    if (!notificationDoc.exists) {
+      return res.status(404).json({ error: "Notification not found" });
+    }
+    
+    const notification = notificationDoc.data();
+    
+    if (notification.userId !== userId) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    await db.collection("notifications").doc(notificationId).update({
+      isRead: true,
+      readAt: new Date().toISOString()
+    });
+    
+    res.json({ message: "Notification marked as read" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mark all notifications as read
+app.post("/api/social/notifications/mark-all-read", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const notificationsQuery = await db.collection("notifications")
+      .where("userId", "==", userId)
+      .where("isRead", "==", false)
+      .get();
+    
+    const batch = db.batch();
+    
+    notificationsQuery.docs.forEach(doc => {
+      batch.update(doc.ref, {
+        isRead: true,
+        readAt: new Date().toISOString()
+      });
+    });
+    
+    await batch.commit();
+    
+    res.json({ message: "All notifications marked as read" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Lyrics Management Endpoints
+
+// Get lyrics for a track
+app.get("/api/lyrics/:trackId", async (req, res) => {
+  try {
+    const { trackId } = req.params;
+    
+    // First try to get from our database
+    const lyricsQuery = await db.collection("lyrics")
+      .where("trackId", "==", trackId)
+      .limit(1)
+      .get();
+    
+    if (!lyricsQuery.empty) {
+      const lyrics = lyricsQuery.docs[0].data();
+      return res.json({
+        trackId: lyrics.trackId,
+        title: lyrics.title,
+        artist: lyrics.artist,
+        album: lyrics.album,
+        text: lyrics.text,
+        translation: lyrics.translation,
+        language: lyrics.language,
+        isExplicit: lyrics.isExplicit || false,
+        source: lyrics.source || 'Database',
+        lastUpdated: lyrics.lastUpdated
+      });
+    }
+    
+    // If not found in database, try external API
+    const externalLyrics = await fetchLyricsFromExternalAPI(trackId);
+    
+    if (externalLyrics) {
+      // Save to database for future use
+      await db.collection("lyrics").add({
+        trackId,
+        title: externalLyrics.title,
+        artist: externalLyrics.artist,
+        album: externalLyrics.album,
+        text: externalLyrics.text,
+        translation: externalLyrics.translation,
+        language: externalLyrics.language,
+        isExplicit: externalLyrics.isExplicit || false,
+        source: externalLyrics.source || 'External API',
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+      });
+      
+      return res.json(externalLyrics);
+    }
+    
+    res.status(404).json({ error: "Lyrics not found" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Search lyrics
+app.get("/api/lyrics/search", async (req, res) => {
+  try {
+    const { q, limit = 20 } = req.query;
+    
+    if (!q || q.trim().length < 2) {
+      return res.json([]);
+    }
+    
+    // Search in database
+    const lyricsQuery = await db.collection("lyrics")
+      .where("title", ">=", q)
+      .where("title", "<=", q + "\uf8ff")
+      .limit(parseInt(limit))
+      .get();
+    
+    const lyrics = lyricsQuery.docs.map(doc => ({
+      id: doc.id,
+      trackId: doc.data().trackId,
+      title: doc.data().title,
+      artist: doc.data().artist,
+      album: doc.data().album,
+      language: doc.data().language,
+      isExplicit: doc.data().isExplicit || false
+    }));
+    
+    res.json(lyrics);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get saved lyrics for user
+app.get("/api/lyrics/saved", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const savedLyricsQuery = await db.collection("savedLyrics")
+      .where("userId", "==", userId)
+      .orderBy("savedAt", "desc")
+      .get();
+    
+    const savedLyrics = savedLyricsQuery.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    res.json(savedLyrics);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Save lyrics for user
+app.post("/api/lyrics/:trackId/save", authMiddleware, async (req, res) => {
+  try {
+    const { trackId } = req.params;
+    const { lyrics, translation } = req.body;
+    const userId = req.user.id;
+    
+    if (!lyrics) {
+      return res.status(400).json({ error: "Lyrics text is required" });
+    }
+    
+    // Check if already saved
+    const existingQuery = await db.collection("savedLyrics")
+      .where("userId", "==", userId)
+      .where("trackId", "==", trackId)
+      .get();
+    
+    if (!existingQuery.empty) {
+      return res.status(400).json({ error: "Lyrics already saved" });
+    }
+    
+    // Get track info from Spotify
+    const trackInfo = await getSpotifyTrackInfo(trackId);
+    
+    // Save lyrics
+    await db.collection("savedLyrics").add({
+      userId,
+      trackId,
+      title: trackInfo.title,
+      artist: trackInfo.artist,
+      album: trackInfo.album,
+      lyrics,
+      translation: translation || null,
+      savedAt: new Date().toISOString()
+    });
+    
+    res.json({ message: "Lyrics saved successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Remove saved lyrics
+app.delete("/api/lyrics/:trackId/save", authMiddleware, async (req, res) => {
+  try {
+    const { trackId } = req.params;
+    const userId = req.user.id;
+    
+    const savedLyricsQuery = await db.collection("savedLyrics")
+      .where("userId", "==", userId)
+      .where("trackId", "==", trackId)
+      .get();
+    
+    if (savedLyricsQuery.empty) {
+      return res.status(404).json({ error: "Saved lyrics not found" });
+    }
+    
+    await savedLyricsQuery.docs[0].ref.delete();
+    
+    res.json({ message: "Saved lyrics removed successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Add lyrics (admin only)
+app.post("/api/lyrics", authMiddleware, async (req, res) => {
+  try {
+    // Check if user is admin
+    const userDoc = await db.collection("users").doc(req.user.id).get();
+    const userData = userDoc.data();
+    
+    if (userData.role !== 'admin' && userData.role !== 'superadmin') {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    const { trackId, title, artist, album, text, translation, language, isExplicit } = req.body;
+    
+    if (!trackId || !title || !artist || !text) {
+      return res.status(400).json({ error: "Track ID, title, artist and text are required" });
+    }
+    
+    // Check if lyrics already exist
+    const existingQuery = await db.collection("lyrics")
+      .where("trackId", "==", trackId)
+      .get();
+    
+    if (!existingQuery.empty) {
+      return res.status(400).json({ error: "Lyrics for this track already exist" });
+    }
+    
+    const lyricsData = {
+      trackId,
+      title: title.trim(),
+      artist: artist.trim(),
+      album: album?.trim() || null,
+      text: text.trim(),
+      translation: translation?.trim() || null,
+      language: language || 'tr',
+      isExplicit: isExplicit || false,
+      source: 'Manual Entry',
+      createdAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString()
+    };
+    
+    const docRef = await db.collection("lyrics").add(lyricsData);
+    
+    res.json({
+      id: docRef.id,
+      ...lyricsData
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update lyrics (admin only)
+app.put("/api/lyrics/:id", authMiddleware, async (req, res) => {
+  try {
+    // Check if user is admin
+    const userDoc = await db.collection("users").doc(req.user.id).get();
+    const userData = userDoc.data();
+    
+    if (userData.role !== 'admin' && userData.role !== 'superadmin') {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    const { title, artist, album, text, translation, language, isExplicit } = req.body;
+    
+    const updateData = {
+      lastUpdated: new Date().toISOString()
+    };
+    
+    if (title !== undefined) updateData.title = title.trim();
+    if (artist !== undefined) updateData.artist = artist.trim();
+    if (album !== undefined) updateData.album = album?.trim() || null;
+    if (text !== undefined) updateData.text = text.trim();
+    if (translation !== undefined) updateData.translation = translation?.trim() || null;
+    if (language !== undefined) updateData.language = language;
+    if (isExplicit !== undefined) updateData.isExplicit = isExplicit;
+    
+    await db.collection("lyrics").doc(req.params.id).update(updateData);
+    
+    // Return updated lyrics
+    const updatedDoc = await db.collection("lyrics").doc(req.params.id).get();
+    res.json({
+      id: updatedDoc.id,
+      ...updatedDoc.data()
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete lyrics (admin only)
+app.delete("/api/lyrics/:id", authMiddleware, async (req, res) => {
+  try {
+    // Check if user is admin
+    const userDoc = await db.collection("users").doc(req.user.id).get();
+    const userData = userDoc.data();
+    
+    if (userData.role !== 'admin' && userData.role !== 'superadmin') {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    await db.collection("lyrics").doc(req.params.id).delete();
+    
+    res.json({ message: "Lyrics deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Helper functions for lyrics
+
+// Fetch lyrics from external API
+async function fetchLyricsFromExternalAPI(trackId) {
+  try {
+    // This would integrate with external lyrics APIs like:
+    // - Musixmatch API
+    // - Genius API
+    // - Lyrics.ovh API
+    
+    // For now, return null (no external integration)
+    return null;
+  } catch (error) {
+    console.error('Error fetching lyrics from external API:', error);
+    return null;
+  }
+}
+
+// Get Spotify track info
+async function getSpotifyTrackInfo(trackId) {
+  try {
+    const response = await fetch(`${BACKEND_BASE}/api/spotify/track/${trackId}`);
+    
+    if (response.ok) {
+      const track = await response.json();
+      return {
+        title: track.name,
+        artist: track.artists[0]?.name || 'Unknown Artist',
+        album: track.album?.name || 'Unknown Album'
+      };
+    }
+  } catch (error) {
+    console.error('Error getting Spotify track info:', error);
+  }
+  
+  return {
+    title: 'Unknown Title',
+    artist: 'Unknown Artist',
+    album: 'Unknown Album'
+  };
+}
+
+// Analytics Endpoints
+
+// Get user analytics
+app.get("/api/analytics/user", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Get user's music data
+    const postsQuery = await db.collection("posts")
+      .where("userId", "==", userId)
+      .where("musicData", "!=", null)
+      .get();
+    
+    const posts = postsQuery.docs.map(doc => doc.data());
+    
+    // Calculate analytics
+    const analytics = await calculateUserAnalytics(userId, posts);
+    
+    res.json(analytics);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get platform analytics (admin only)
+app.get("/api/analytics/platform", authMiddleware, async (req, res) => {
+  try {
+    // Check if user is admin
+    const userDoc = await db.collection("users").doc(req.user.id).get();
+    const userData = userDoc.data();
+    
+    if (userData.role !== 'admin' && userData.role !== 'superadmin') {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    // Get platform-wide analytics
+    const analytics = await calculatePlatformAnalytics();
+    
+    res.json(analytics);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Helper functions for analytics
+
+// Calculate user analytics
+async function calculateUserAnalytics(userId, posts) {
+  const analytics = {
+    overview: {},
+    genreDistribution: [],
+    monthlyTrend: [],
+    topArtists: [],
+    topTracks: [],
+    dailyListening: [],
+    weeklyListening: [],
+    listeningHabits: {},
+    genreAnalysis: [],
+    genreDetails: [],
+    artistDistribution: [],
+    artistTrend: [],
+    monthlyTrendDetail: [],
+    yearlyComparison: [],
+    socialInteraction: [],
+    sharingStats: []
+  };
+
+  // Calculate overview metrics
+  analytics.overview = {
+    totalTracks: posts.length,
+    totalListenTime: posts.reduce((sum, post) => sum + (post.listenTime || 0), 0),
+    averageRating: calculateAverageRating(posts),
+    totalLikes: posts.reduce((sum, post) => sum + (post.likes || 0), 0)
+  };
+
+  // Calculate genre distribution
+  const genreCounts = {};
+  posts.forEach(post => {
+    if (post.musicData && post.musicData.genre) {
+      const genre = post.musicData.genre;
+      genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+    }
+  });
+
+  analytics.genreDistribution = Object.entries(genreCounts)
+    .map(([genre, count]) => ({ genre, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  // Calculate monthly trend
+  const monthlyCounts = {};
+  posts.forEach(post => {
+    const month = new Date(post.createdAt).toLocaleDateString('tr-TR', { month: 'long' });
+    monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
+  });
+
+  analytics.monthlyTrend = Object.entries(monthlyCounts)
+    .map(([month, count]) => ({ month, count }))
+    .sort((a, b) => new Date(a.month) - new Date(b.month));
+
+  // Calculate top artists
+  const artistCounts = {};
+  posts.forEach(post => {
+    if (post.musicData && post.musicData.artist) {
+      const artist = post.musicData.artist;
+      if (!artistCounts[artist]) {
+        artistCounts[artist] = {
+          name: artist,
+          listenCount: 0,
+          genre: post.musicData.genre || 'Unknown',
+          image: post.musicData.image
+        };
+      }
+      artistCounts[artist].listenCount++;
+    }
+  });
+
+  analytics.topArtists = Object.values(artistCounts)
+    .sort((a, b) => b.listenCount - a.listenCount)
+    .slice(0, 10);
+
+  // Calculate top tracks
+  const trackCounts = {};
+  posts.forEach(post => {
+    if (post.musicData && post.musicData.id) {
+      const trackId = post.musicData.id;
+      if (!trackCounts[trackId]) {
+        trackCounts[trackId] = {
+          id: trackId,
+          title: post.musicData.title,
+          artist: post.musicData.artist,
+          rating: post.musicData.rating || 0,
+          image: post.musicData.image
+        };
+      }
+    }
+  });
+
+  analytics.topTracks = Object.values(trackCounts)
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 10);
+
+  // Calculate daily listening habits
+  const dailyCounts = Array(24).fill(0);
+  posts.forEach(post => {
+    const hour = new Date(post.createdAt).getHours();
+    dailyCounts[hour] += post.listenTime || 0;
+  });
+
+  analytics.dailyListening = dailyCounts.map((duration, hour) => ({
+    hour,
+    duration: Math.round(duration / 60) // Convert to minutes
+  }));
+
+  // Calculate weekly listening habits
+  const weeklyCounts = {};
+  posts.forEach(post => {
+    const day = new Date(post.createdAt).toLocaleDateString('tr-TR', { weekday: 'long' });
+    weeklyCounts[day] = (weeklyCounts[day] || 0) + (post.listenTime || 0);
+  });
+
+  analytics.weeklyListening = Object.entries(weeklyCounts)
+    .map(([day, duration]) => ({ day, duration: Math.round(duration / 3600) })); // Convert to hours
+
+  // Calculate listening habits details
+  const mostActiveHour = dailyCounts.indexOf(Math.max(...dailyCounts));
+  const mostActiveDay = Object.entries(weeklyCounts).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+  const avgSessionDuration = posts.reduce((sum, post) => sum + (post.listenTime || 0), 0) / posts.length;
+
+  analytics.listeningHabits = {
+    mostActiveDay,
+    mostActiveHour: `${mostActiveHour}:00`,
+    avgSessionDuration: Math.round(avgSessionDuration)
+  };
+
+  // Calculate genre analysis
+  const genreDuration = {};
+  posts.forEach(post => {
+    if (post.musicData && post.musicData.genre) {
+      const genre = post.musicData.genre;
+      genreDuration[genre] = (genreDuration[genre] || 0) + (post.listenTime || 0);
+    }
+  });
+
+  analytics.genreAnalysis = Object.entries(genreDuration)
+    .map(([genre, duration]) => ({ genre, duration: Math.round(duration / 3600) }))
+    .sort((a, b) => b.duration - a.duration);
+
+  // Calculate genre details
+  const totalDuration = Object.values(genreDuration).reduce((sum, duration) => sum + duration, 0);
+  analytics.genreDetails = Object.entries(genreDuration)
+    .map(([genre, duration]) => ({
+      genre,
+      count: genreCounts[genre] || 0,
+      duration: Math.round(duration / 3600),
+      percentage: Math.round((duration / totalDuration) * 100)
+    }))
+    .sort((a, b) => b.percentage - a.percentage);
+
+  // Calculate artist distribution
+  analytics.artistDistribution = Object.values(artistCounts)
+    .sort((a, b) => b.listenCount - a.listenCount)
+    .slice(0, 5);
+
+  // Calculate social interaction
+  const socialCounts = {
+    'Beğeni': posts.reduce((sum, post) => sum + (post.likes || 0), 0),
+    'Yorum': posts.reduce((sum, post) => sum + (post.comments || 0), 0),
+    'Paylaşım': posts.reduce((sum, post) => sum + (post.shares || 0), 0),
+    'Kaydetme': posts.reduce((sum, post) => sum + (post.bookmarks || 0), 0)
+  };
+
+  analytics.socialInteraction = Object.entries(socialCounts)
+    .map(([type, count]) => ({ type, count }));
+
+  return analytics;
+}
+
+// Calculate platform analytics
+async function calculatePlatformAnalytics() {
+  const analytics = {
+    totalUsers: 0,
+    totalPosts: 0,
+    totalComments: 0,
+    totalLikes: 0,
+    userGrowth: [],
+    postGrowth: [],
+    genreDistribution: [],
+    topArtists: [],
+    topTracks: [],
+    monthlyActivity: []
+  };
+
+  // Get total counts
+  const [usersQuery, postsQuery, commentsQuery] = await Promise.all([
+    db.collection("users").get(),
+    db.collection("posts").get(),
+    db.collection("comments").get()
+  ]);
+
+  analytics.totalUsers = usersQuery.size;
+  analytics.totalPosts = postsQuery.size;
+  analytics.totalComments = commentsQuery.size;
+
+  // Calculate total likes
+  const posts = postsQuery.docs.map(doc => doc.data());
+  analytics.totalLikes = posts.reduce((sum, post) => sum + (post.likes || 0), 0);
+
+  // Calculate user growth
+  const userGrowth = {};
+  usersQuery.docs.forEach(doc => {
+    const month = new Date(doc.data().createdAt).toLocaleDateString('tr-TR', { month: 'long' });
+    userGrowth[month] = (userGrowth[month] || 0) + 1;
+  });
+
+  analytics.userGrowth = Object.entries(userGrowth)
+    .map(([month, count]) => ({ month, count }))
+    .sort((a, b) => new Date(a.month) - new Date(b.month));
+
+  // Calculate post growth
+  const postGrowth = {};
+  posts.forEach(post => {
+    const month = new Date(post.createdAt).toLocaleDateString('tr-TR', { month: 'long' });
+    postGrowth[month] = (postGrowth[month] || 0) + 1;
+  });
+
+  analytics.postGrowth = Object.entries(postGrowth)
+    .map(([month, count]) => ({ month, count }))
+    .sort((a, b) => new Date(a.month) - new Date(b.month));
+
+  // Calculate genre distribution
+  const genreCounts = {};
+  posts.forEach(post => {
+    if (post.musicData && post.musicData.genre) {
+      const genre = post.musicData.genre;
+      genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+    }
+  });
+
+  analytics.genreDistribution = Object.entries(genreCounts)
+    .map(([genre, count]) => ({ genre, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  return analytics;
+}
+
+// Calculate average rating
+function calculateAverageRating(posts) {
+  const ratings = posts
+    .filter(post => post.musicData && post.musicData.rating)
+    .map(post => post.musicData.rating);
+  
+  if (ratings.length === 0) return 0;
+  
+  return ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
+}
 
 // Simple avatar upload (base64 to Firebase Storage emulation via Firestore hosting is out of scope)
 // We store as data URL in user doc for simplicity; consider real object storage in production

@@ -1,276 +1,336 @@
-﻿<!doctype html>
-<html lang="tr">
+﻿<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Moderasyon â€” Nara MÃ¼zik</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moderasyon - Nara Müzik</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="../css/styles.css" rel="stylesheet">
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark mainnav" id="mainNavbar">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="../index.html" data-lang="home">Nara MÃ¼zik</a>
-      <div class="ms-auto d-flex align-items-center gap-2">
-        <select id="language-toggle">
-          <option value="en">EN</option>
-          <option value="tr">TR</option>
-        </select>
-        <button id="themeToggle" class="btn btn-outline-light btn-sm">â˜€ï¸</button>
+  <!-- Topbar -->
+  <div class="topbar d-none d-lg-block">
+    <div class="container d-flex justify-content-between align-items-center py-1">
+      <div class="small">
+        <span>🎵 Nara Müzik Forum</span>
+      </div>
+      <div class="d-flex gap-3 small">
+        <span id="currentTime"></span>
+        <button id="themeToggle" class="btn btn-sm btn-outline-secondary">🌙</button>
+        <button id="languageToggle" class="btn btn-sm btn-outline-secondary">TR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg mainnav">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title">Menü</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" href="../index.html">Ana Sayfa</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="yenimuzik.html">Yeni Müzik</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="album.html">Albümler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="etkinlik.html">Etkinlikler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="playlists.html">Oynatma Listeleri</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="haberler.html">Haberler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="listeler.html">Listeler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="sosyal.html">Sosyal</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="analitik.html">Analitikler</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="search.html">Arama</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">İletişim</a>
+            </li>
+          </ul>
+          <div class="d-flex gap-2" id="authButtons">
+            <!-- Auth buttons will be populated by JavaScript -->
+          </div>
+        </div>
       </div>
     </div>
   </nav>
-  <main class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">ðŸš¨ Raporlar</h5>
-      <a href="#" id="manageUsersLink" class="btn btn-sm btn-outline-warning">KullanÄ±cÄ± Rollerini YÃ¶net</a>
-    </div>
-    <div class="d-flex align-items-center gap-2 mb-2">
-      <select id="reportTypeFilter" class="form-select form-select-sm" style="width:160px">
-        <option value="">TÃ¼mÃ¼</option>
-        <option value="post">post</option>
-        <option value="comment">comment</option>
-      </select>
-      <select id="reportLockPinFilter" class="form-select form-select-sm" style="width:200px">
-        <option value="">Hepsi</option>
-        <option value="pinned">Sadece sabit gÃ¶nderiler</option>
-        <option value="locked">Sadece kilitli gÃ¶nderiler</option>
-      </select>
-    </div>
-    <div id="reports" class="list-group mb-4"></div>
-    <div class="card">
-      <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
-        <span>ðŸ‘¥ KullanÄ±cÄ±lar</span>
-        <div class="d-flex align-items-center gap-2">
-          <select id="roleFilter" class="form-select form-select-sm" style="width:140px">
-            <option value="">TÃ¼mÃ¼</option>
-            <option value="user">user</option>
-            <option value="moderator">moderator</option>
-            <option value="admin">admin</option>
-            <option value="superadmin">superadmin</option>
-          </select>
-          <input id="userSearch" class="form-control form-control-sm" placeholder="Ara..." style="width:200px">
-        </div>
-      </div>
-      <div class="list-group list-group-flush" id="users"></div>
-    </div>
-    <div id="state" class="mt-3 text-muted small"></div>
-  </main>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Language files -->
-  <script>
-    // Load Turkish translations directly
-    window.translations = {
-      "home": "Ana Sayfa",
-      "about": "HakkÄ±nda",
-      "contact": "Ä°letiÅŸim",
-      "welcome": "Bloguma HoÅŸgeldin",
-      "subtitle": "MÃ¼zik, sanat ve kÃ¼ltÃ¼r Ã¼zerine",
-      "login": "GiriÅŸ",
-      "register": "KayÄ±t",
-      "logout": "Ã‡Ä±kÄ±ÅŸ",
-      "profile": "Profil",
-      "newPost": "Yeni GÃ¶nderi",
-      "search": "Ara...",
-      "notifications": "Bildirimler",
-      "saved": "Kaydedilenler",
-      "mod": "Mod",
-      "submit": "GÃ¶nder",
-      "title": "BaÅŸlÄ±k",
-      "content": "Ä°Ã§erik",
-      "category": "Kategori",
-      "mediaUrl": "FotoÄŸraf/GIF URL (opsiyonel)",
-      "linkUrl": "Harici Link (opsiyonel)",
-      "share": "PaylaÅŸ",
-      "popular": "En PopÃ¼ler",
-      "latest": "En Son Eklenenler",
-      "comments": "Yorumlar",
-      "like": "BeÄŸen",
-      "bookmark": "Kaydet",
-      "report": "Raporla",
-      "edit": "DÃ¼zenle",
-      "delete": "Sil",
-      "pin": "Sabitle",
-      "lock": "Kilitle",
-      "newMusic": "Yeni MÃ¼zik",
-      "industry": "EndÃ¼stri Haberleri",
-      "review": "DeÄŸerlendirme",
-      "album": "AlbÃ¼m Ä°nceleme",
-      "interview": "RÃ¶portajlar",
-      "event": "Etkinlikler",
-      "series": "Dizi & Filmler",
-      "loading": "YÃ¼kleniyor...",
-      "error": "Hata",
-      "success": "BaÅŸarÄ±lÄ±",
-      "cancel": "Ä°ptal",
-      "save": "Kaydet",
-      "close": "Kapat",
-      "send": "GÃ¶nder",
-      "name": "AdÄ±nÄ±z",
-      "email": "Email",
-      "password": "Parola",
-      "username": "KullanÄ±cÄ± AdÄ±",
-      "message": "MesajÄ±nÄ±z",
-      "writeComment": "Yorum yaz...",
-      "noPosts": "HenÃ¼z gÃ¶nderi yok",
-      "noComments": "HenÃ¼z yorum yok",
-      "loadMore": "Daha Fazla",
-      "allRightsReserved": "TÃ¼m haklarÄ± saklÄ±dÄ±r",
-      "avatarUrl": "Avatar URL",
-      "avatarUrlPlaceholder": "https://... (fotoÄŸraf/gif)",
-      "avatarUrlHelp": "URL boÅŸ kaydedilirse avatar kaldÄ±rÄ±lÄ±r.",
-      "uploadFile": "Veya dosya yÃ¼kle",
-      "upload": "YÃ¼kle",
-      "myPosts": "GÃ¶nderilerim",
-      "noPostsYet": "HenÃ¼z gÃ¶nderi yok",
-      "createFirstPost": "Ä°lk gÃ¶nderinizi oluÅŸturun",
-      "welcomeMessage": "Nara MÃ¼zik'e hoÅŸ geldiniz!",
-      "profileSettings": "Profil AyarlarÄ±",
-      "accountInfo": "Hesap Bilgileri",
-      "contactMessage": "Bize mesaj bÄ±rakÄ±n; evencreed hesabÄ±nÄ±n gelen kutusuna dÃ¼ÅŸecek.",
-      "popularAlbums": "PopÃ¼ler AlbÃ¼mler",
-      "popularAlbumsDesc": "En Ã§ok dinlenen ve tartÄ±ÅŸÄ±lan albÃ¼mleri keÅŸfedin",
-      "addComment": "Ekle",
-      "albumSearch": "AlbÃ¼m Ara",
-      "searchAlbum": "AlbÃ¼m adÄ± yazÄ±n...",
-      "searchResults": "Arama SonuÃ§larÄ±",
-      "myFavorites": "Favori AlbÃ¼mlerim",
-      "loadingFavorites": "Favori albÃ¼mleriniz yÃ¼kleniyor...",
-      "noFavorites": "HenÃ¼z favori albÃ¼mÃ¼nÃ¼z yok.",
-      "addFavorites": "AlbÃ¼m inceleme sayfasÄ±ndan favori albÃ¼mlerinizi ekleyebilirsiniz."
-    };
-  </script>
-  <script src="../js/lang.js"></script>
-  <script>
-    (async ()=>{
-      const base = location.hostname.includes('localhost')? 'http://localhost:4000':'https://naramusic.onrender.com';
-      const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem('user')||'null');
-      const state = document.getElementById('state');
-      if (!user){ state.textContent='GiriÅŸ yapÄ±n.'; return; }
-      try{
-        const r = await fetch(`${base}/api/mod/reports`, { headers:{ 'Authorization': `Bearer ${token}` }});
-        const items = await r.json();
-        if (items.error){ state.textContent = items.error; return; }
-        const all = Array.isArray(items)? items: [];
-        function renderReports(){
-          const el = document.getElementById('reports');
-          const rt = document.getElementById('reportTypeFilter').value;
-          const lf = document.getElementById('reportLockPinFilter').value;
-          let data = all;
-          if (rt){ data = data.filter(x=> x.type===rt); }
-          if (lf){
-            data = data.filter(x=>{
-              if (x.type!=='post') return false;
-              const post = x; // we only have ids, so basic filtering is limited; show all and annotate client-side if needed.
-              // Without fetching post details here, we can't know; so skip heavy fetch and just return true.
-              return true;
-            });
-          }
-          if (!data.length){ el.innerHTML = '<div class="list-group-item text-muted">Rapor bulunamadÄ±.</div>'; return; }
-          el.innerHTML = data.map(x=>`
-            <div class="list-group-item">
-              <div class="d-flex w-100 justify-content-between align-items-center">
-                <div>
-                  <h6 class="mb-1 d-inline">${x.type==='comment'?'Yorum':'GÃ¶nderi'} raporu</h6>
-                  ${x.status==='resolved'?'<span class="badge bg-success ms-2">Ã‡Ã¶zÃ¼ldÃ¼</span>':''}
-                  ${x.seen && x.status!=='resolved'?'<span class="badge bg-secondary ms-1">GÃ¶rÃ¼ldÃ¼</span>':''}
-                </div>
-                <small>${new Date(x.createdAt).toLocaleString()}</small>
-              </div>
-              <p class="mb-1">Neden: ${x.reason||'-'}</p>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-secondary mark-seen" data-id="${x.id}" ${x.seen?'disabled':''}>GÃ¶rÃ¼ldÃ¼</button>
-                <button class="btn btn-sm btn-outline-success mark-res" data-id="${x.id}" ${x.status==='resolved'?'disabled':''}>Ã‡Ã¶zÃ¼ldÃ¼</button>
-              </div>
-              <small class="text-muted">ID: ${x.id}</small>
-            </div>
-          `).join('');
-        }
-        renderReports();
-        document.getElementById('reportTypeFilter').addEventListener('change', renderReports);
-        document.getElementById('reportLockPinFilter').addEventListener('change', renderReports);
-        document.getElementById('reports').addEventListener('click', async (e)=>{
-          const seenBtn = e.target.closest('.mark-seen');
-          const resBtn = e.target.closest('.mark-res');
-          if (seenBtn){
-            const id = seenBtn.getAttribute('data-id');
-            try{ await fetch(`${base}/api/mod/reports/${id}/seen`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` }}); seenBtn.disabled = true; }catch(_){ alert('GÃ¼ncellenemedi'); }
-          }
-          if (resBtn){
-            const id = resBtn.getAttribute('data-id');
-            try{ await fetch(`${base}/api/mod/reports/${id}/resolve`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` }}); resBtn.disabled = true; }catch(_){ alert('GÃ¼ncellenemedi'); }
-          }
-        });
-      }catch(err){ state.textContent='YÃ¼klenemedi.'; }
 
-      // Superadmin user list and role assignment
-      const usersWrap = document.getElementById('users');
-      const searchInput = document.getElementById('userSearch');
-      let allUsers = [];
-      let page = 0; const pageSize = 20;
-      function renderUsers(){
-        const roleFilter = document.getElementById('roleFilter').value;
-        const searchQ = searchInput.value.trim().toLowerCase();
-        let items = allUsers;
-        if (roleFilter){ items = items.filter(u=> (u.role||'user')===roleFilter); }
-        if (searchQ){ items = items.filter(u=> (u.username||'').toLowerCase().includes(searchQ) || (u.email||'').toLowerCase().includes(searchQ)); }
-        const start = page*pageSize; const paged = items.slice(start, start+pageSize);
-        usersWrap.innerHTML = paged.map(u=>`
-          <div class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-              <div class="fw-semibold">${u.username||'-'} <span class="text-muted">(${u.email||''})</span></div>
-              <div class="small text-muted">${new Date(u.createdAt||Date.now()).toLocaleString()} â€¢ <span class="badge bg-dark">${u.role||'user'}</span></div>
+  <!-- Main Content -->
+  <main class="container mt-4">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h1 class="h3 mb-0">
+              <i class="fas fa-shield-alt me-2"></i>Moderasyon Paneli
+            </h1>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-warning" role="alert">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              <strong>Moderasyon Yetkisi Gerekli!</strong> Bu sayfaya erişim için moderatör veya admin yetkisi gereklidir.
             </div>
-            <div class="d-flex align-items-center gap-2">
-              <select class="form-select form-select-sm role-select" data-id="${u.id}">
-                <option value="user" ${u.role==='user'?'selected':''}>user</option>
-                <option value="moderator" ${u.role==='moderator'?'selected':''}>moderator</option>
-                <option value="admin" ${u.role==='admin'?'selected':''}>admin</option>
-                <option value="superadmin" ${u.role==='superadmin'?'selected':''}>superadmin</option>
-              </select>
-              <button class="btn btn-sm btn-primary apply-role" data-id="${u.id}">Uygula</button>
+            
+            <div class="row">
+              <div class="col-md-6 mb-4">
+                <div class="card">
+                  <div class="card-header">
+                    <h5 class="mb-0">
+                      <i class="fas fa-flag me-2"></i>Raporlar
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <p class="text-muted">Kullanıcılar tarafından rapor edilen içerikleri inceleyin.</p>
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-outline-primary btn-sm" onclick="loadReports()">
+                        <i class="fas fa-eye me-1"></i>Raporları Görüntüle
+                      </button>
+                      <span class="badge bg-danger">3 Yeni</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-4">
+                <div class="card">
+                  <div class="card-header">
+                    <h5 class="mb-0">
+                      <i class="fas fa-users me-2"></i>Kullanıcı Yönetimi
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <p class="text-muted">Kullanıcı hesaplarını yönetin ve moderasyon işlemleri yapın.</p>
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-outline-primary btn-sm" onclick="loadUsers()">
+                        <i class="fas fa-users me-1"></i>Kullanıcıları Görüntüle
+                      </button>
+                      <span class="badge bg-info">127 Aktif</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-4">
+                <div class="card">
+                  <div class="card-header">
+                    <h5 class="mb-0">
+                      <i class="fas fa-comments me-2"></i>Yorum Moderasyonu
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <p class="text-muted">Yorumları inceleyin ve uygunsuz içerikleri kaldırın.</p>
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-outline-primary btn-sm" onclick="loadComments()">
+                        <i class="fas fa-comments me-1"></i>Yorumları Görüntüle
+                      </button>
+                      <span class="badge bg-warning">5 Beklemede</span>
+                    </div>
+                  </div>
+    </div>
+    </div>
+              
+              <div class="col-md-6 mb-4">
+    <div class="card">
+                  <div class="card-header">
+                    <h5 class="mb-0">
+                      <i class="fas fa-chart-bar me-2"></i>İstatistikler
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <p class="text-muted">Platform istatistiklerini ve moderasyon metriklerini görüntüleyin.</p>
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-outline-primary btn-sm" onclick="loadStats()">
+                        <i class="fas fa-chart-bar me-1"></i>İstatistikleri Görüntüle
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Reports Table -->
+            <div id="reportsSection" class="mt-4" style="display: none;">
+              <h5>Raporlar</h5>
+              <div class="table-responsive">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>İçerik</th>
+                      <th>Rapor Sebebi</th>
+                      <th>Raporlayan</th>
+                      <th>Tarih</th>
+                      <th>İşlemler</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>#001</td>
+                      <td>Gönderi: "Yeni Albüm İncelemesi"</td>
+                      <td>Spam</td>
+                      <td>user123</td>
+                      <td>2024-01-15</td>
+                      <td>
+                        <button class="btn btn-sm btn-success me-1">Onayla</button>
+                        <button class="btn btn-sm btn-danger">Reddet</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>#002</td>
+                      <td>Yorum: "Uygunsuz içerik"</td>
+                      <td>Uygunsuz İçerik</td>
+                      <td>user456</td>
+                      <td>2024-01-14</td>
+                      <td>
+                        <button class="btn btn-sm btn-success me-1">Onayla</button>
+                        <button class="btn btn-sm btn-danger">Reddet</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <!-- Users Table -->
+            <div id="usersSection" class="mt-4" style="display: none;">
+              <h5>Kullanıcılar</h5>
+              <div class="table-responsive">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>Kullanıcı Adı</th>
+                      <th>E-posta</th>
+                      <th>Rol</th>
+                      <th>Kayıt Tarihi</th>
+                      <th>Durum</th>
+                      <th>İşlemler</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>user123</td>
+                      <td>user123@example.com</td>
+                      <td>Kullanıcı</td>
+                      <td>2024-01-10</td>
+                      <td><span class="badge bg-success">Aktif</span></td>
+                      <td>
+                        <button class="btn btn-sm btn-warning me-1">Uyar</button>
+                        <button class="btn btn-sm btn-danger">Yasakla</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>user456</td>
+                      <td>user456@example.com</td>
+                      <td>Kullanıcı</td>
+                      <td>2024-01-08</td>
+                      <td><span class="badge bg-warning">Uyarılı</span></td>
+                      <td>
+                        <button class="btn btn-sm btn-success me-1">Aktif Et</button>
+                        <button class="btn btn-sm btn-danger">Yasakla</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        `).join('') + (items.length>pageSize? `<div class="list-group-item text-center"><button id="prevPage" class="btn btn-sm btn-outline-secondary me-2" ${page===0?'disabled':''}>Ã–nceki</button><button id="nextPage" class="btn btn-sm btn-outline-secondary" ${(start+pageSize)>=items.length?'disabled':''}>Sonraki</button></div>` : '');
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-4 mt-5">
+    <div class="container">
+      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/lang.js"></script>
+  <script>
+    // Check if user has moderation rights
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+      
+      if (!currentUser || (currentUser.role !== 'moderator' && currentUser.role !== 'admin' && currentUser.role !== 'superadmin')) {
+        document.querySelector('.card-body').innerHTML = `
+          <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Erişim Reddedildi!</strong> Bu sayfaya erişim için moderatör veya admin yetkisi gereklidir.
+            <div class="mt-3">
+              <a href="../index.html" class="btn btn-primary">
+                <i class="fas fa-home me-1"></i>Ana Sayfaya Dön
+              </a>
+            </div>
+          </div>
+        `;
+        return;
       }
-      async function loadUsers(){
-        try{
-          const r = await fetch(`${base}/api/admin/users`, { headers:{ 'Authorization': `Bearer ${token}` }});
-          const items = await r.json();
-          if (Array.isArray(items)){ allUsers = items; page = 0; renderUsers(); }
-          else { usersWrap.innerHTML = '<div class="list-group-item text-danger">KullanÄ±cÄ±lar yÃ¼klenemedi</div>'; }
-        }catch(_){ usersWrap.innerHTML = '<div class="list-group-item text-danger">KullanÄ±cÄ±lar yÃ¼klenemedi</div>'; }
+    });
+    
+    // Moderation functions
+    function loadReports() {
+      const section = document.getElementById('reportsSection');
+      section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    }
+    
+    function loadUsers() {
+      const section = document.getElementById('usersSection');
+      section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    }
+    
+    function loadComments() {
+      alert('Yorum moderasyonu özelliği geliştirilmekte.');
+    }
+    
+    function loadStats() {
+      alert('İstatistikler özelliği geliştirilmekte.');
+    }
+    
+    // Update current time
+    function updateTime() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('tr-TR');
+      const timeElement = document.getElementById('currentTime');
+      if (timeElement) {
+        timeElement.textContent = timeString;
       }
-      await loadUsers();
-      searchInput.addEventListener('input', ()=>{ clearTimeout(window.__us_f1); window.__us_f1 = setTimeout(()=>{ page=0; renderUsers(); }, 200); });
-      document.getElementById('roleFilter').addEventListener('change', ()=>{ page=0; renderUsers(); });
-      usersWrap.addEventListener('click', (e)=>{
-        if (e.target && e.target.id==='prevPage'){ e.preventDefault(); if (page>0){ page--; renderUsers(); } }
-        if (e.target && e.target.id==='nextPage'){ e.preventDefault(); page++; renderUsers(); }
-      });
-      usersWrap.addEventListener('click', async (e)=>{
-        const btn = e.target.closest('.apply-role');
-        if (!btn) return;
-        const id = btn.getAttribute('data-id');
-        const sel = usersWrap.querySelector(`.role-select[data-id="${'${id}'}"]`);
-        const sel2 = usersWrap.querySelector('.role-select[data-id="'+id+'"]');
-        const selectEl = sel || sel2;
-        if (!selectEl) return;
-        try{
-          const r = await fetch(`${base}/api/admin/users/${id}/role`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ role: selectEl.value }) });
-          const d = await r.json();
-          if (d.error){ alert(d.error); } else { await loadUsers(); }
-        }catch(_){ alert('GÃ¼ncellenemedi'); }
-      });
-    })();
+    }
+    
+    updateTime();
+    setInterval(updateTime, 1000);
+    
+    // Update year
+    document.getElementById('year').textContent = new Date().getFullYear();
   </script>
-  <select id="language-toggle">
-    <option value="en">EN</option>
-    <option value="tr">TR</option>
-  </select>
 </body>
 </html>
-
-
-
