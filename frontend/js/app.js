@@ -102,56 +102,6 @@ function updateAuthUI() {
   }
 }
 
-// Fallback data
-const FALLBACK_DATA = {
-  posts: [
-    {
-      id: 1,
-      title: "Taylor Swift - Midnights İncelemesi",
-      content: "Taylor Swift'in yeni albümü Midnights, sanatçının pop müzikteki ustalığını bir kez daha kanıtlıyor. 13 şarkılık bu albüm, gece saatlerinin büyüsünü ve insanın en derin düşüncelerini ele alıyor.",
-      author: { username: "muziksever", displayName: "Müzik Sever" },
-      category: "degerlendirme",
-      createdAt: new Date().toISOString(),
-      likes: 24,
-      comments: 8,
-      views: 156,
-      featured: true,
-      tags: ["taylor swift", "pop", "midnights", "inceleme"]
-    },
-    {
-      id: 2,
-      title: "2024'ün En İyi Rock Albümleri",
-      content: "Bu yıl çıkan rock albümlerini inceliyoruz. Foo Fighters, Arctic Monkeys ve daha birçok grup harika işler çıkardı.",
-      author: { username: "rockfan", displayName: "Rock Fan" },
-      category: "album",
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-      likes: 18,
-      comments: 12,
-      views: 89,
-      featured: false,
-      tags: ["rock", "2024", "albüm", "inceleme"]
-    },
-    {
-      id: 3,
-      title: "Spotify'da Yeni Özellikler",
-      content: "Spotify'ın son güncellemeleri ile gelen yeni özellikler hakkında detaylı bilgi.",
-      author: { username: "techmusic", displayName: "Tech Music" },
-      category: "endustri",
-      createdAt: new Date(Date.now() - 172800000).toISOString(),
-      likes: 15,
-      comments: 6,
-      views: 203,
-      featured: false,
-      tags: ["spotify", "teknoloji", "müzik", "güncelleme"]
-    }
-  ],
-  stats: {
-    totalPosts: 1247,
-    totalUsers: 3421,
-    totalComments: 8934,
-    onlineUsers: 156
-  }
-};
 
 // API functions
 async function apiRequest(endpoint, options = {}) {
@@ -175,22 +125,7 @@ async function apiRequest(endpoint, options = {}) {
     return data;
   } catch (error) {
     console.error('API Error:', error);
-    
-    // Return fallback data based on endpoint
-    if (endpoint.includes('/posts')) {
-      if (endpoint.includes('featured=true')) {
-        return { posts: FALLBACK_DATA.posts.filter(p => p.featured) };
-      } else if (endpoint.includes('sort=popular')) {
-        return { posts: FALLBACK_DATA.posts.sort((a, b) => b.likes - a.likes) };
-      } else {
-        return { posts: FALLBACK_DATA.posts, total: FALLBACK_DATA.posts.length };
-      }
-    } else if (endpoint.includes('/stats')) {
-      return FALLBACK_DATA.stats;
-    }
-    
-    // Don't show alert for fallback data
-    console.log('Using fallback data for:', endpoint);
+    showAlert('Sunucuya bağlanırken hata oluştu. Lütfen sayfayı yenileyin.', 'danger');
     throw error;
   }
 }
@@ -229,17 +164,7 @@ async function loadLatestPostsPaginated(reset = false) {
     
   } catch (error) {
     console.error('Error loading latest posts:', error);
-    // Use fallback data
-    try {
-      const fallbackData = await apiRequest('/api/posts?page=1&limit=6&sort=latest');
-      if (fallbackData && fallbackData.posts) {
-        renderPosts(fallbackData.posts, container);
-      } else {
-        container.innerHTML = '<div class="col-12"><div class="text-center py-5"><p class="text-danger">Gönderiler yüklenirken hata oluştu.</p></div></div>';
-      }
-    } catch (fallbackError) {
-      container.innerHTML = '<div class="col-12"><div class="text-center py-5"><p class="text-danger">Gönderiler yüklenirken hata oluştu.</p></div></div>';
-    }
+    container.innerHTML = '<div class="col-12"><div class="text-center py-5"><p class="text-danger">Gönderiler yüklenirken hata oluştu.</p></div></div>';
   } finally {
     isLoading = false;
     hideLoading(container);
@@ -263,18 +188,7 @@ async function loadPopularPosts() {
     }
   } catch (error) {
     console.error('Error loading popular posts:', error);
-    // Use fallback data
-    try {
-      const fallbackData = await apiRequest('/api/posts?limit=5&sort=popular');
-      if (fallbackData && fallbackData.posts) {
-        const postsHtml = fallbackData.posts.map(post => createPopularPostItem(post)).join('');
-        container.innerHTML = postsHtml;
-      } else {
-        container.innerHTML = '<p class="text-danger text-center">Popüler gönderiler yüklenirken hata oluştu.</p>';
-      }
-    } catch (fallbackError) {
-      container.innerHTML = '<p class="text-danger text-center">Popüler gönderiler yüklenirken hata oluştu.</p>';
-    }
+    container.innerHTML = '<p class="text-danger text-center">Popüler gönderiler yüklenirken hata oluştu.</p>';
   } finally {
     hideLoading(container);
   }
@@ -297,18 +211,7 @@ async function loadCategoryPosts(category) {
     }
   } catch (error) {
     console.error('Error loading category posts:', error);
-    // Use fallback data
-    try {
-      const fallbackData = await apiRequest(`/api/posts?category=${category}&limit=20`);
-      if (fallbackData && fallbackData.posts) {
-        const postsHtml = fallbackData.posts.map(post => createPostCard(post)).join('');
-        container.innerHTML = `<div class="row g-4">${postsHtml}</div>`;
-      } else {
-        container.innerHTML = '<div class="text-center py-5"><p class="text-danger">Gönderiler yüklenirken hata oluştu.</p></div>';
-      }
-    } catch (fallbackError) {
-      container.innerHTML = '<div class="text-center py-5"><p class="text-danger">Gönderiler yüklenirken hata oluştu.</p></div>';
-    }
+    container.innerHTML = '<div class="text-center py-5"><p class="text-danger">Gönderiler yüklenirken hata oluştu.</p></div>';
   } finally {
     hideLoading(container);
   }
@@ -570,19 +473,6 @@ async function loadStats() {
     
   } catch (error) {
     console.error('Stats loading error:', error);
-    // Use fallback data
-    try {
-      const fallbackData = await apiRequest('/api/stats');
-      const totalPosts = document.getElementById('totalPosts');
-      const totalUsers = document.getElementById('totalUsers');
-      const totalComments = document.getElementById('totalComments');
-      
-      if (totalPosts) totalPosts.textContent = fallbackData.totalPosts || 0;
-      if (totalUsers) totalUsers.textContent = fallbackData.totalUsers || 0;
-      if (totalComments) totalComments.textContent = fallbackData.totalComments || 0;
-    } catch (fallbackError) {
-      console.error('Fallback stats error:', fallbackError);
-    }
   }
 }
 
@@ -605,24 +495,6 @@ async function loadFeaturedPost() {
     }
   } catch (error) {
     console.error('Featured post loading error:', error);
-    // Use fallback data
-    try {
-      const fallbackData = await apiRequest('/api/posts?featured=true&limit=1');
-      if (fallbackData && fallbackData.posts && fallbackData.posts.length > 0) {
-        const post = fallbackData.posts[0];
-        const titleEl = document.getElementById('heroPinnedTitle');
-        const excerptEl = document.getElementById('heroPinnedExcerpt');
-        const linkEl = document.getElementById('heroPinnedLink');
-        const imgEl = document.getElementById('heroPinnedImg');
-        
-        if (titleEl) titleEl.textContent = post.title;
-        if (excerptEl) excerptEl.textContent = post.content ? post.content.substring(0, 140) + '...' : '';
-        if (linkEl) linkEl.href = `pages/post.html?id=${post.id}`;
-        if (imgEl && post.mediaUrl) imgEl.src = post.mediaUrl;
-      }
-    } catch (fallbackError) {
-      console.error('Fallback featured post error:', fallbackError);
-    }
   }
 }
 
