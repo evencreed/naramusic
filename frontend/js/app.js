@@ -142,37 +142,35 @@ async function apiRequest(endpoint, options = {}) {
     }
   } catch (error) {
     console.error('API Error:', error);
+    // If same-origin (Vercel) fails, fall back to Render once
+    try{
+      const isSameOrigin = BACKEND_BASE && BACKEND_BASE.startsWith(window.location.origin);
+      if (isSameOrigin) {
+        localStorage.removeItem('BACKEND_BASE');
+        BACKEND_BASE = 'https://naramusic.onrender.com';
+        return await apiRequest(endpoint, { ...options, retries: 0 });
+      }
+    }catch(_){ }
     throw error;
   }
 }
 
 // Backend base detection with health probes
 async function detectBackendBase() {
+  // Force Render in production; use localhost in local dev
   const cached = localStorage.getItem('BACKEND_BASE');
-  if (cached) { BACKEND_BASE = cached; return; }
-
-  const candidates = [];
-  if (isLocalHost) candidates.push('http://localhost:4000');
-  // Same-origin API (if reverse-proxied)
-  candidates.push(`${window.location.origin}`.replace(/\/$/, ''));
-  // Render
-  candidates.push('https://naramusic.onrender.com');
-
-  for (const base of candidates) {
-    try {
-      const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), 3000);
-      const res = await fetch(`${base}/api/stats`, { signal: controller.signal });
-      clearTimeout(t);
-      if (res.ok) {
-        BACKEND_BASE = base;
-        localStorage.setItem('BACKEND_BASE', BACKEND_BASE);
-        return;
-      }
-    } catch (_) { /* try next */ }
+  const isVercel = /vercel\.app$/.test(window.location.host);
+  if (isLocalHost) {
+    BACKEND_BASE = 'http://localhost:4000';
+    localStorage.setItem('BACKEND_BASE', BACKEND_BASE);
+    return;
   }
-  // Fallback to Render even if probe failed (may be cold start)
+  if (cached && !/vercel\.app$/.test(new URL(cached).host)) {
+    BACKEND_BASE = cached;
+    return;
+  }
   BACKEND_BASE = 'https://naramusic.onrender.com';
+  localStorage.setItem('BACKEND_BASE', BACKEND_BASE);
 }
 
 // Navbar template loader
