@@ -97,6 +97,10 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+// Lightweight health endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, service: 'naramusic-backend', time: new Date().toISOString() });
+});
 
 // Rate limiters
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
