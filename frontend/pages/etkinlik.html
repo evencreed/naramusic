@@ -9,65 +9,7 @@
   <link href="../css/styles.css" rel="stylesheet">
 </head>
 <body>
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="container d-flex justify-content-between align-items-center py-1">
-      <div class="small">
-        <span>🎵 Nara Müzik Forum</span>
-      </div>
-      <div class="d-flex gap-3 small">
-        <span id="currentTime"></span>
-        <button id="themeToggle" class="btn btn-sm btn-outline-secondary">🌙</button>
-        <button id="languageToggle" class="btn btn-sm btn-outline-secondary">TR</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg mainnav">
-    <div class="container">
-      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
-      
-      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar">
-        <div class="offcanvas-header">
-          <h5 class="offcanvas-title">Menü</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-        </div>
-        <div class="offcanvas-body">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a class="nav-link" href="../index.html">Ana Sayfa</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="yenimuzik.html">Yeni Müzik</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="album.html">Albümler</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" href="etkinlik.html">Etkinlikler</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="playlists.html">Oynatma Listeleri</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="search.html">Arama</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="contact.html">İletişim</a>
-            </li>
-          </ul>
-          <div class="d-flex gap-2" id="authButtons">
-            <!-- Auth buttons will be populated by JavaScript -->
-        </div>
-        </div>
-      </div>
-    </div>
-  </nav>
+  <!-- Navbar will be injected by app.js -->
 
   <!-- Main Content -->
   <main class="container mt-4">
@@ -242,12 +184,7 @@
     </div>
   </main>
 
-  <!-- Footer -->
-  <footer class="text-center py-4 mt-5">
-    <div class="container">
-      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
-    </div>
-  </footer>
+  <!-- Footer will be injected by app.js -->
 
   <!-- Create Event Modal -->
   <div class="modal fade" id="createEventModal" tabindex="-1" aria-hidden="true">

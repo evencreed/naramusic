@@ -197,8 +197,8 @@ class ProfileManager {
     });
 
     // Fill text fields
-    document.getElementById('favoriteArtist').value = this.musicPreferences.favoriteArtist || '';
-    document.getElementById('favoriteSong').value = this.musicPreferences.favoriteSong || '';
+    document.getElementById('prefFavoriteArtist').value = this.musicPreferences.favoriteArtist || '';
+    document.getElementById('prefFavoriteSong').value = this.musicPreferences.favoriteSong || '';
   }
 
   // Load user stats
@@ -439,8 +439,8 @@ class ProfileManager {
     const formData = {
       favoriteGenres: Array.from(document.querySelectorAll('input[name="genres"]:checked')).map(cb => cb.value),
       musicMood: Array.from(document.querySelectorAll('input[name="moods"]:checked')).map(cb => cb.value),
-      favoriteArtist: document.getElementById('favoriteArtist').value,
-      favoriteSong: document.getElementById('favoriteSong').value
+      favoriteArtist: document.getElementById('prefFavoriteArtist').value,
+      favoriteSong: document.getElementById('prefFavoriteSong').value
     };
 
     try {

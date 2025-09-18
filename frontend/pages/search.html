@@ -9,77 +9,7 @@
   <link href="../css/styles.css" rel="stylesheet">
 </head>
 <body>
-  <!-- Topbar -->
-  <div class="topbar d-none d-lg-block">
-    <div class="container d-flex justify-content-between align-items-center py-1">
-      <div class="small">
-        <span>🎵 Nara Müzik Forum</span>
-      </div>
-      <div class="d-flex gap-3 small">
-        <span id="currentTime"></span>
-        <button id="themeToggle" class="btn btn-sm btn-outline-secondary">🌙</button>
-        <button id="languageToggle" class="btn btn-sm btn-outline-secondary">TR</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg mainnav">
-    <div class="container">
-      <a class="navbar-brand" href="../index.html">Nara Müzik</a>
-      
-      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar">
-        <div class="offcanvas-header">
-          <h5 class="offcanvas-title">Menü</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-        </div>
-        <div class="offcanvas-body">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a class="nav-link" href="../index.html">Ana Sayfa</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="yenimuzik.html">Yeni Müzik</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="album.html">Albümler</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="etkinlik.html">Etkinlikler</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="playlists.html">Oynatma Listeleri</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="haberler.html">Haberler</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="listeler.html">Listeler</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="sosyal.html">Sosyal</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="analitik.html">Analitikler</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" href="search.html">Arama</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="contact.html">İletişim</a>
-            </li>
-          </ul>
-          <div class="d-flex gap-2" id="authButtons">
-            <!-- Auth buttons will be populated by JavaScript -->
-        </div>
-        </div>
-      </div>
-    </div>
-  </nav>
+  <!-- Navbar will be injected by app.js -->
 
   <!-- Main Content -->
   <main class="container mt-4">
@@ -92,25 +22,23 @@
             </h1>
           </div>
           <div class="card-body">
-            <!-- Search Form -->
-            <form id="searchForm" class="mb-4">
-              <div class="row">
+            <!-- Advanced Search Form -->
+            <form id="advancedSearchForm" class="mb-4">
+              <div class="row g-2 align-items-stretch">
                 <div class="col-md-8">
                   <div class="input-group">
-                    <input type="text" class="form-control" id="searchQuery" placeholder="Arama terimi girin..." required>
+                    <input type="text" class="form-control" id="advancedSearchInput" placeholder="Arama terimi girin...">
                     <button class="btn btn-primary" type="submit">
                       <i class="fas fa-search me-1"></i>Ara
                     </button>
                   </div>
                 </div>
                 <div class="col-md-4">
-                  <select class="form-select" id="searchType">
-                    <option value="all">Tümü</option>
-                    <option value="posts">Gönderiler</option>
-                    <option value="users">Kullanıcılar</option>
-                    <option value="music">Müzik</option>
-                    <option value="events">Etkinlikler</option>
-                    <option value="news">Haberler</option>
+                  <select class="form-select" id="sortByFilter">
+                    <option value="relevance">İlgililik</option>
+                    <option value="date">Tarih</option>
+                    <option value="popularity">Popülerlik</option>
+                    <option value="rating">Puan</option>
             </select>
           </div>
               </div>
@@ -122,236 +50,68 @@
                 <h6 class="mb-0">Filtreler</h6>
           </div>
               <div class="card-body">
-                <div class="row">
-          <div class="col-md-3">
-                    <label for="categoryFilter" class="form-label">Kategori</label>
-                    <select class="form-select" id="categoryFilter">
-                      <option value="">Tüm Kategoriler</option>
-                      <option value="pop">Pop</option>
-                      <option value="rock">Rock</option>
-                      <option value="jazz">Jazz</option>
-                      <option value="classical">Klasik</option>
-                      <option value="electronic">Elektronik</option>
-                    </select>
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label for="genreFilter" class="form-label">Tür</label>
+                    <select class="form-select" id="genreFilter"></select>
+                  </div>
+                  <div class="col-md-4">
+                    <label for="artistFilter" class="form-label">Sanatçı</label>
+                    <input type="text" class="form-control" id="artistFilter" placeholder="Sanatçı adı">
+                  </div>
+                  <div class="col-md-4">
+                    <label for="albumFilter" class="form-label">Albüm</label>
+                    <input type="text" class="form-control" id="albumFilter" placeholder="Albüm adı">
           </div>
           <div class="col-md-3">
-                    <label for="dateFilter" class="form-label">Tarih</label>
-                    <select class="form-select" id="dateFilter">
-                      <option value="">Tüm Zamanlar</option>
-                      <option value="today">Bugün</option>
-                      <option value="week">Bu Hafta</option>
-                      <option value="month">Bu Ay</option>
-                      <option value="year">Bu Yıl</option>
-                    </select>
+                    <label for="yearFilter" class="form-label">Yıl</label>
+                    <input type="number" class="form-control" id="yearFilter" placeholder="YYYY">
           </div>
           <div class="col-md-3">
-                    <label for="sortBy" class="form-label">Sırala</label>
-                    <select class="form-select" id="sortBy">
-                      <option value="relevance">İlgililik</option>
-                      <option value="date">Tarih</option>
-                      <option value="popularity">Popülerlik</option>
-                      <option value="rating">Puan</option>
-            </select>
+                    <label for="moodFilter" class="form-label">Ruh Hali</label>
+                    <select class="form-select" id="moodFilter"></select>
           </div>
           <div class="col-md-3">
-                    <label for="sortOrder" class="form-label">Sıralama</label>
-                    <select class="form-select" id="sortOrder">
-              <option value="desc">Azalan</option>
-              <option value="asc">Artan</option>
+                    <label for="ratingFilter" class="form-label">Puan</label>
+                    <select class="form-select" id="ratingFilter">
+                      <option value="">Tümü</option>
+                      <option value="4.5">4.5+</option>
+                      <option value="4">4+</option>
+                      <option value="3.5">3.5+</option>
+                      <option value="3">3+</option>
             </select>
           </div>
         </div>
               </div>
             </div>
             
-            <!-- Search Results -->
-            <div id="searchResults">
-              <div class="text-center text-muted py-5">
-                <i class="fas fa-search fa-3x mb-3"></i>
-                <p>Arama yapmak için yukarıdaki formu kullanın.</p>
+            <!-- Loading -->
+            <div id="advancedSearchLoading" class="text-center py-4 d-none">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Aranıyor...</span>
               </div>
             </div>
+
+            <!-- Results Info -->
+            <div class="mb-2 text-muted" id="searchResultsInfo"></div>
+
+            <!-- Results -->
+            <div class="row" id="advancedSearchResults"></div>
             
             <!-- Pagination -->
-            <nav id="pagination" class="mt-4" style="display: none;">
-              <ul class="pagination justify-content-center">
-                <!-- Pagination will be populated by JavaScript -->
-              </ul>
-            </nav>
+            <div id="advancedSearchPagination" class="mt-3"></div>
           </div>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Footer -->
-  <footer class="text-center py-4 mt-5">
-    <div class="container">
-      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
-    </div>
-  </footer>
+  <!-- Footer will be injected by app.js -->
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../js/app.js"></script>
   <script src="../js/lang.js"></script>
-  <script>
-    // Search functionality
-    document.getElementById('searchForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      performSearch();
-    });
-    
-    function performSearch() {
-      const query = document.getElementById('searchQuery').value;
-      const type = document.getElementById('searchType').value;
-      const category = document.getElementById('categoryFilter').value;
-      const date = document.getElementById('dateFilter').value;
-      const sortBy = document.getElementById('sortBy').value;
-      const sortOrder = document.getElementById('sortOrder').value;
-      
-      if (!query.trim()) {
-        alert('Lütfen arama terimi girin.');
-        return;
-      }
-      
-      // Show loading
-      const resultsDiv = document.getElementById('searchResults');
-      resultsDiv.innerHTML = `
-        <div class="text-center py-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Aranıyor...</span>
-          </div>
-          <p class="mt-3">Aranıyor...</p>
-        </div>
-      `;
-      
-      // Simulate search results
-      setTimeout(() => {
-        displaySearchResults(query, type);
-      }, 1000);
-    }
-    
-    function displaySearchResults(query, type) {
-      const resultsDiv = document.getElementById('searchResults');
-      
-      // Mock search results
-      const mockResults = [
-        {
-          type: 'post',
-          title: 'Yeni Albüm İncelemesi: ' + query,
-          content: 'Bu albüm hakkında detaylı inceleme...',
-          author: 'user123',
-          date: '2024-01-15',
-          likes: 15,
-          comments: 8
-        },
-        {
-          type: 'user',
-          username: 'user456',
-          displayName: 'Müzik Sever',
-          joinDate: '2024-01-10',
-          posts: 25,
-          followers: 150
-        },
-        {
-          type: 'music',
-          title: 'Şarkı Adı: ' + query,
-          artist: 'Sanatçı Adı',
-          album: 'Albüm Adı',
-          year: 2024,
-          genre: 'Pop',
-          rating: 4.5
-        }
-      ];
-      
-      let html = '<h5>Arama Sonuçları: "' + query + '"</h5>';
-      
-      if (type === 'all' || type === 'posts') {
-        html += '<div class="mb-4"><h6>Gönderiler</h6>';
-        mockResults.filter(r => r.type === 'post').forEach(result => {
-          html += `
-            <div class="card mb-2">
-              <div class="card-body">
-                <h6 class="card-title">${result.title}</h6>
-                <p class="card-text">${result.content}</p>
-                <small class="text-muted">
-                  <i class="fas fa-user me-1"></i>${result.author} • 
-                  <i class="fas fa-calendar me-1"></i>${result.date} • 
-                  <i class="fas fa-heart me-1"></i>${result.likes} • 
-                  <i class="fas fa-comment me-1"></i>${result.comments}
-                </small>
-              </div>
-            </div>
-          `;
-        });
-        html += '</div>';
-      }
-      
-      if (type === 'all' || type === 'users') {
-        html += '<div class="mb-4"><h6>Kullanıcılar</h6>';
-        mockResults.filter(r => r.type === 'user').forEach(result => {
-          html += `
-            <div class="card mb-2">
-                  <div class="card-body">
-                <h6 class="card-title">${result.displayName}</h6>
-                <p class="card-text">@${result.username}</p>
-                <small class="text-muted">
-                  <i class="fas fa-calendar me-1"></i>${result.joinDate} • 
-                  <i class="fas fa-file-alt me-1"></i>${result.posts} gönderi • 
-                  <i class="fas fa-users me-1"></i>${result.followers} takipçi
-                </small>
-                    </div>
-                  </div>
-          `;
-        });
-        html += '</div>';
-      }
-      
-      if (type === 'all' || type === 'music') {
-        html += '<div class="mb-4"><h6>Müzik</h6>';
-        mockResults.filter(r => r.type === 'music').forEach(result => {
-          html += `
-            <div class="card mb-2">
-              <div class="card-body">
-                <h6 class="card-title">${result.title}</h6>
-                <p class="card-text">${result.artist} - ${result.album} (${result.year})</p>
-                <small class="text-muted">
-                  <i class="fas fa-music me-1"></i>${result.genre} • 
-                  <i class="fas fa-star me-1"></i>${result.rating}/5
-                </small>
-              </div>
-              </div>
-            `;
-        });
-        html += '</div>';
-      }
-      
-      if (html === '<h5>Arama Sonuçları: "' + query + '"</h5>') {
-        html += '<div class="text-center text-muted py-5"><p>Sonuç bulunamadı.</p></div>';
-      }
-      
-      resultsDiv.innerHTML = html;
-      
-      // Show pagination
-      document.getElementById('pagination').style.display = 'block';
-    }
-    
-    // Update current time
-    function updateTime() {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString('tr-TR');
-      const timeElement = document.getElementById('currentTime');
-      if (timeElement) {
-        timeElement.textContent = timeString;
-      }
-    }
-    
-    updateTime();
-    setInterval(updateTime, 1000);
-    
-    // Update year
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
+  <script src="../js/advanced-search.js"></script>
 </body>
 </html>

@@ -329,6 +329,37 @@ async function getSpotifyAccessToken() {
   return cachedSpotifyToken;
 }
 
+// Fallback: iTunes Search API (no auth required)
+async function iTunesSearchTracks(query, limit = 20, offset = 0) {
+  const fetch = (await import("node-fetch")).default;
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=${limit}&offset=${offset}`;
+  const r = await fetch(url);
+  const data = await r.json();
+  const items = Array.isArray(data.results) ? data.results : [];
+  // Map to Spotify-like minimal track shape used by frontend
+  const mapped = items.map((t) => ({
+    id: String(t.trackId),
+    name: t.trackName,
+    preview_url: t.previewUrl || null,
+    duration_ms: t.trackTimeMillis || null,
+    external_urls: { spotify: t.trackViewUrl },
+    artists: [{ id: String(t.artistId || ""), name: t.artistName, external_urls: { spotify: t.artistViewUrl } }],
+    album: {
+      id: String(t.collectionId || ""),
+      name: t.collectionName,
+      images: t.artworkUrl100
+        ? [
+            { url: t.artworkUrl100.replace("100x100bb", "640x640bb") },
+            { url: t.artworkUrl100.replace("100x100bb", "300x300bb") },
+            { url: t.artworkUrl100 },
+          ]
+        : [],
+      release_date: t.releaseDate,
+    },
+  }));
+  return { tracks: { items: mapped, total: items.length } };
+}
+
 app.get("/api/spotify/playlist", async (req, res) => {
   try {
     const input = req.query.playlistId || req.query.playlist; // support both id and full url
@@ -578,17 +609,18 @@ app.get("/api/spotify/search", async (req, res) => {
     const { q, type = "track", limit = 20, market = "TR" } = req.query;
     if (!q) return res.status(400).json({ error: "Missing query" });
 
-    const token = await getSpotifyAccessToken();
-    const fetch = (await import("node-fetch")).default;
-    const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=${type}&limit=${limit}&market=${market}`;
-    const r = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await r.json();
-    if (!r.ok) {
-      return res
-        .status(r.status)
-        .json({ error: data.error?.message || data.message || "spotify error", status: r.status, details: data });
+    let data;
+    try {
+      const token = await getSpotifyAccessToken();
+      const fetch = (await import("node-fetch")).default;
+      const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=${type}&limit=${limit}&market=${market}`;
+      const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error?.message || d.message || "spotify error");
+      data = d;
+    } catch (spotifyErr) {
+      // Fallback to iTunes if Spotify credentials missing or request fails
+      data = await iTunesSearchTracks(q, parseInt(limit || 20, 10));
     }
 
     // Simplify tracks
@@ -1232,13 +1264,173 @@ app.get("/api/search", async (req, res) => {
 
 // Pagination
 app.get("/api/posts", async (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit || "10", 10), 30);
-  const after = req.query.after; // ISO date
-  let query = db.collection("posts").orderBy("createdAt", "desc").limit(limit);
-  if (after) query = query.startAfter(after);
-  const snap = await query.get();
-  const posts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  res.json({ items: posts, nextAfter: posts.length ? posts[posts.length - 1].createdAt : null });
+  try {
+    const limit = Math.min(parseInt(req.query.limit || "10", 10), 30);
+    const page = parseInt(req.query.page || "1", 10);
+    const sort = req.query.sort || "latest";
+    const category = req.query.category;
+    const featured = req.query.featured === "true";
+
+    let query = db.collection("posts");
+
+    // Apply filters
+    if (category) {
+      query = query.where("category", "==", category);
+    }
+    if (featured) {
+      query = query.where("featured", "==", true);
+    }
+
+    // Apply sorting
+    if (sort === "popular") {
+      query = query.orderBy("likes", "desc");
+    } else if (sort === "latest") {
+      query = query.orderBy("createdAt", "desc");
+    } else if (sort === "views") {
+      query = query.orderBy("views", "desc");
+    }
+
+    // Pagination (in-memory slice for now)
+    const offset = (page - 1) * limit;
+
+    const snap = await query.get();
+    const allPosts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const total = allPosts.length;
+    const paginated = allPosts.slice(offset, offset + limit);
+
+    res.json({
+      posts: paginated,
+      total: total,
+      page: page,
+      limit: limit,
+      hasMore: offset + paginated.length < total
+    });
+  } catch (err) {
+    console.error("Posts fetch error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Stats endpoint
+app.get("/api/stats", async (req, res) => {
+  try {
+    // Get posts count
+    const postsSnap = await db.collection("posts").get();
+    const totalPosts = postsSnap.size;
+    
+    // Get users count
+    const usersSnap = await db.collection("users").get();
+    const totalUsers = usersSnap.size;
+    
+    // Get comments count
+    const commentsSnap = await db.collection("comments").get();
+    const totalComments = commentsSnap.size;
+    
+    // Calculate online users (mock for now)
+    const onlineUsers = Math.floor(Math.random() * 50) + 10;
+    
+    res.json({
+      totalPosts,
+      totalUsers,
+      totalComments,
+      onlineUsers
+    });
+  } catch (err) {
+    console.error("Stats fetch error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Seed data endpoint
+app.post("/api/seed", async (req, res) => {
+  try {
+    const testPosts = [
+      {
+        title: "Taylor Swift - Midnights İncelemesi",
+        content: "Taylor Swift'in yeni albümü Midnights, sanatçının pop müzikteki ustalığını bir kez daha kanıtlıyor. 13 şarkılık bu albüm, gece saatlerinin büyüsünü ve insanın en derin düşüncelerini ele alıyor. Özellikle 'Anti-Hero' ve 'Lavender Haze' gibi şarkılar, Swift'in lirik yeteneğini ve melodik zenginliğini ortaya koyuyor.",
+        category: "degerlendirme",
+        authorId: "test-user-1",
+        authorName: "Müzik Sever",
+        createdAt: new Date().toISOString(),
+        likes: 24,
+        comments: 8,
+        views: 156,
+        featured: true,
+        tags: ["taylor swift", "pop", "midnights", "inceleme"],
+        pinned: false
+      },
+      {
+        title: "2024'ün En İyi Rock Albümleri",
+        content: "Bu yıl çıkan rock albümlerini inceliyoruz. Foo Fighters, Arctic Monkeys ve daha birçok grup harika işler çıkardı. Özellikle Foo Fighters'ın 'But Here We Are' albümü, grubun en duygusal ve güçlü çalışmalarından biri olarak öne çıkıyor.",
+        category: "album",
+        authorId: "test-user-2",
+        authorName: "Rock Fan",
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        likes: 18,
+        comments: 12,
+        views: 89,
+        featured: false,
+        tags: ["rock", "2024", "albüm", "inceleme"],
+        pinned: false
+      },
+      {
+        title: "Spotify'da Yeni Özellikler",
+        content: "Spotify'ın son güncellemeleri ile gelen yeni özellikler hakkında detaylı bilgi. AI-powered playlist önerileri, gelişmiş ses kalitesi ve yeni sosyal özellikler kullanıcı deneyimini önemli ölçüde artırıyor.",
+        category: "endustri",
+        authorId: "test-user-3",
+        authorName: "Tech Music",
+        createdAt: new Date(Date.now() - 172800000).toISOString(),
+        likes: 15,
+        comments: 6,
+        views: 203,
+        featured: false,
+        tags: ["spotify", "teknoloji", "müzik", "güncelleme"],
+        pinned: false
+      },
+      {
+        title: "Billie Eilish - Hit Me Hard and Soft",
+        content: "Billie Eilish'in yeni albümü Hit Me Hard and Soft, sanatçının müzikal evrimini gösteriyor. Daha olgun ve derinlemesine bir yaklaşım sergileyen albüm, dinleyicileri büyülüyor.",
+        category: "degerlendirme",
+        authorId: "test-user-4",
+        authorName: "Pop Lover",
+        createdAt: new Date(Date.now() - 259200000).toISOString(),
+        likes: 32,
+        comments: 15,
+        views: 234,
+        featured: false,
+        tags: ["billie eilish", "pop", "hit me hard and soft", "inceleme"],
+        pinned: false
+      },
+      {
+        title: "Müzik Endüstrisinde Yapay Zeka",
+        content: "Yapay zeka teknolojilerinin müzik endüstrisindeki etkileri ve gelecekteki potansiyeli hakkında kapsamlı bir analiz. AI'ın müzik üretimi, keşfi ve dağıtımındaki rolü inceleniyor.",
+        category: "endustri",
+        authorId: "test-user-5",
+        authorName: "AI Music",
+        createdAt: new Date(Date.now() - 345600000).toISOString(),
+        likes: 28,
+        comments: 9,
+        views: 187,
+        featured: false,
+        tags: ["yapay zeka", "müzik endüstrisi", "teknoloji", "gelecek"],
+        pinned: false
+      }
+    ];
+
+    // Add posts to database
+    const batch = db.batch();
+    testPosts.forEach(post => {
+      const docRef = db.collection("posts").doc();
+      batch.set(docRef, post);
+    });
+    
+    await batch.commit();
+    
+    res.json({ message: "Test verileri başarıyla eklendi", count: testPosts.length });
+  } catch (err) {
+    console.error("Seed data error:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Comments
@@ -1543,7 +1735,17 @@ app.get("/api/users/:id", async (req, res) => {
     const doc = await db.collection("users").doc(req.params.id).get();
     if (!doc.exists) return res.status(404).json({ error: "User not found" });
     const d = doc.data();
-    res.json({ id: doc.id, username: d.username, email: d.email, avatarUrl: d.avatarUrl || null, createdAt: d.createdAt, role: d.role || "user" });
+    res.json({ 
+      id: doc.id, 
+      username: d.username, 
+      email: d.email, 
+      avatarUrl: d.avatarUrl || null, 
+      createdAt: d.createdAt, 
+      role: d.role || "user",
+      bio: d.bio || null,
+      location: d.location || null,
+      website: d.website || null
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

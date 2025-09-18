@@ -56,38 +56,7 @@
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-dark mainnav" id="mainNavbar">
-    <div class="container-fluid">
-      <div class="d-flex align-items-center">
-        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">☰</button>
-        <a class="navbar-brand me-3" href="../index.html">Nara Müzik</a>
-        <div class="d-none d-lg-flex align-items-center gap-2">
-          <a class="nav-link px-2" href="yenimuzik.html" style="color: var(--accent)">Yeni Müzik</a>
-          <a class="nav-link px-2" href="endustri.html">Endüstri Haberleri</a>
-          <a class="nav-link px-2" href="degerlendirme.html">Değerlendirme</a>
-          <a class="nav-link px-2" href="album.html">Albüm İnceleme</a>
-          <a class="nav-link px-2" href="roportaj.html">Röportajlar</a>
-          <a class="nav-link px-2" href="etkinlik.html">Etkinlikler</a>
-          <a class="nav-link px-2" href="dizifilm.html">Dizi & Filmler</a>
-        </div>
-      </div>
-      <div class="d-flex ms-auto align-items-center gap-2">
-        <div class="d-none d-md-block">
-          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
-        </div>
-        <select id="language-toggle">
-          <option value="en">EN</option>
-          <option value="tr">TR</option>
-        </select>
-        <button id="themeToggle" class="btn btn-outline-light btn-sm">🌙</button>
-        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">Yeni Gönderi</button>
-        <div id="authButtons" class="d-flex gap-1">
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
-        </div>
-      </div>
-    </div>
-  </nav>
+  <!-- Navbar will be injected by app.js -->
 
   <!-- Hero Section -->
   <div class="category-hero">
@@ -304,11 +273,7 @@
     </div>
   </main>
 
-  <footer class="text-center py-4 mt-5">
-    <div class="container">
-      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
-    </div>
-  </footer>
+  <!-- Footer will be injected by app.js -->
 
   <!-- Music Search Modal -->
   <div class="modal fade" id="musicSearchModal" tabindex="-1" aria-hidden="true">
@@ -444,49 +409,7 @@
       });
     });
 
-    // Music search functionality
-    const musicSearchInput = document.getElementById('musicSearchInput');
-    const musicSearchResults = document.getElementById('musicSearchResults');
-    const selectMusicBtn = document.getElementById('selectMusicBtn');
-    let selectedMusic = null;
-
-    musicSearchInput.addEventListener('input', (e) => {
-      const query = e.target.value.trim();
-      if (query.length > 2) {
-        // Mock search results
-        musicSearchResults.innerHTML = `
-          <div class="list-group">
-            <div class="list-group-item list-group-item-action music-search-result" data-music='{"id":"1","title":"Anti-Hero","artist":"Taylor Swift","album":"Midnights","preview_url":"https://example.com/preview1.mp3"}'>
-              <div class="d-flex align-items-center">
-                <img src="https://picsum.photos/50/50?random=10" alt="Anti-Hero" class="rounded me-3">
-                <div class="flex-grow-1">
-                  <h6 class="mb-1">Anti-Hero</h6>
-                  <p class="text-muted small mb-0">Taylor Swift • Midnights</p>
-                </div>
-                <button class="btn btn-sm btn-outline-primary">Seç</button>
-              </div>
-            </div>
-            <div class="list-group-item list-group-item-action music-search-result" data-music='{"id":"2","title":"Lavender Haze","artist":"Taylor Swift","album":"Midnights","preview_url":"https://example.com/preview2.mp3"}'>
-              <div class="d-flex align-items-center">
-                <img src="https://picsum.photos/50/50?random=11" alt="Lavender Haze" class="rounded me-3">
-                <div class="flex-grow-1">
-                  <h6 class="mb-1">Lavender Haze</h6>
-                  <p class="text-muted small mb-0">Taylor Swift • Midnights</p>
-                </div>
-                <button class="btn btn-sm btn-outline-primary">Seç</button>
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
-        musicSearchResults.innerHTML = `
-          <div class="text-center text-muted py-4">
-            <i class="fas fa-music fa-3x mb-3"></i>
-            <p>Arama yapmak için yukarıdaki kutuya yazın</p>
-          </div>
-        `;
-      }
-    });
+    // Music search functionality (real API handled by music-search.js)
 
     // Music selection
     musicSearchResults.addEventListener('click', (e) => {

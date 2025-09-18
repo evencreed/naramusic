@@ -20,38 +20,7 @@
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-dark mainnav" id="mainNavbar">
-    <div class="container-fluid">
-      <div class="d-flex align-items-center">
-        <button class="btn btn-outline-light me-2 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu">☰</button>
-        <a class="navbar-brand me-3" href="../index.html">Nara Müzik</a>
-        <div class="d-none d-lg-flex align-items-center gap-2">
-          <a class="nav-link px-2" href="yenimuzik.html">Yeni Müzik</a>
-          <a class="nav-link px-2" href="endustri.html">Endüstri Haberleri</a>
-          <a class="nav-link px-2" href="degerlendirme.html">Değerlendirme</a>
-          <a class="nav-link px-2" href="album.html" style="color: var(--accent)">Albüm İnceleme</a>
-          <a class="nav-link px-2" href="roportaj.html">Röportajlar</a>
-          <a class="nav-link px-2" href="etkinlik.html">Etkinlikler</a>
-          <a class="nav-link px-2" href="dizifilm.html">Dizi & Filmler</a>
-        </div>
-      </div>
-      <div class="d-flex ms-auto align-items-center gap-2">
-        <div class="d-none d-md-block">
-          <input id="globalSearch" class="form-control form-control-sm bg-dark text-light border-0" style="width:220px" placeholder="Ara...">
-        </div>
-        <select id="language-toggle">
-          <option value="en">EN</option>
-          <option value="tr">TR</option>
-        </select>
-        <button id="themeToggle" class="btn btn-outline-light btn-sm">🌙</button>
-        <button class="btn btn-success btn-sm d-none d-md-inline" data-bs-toggle="modal" data-bs-target="#createPostModal">Yeni Gönderi</button>
-        <div id="authButtons" class="d-flex gap-1">
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş</button>
-          <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt</button>
-        </div>
-      </div>
-    </div>
-  </nav>
+  <!-- Navbar will be injected by app.js -->
 
   <!-- Hero Section -->
   <section class="hero-section py-5">
@@ -101,11 +70,7 @@
     </section>
   </main>
 
-  <footer class="text-center py-4 mt-5">
-    <div class="container">
-      <small class="text-muted">© <span id="year"></span> Nara Müzik — Tüm hakları saklıdır.</small>
-    </div>
-  </footer>
+  <!-- Footer will be injected by app.js -->
 
   <!-- Modals -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">

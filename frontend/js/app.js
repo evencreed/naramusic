@@ -46,7 +46,7 @@ function updateAuthUI() {
   const authButtons = document.getElementById('authButtons');
   const newPostBtn = document.querySelector('[data-bs-target="#createPostModal"]');
   const savedLink = document.getElementById('savedLink');
-  const modLink = document.getElementById('modLink');
+  const modLinks = document.querySelectorAll('.mod-only');
   
   if (!authButtons) return;
   
@@ -78,8 +78,9 @@ function updateAuthUI() {
     }
     
     if (savedLink) savedLink.classList.remove('d-none');
-    if (modLink) {
-      modLink.classList.toggle('d-none', !(CURRENT_USER.role === 'admin' || CURRENT_USER.role === 'moderator'));
+    if (modLinks && modLinks.length) {
+      const isMod = (CURRENT_USER.role === 'admin' || CURRENT_USER.role === 'moderator');
+      modLinks.forEach(el => el.classList.toggle('d-none', !isMod));
     }
   } else {
     authButtons.innerHTML = `
@@ -98,170 +99,137 @@ function updateAuthUI() {
     }
     
     if (savedLink) savedLink.classList.add('d-none');
-    if (modLink) modLink.classList.add('d-none');
+    if (modLinks && modLinks.length) modLinks.forEach(el => el.classList.add('d-none'));
   }
 }
 
 
-// Fallback data for when backend is down
-const FALLBACK_DATA = {
-  posts: [
-    {
-      id: 1,
-      title: "Taylor Swift - Midnights İncelemesi",
-      content: "Taylor Swift'in yeni albümü Midnights, sanatçının pop müzikteki ustalığını bir kez daha kanıtlıyor. 13 şarkılık bu albüm, gece saatlerinin büyüsünü ve insanın en derin düşüncelerini ele alıyor.",
-      author: { username: "muziksever", displayName: "Müzik Sever" },
-      category: "degerlendirme",
-      createdAt: new Date().toISOString(),
-      likes: 24,
-      comments: 8,
-      views: 156,
-      featured: true,
-      tags: ["taylor swift", "pop", "midnights", "inceleme"]
-    },
-    {
-      id: 2,
-      title: "2024'ün En İyi Rock Albümleri",
-      content: "Bu yıl çıkan rock albümlerini inceliyoruz. Foo Fighters, Arctic Monkeys ve daha birçok grup harika işler çıkardı.",
-      author: { username: "rockfan", displayName: "Rock Fan" },
-      category: "album",
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-      likes: 18,
-      comments: 12,
-      views: 89,
-      featured: false,
-      tags: ["rock", "2024", "albüm", "inceleme"]
-    },
-    {
-      id: 3,
-      title: "Spotify'da Yeni Özellikler",
-      content: "Spotify'ın son güncellemeleri ile gelen yeni özellikler hakkında detaylı bilgi.",
-      author: { username: "techmusic", displayName: "Tech Music" },
-      category: "endustri",
-      createdAt: new Date(Date.now() - 172800000).toISOString(),
-      likes: 15,
-      comments: 6,
-      views: 203,
-      featured: false,
-      tags: ["spotify", "teknoloji", "müzik", "güncelleme"]
-    }
-  ],
-  stats: {
-    totalPosts: 1247,
-    totalUsers: 3421,
-    totalComments: 8934,
-    onlineUsers: 156
-  }
-};
 
-// API functions with retry mechanism and fallback data
-async function apiRequest(endpoint, options = {}, retries = 3) {
+// API functions
+async function apiRequest(endpoint, options = {}) {
   const url = `${BACKEND_BASE}${endpoint}`;
+  const config = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(AUTH_TOKEN && { 'Authorization': `Bearer ${AUTH_TOKEN}` })
+    },
+    ...options
+  };
   
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      console.log(`Trying ${url} (attempt ${attempt}/${retries})`);
-      
-      // Try with different fetch configurations
-      let response;
-      if (attempt === 1) {
-        // First attempt: normal fetch
-        response = await fetch(url, {
-          headers: {
-            'Content-Type': 'application/json',
-            ...(AUTH_TOKEN && { 'Authorization': `Bearer ${AUTH_TOKEN}` })
-          },
-          ...options
-        });
-      } else if (attempt === 2) {
-        // Second attempt: with different headers
-        response = await fetch(url, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache',
-            ...(AUTH_TOKEN && { 'Authorization': `Bearer ${AUTH_TOKEN}` })
-          },
-          cache: 'no-cache',
-          ...options
-        });
-      } else {
-        // Third attempt: with XMLHttpRequest fallback
-        return await xhrRequest(url, options);
-      }
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log(`Success with ${url}`);
-      return data;
-      
-    } catch (error) {
-      console.error(`API Error (attempt ${attempt}/${retries}):`, error);
-      
-      // If it's the last attempt, return fallback data
-      if (attempt === retries) {
-        console.log('Using fallback data due to persistent errors');
-        
-        if (endpoint.includes('/posts')) {
-          if (endpoint.includes('featured=true')) {
-            return { posts: FALLBACK_DATA.posts.filter(p => p.featured) };
-          } else if (endpoint.includes('sort=popular')) {
-            return { posts: FALLBACK_DATA.posts.sort((a, b) => b.likes - a.likes) };
-          } else {
-            return { posts: FALLBACK_DATA.posts, total: FALLBACK_DATA.posts.length };
-          }
-        } else if (endpoint.includes('/stats')) {
-          return FALLBACK_DATA.stats;
-        }
-        
-        // Show warning but don't break the app
-        showAlert('Sunucu geçici olarak kullanılamıyor. Demo veriler gösteriliyor.', 'warning');
-        return { posts: [], total: 0 };
-      }
-      
-      // Wait before retry
-      console.log(`Retrying in ${attempt * 1000}ms...`);
-      await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+  try {
+    const response = await fetch(url, config);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const msg = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(msg);
     }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
   }
 }
 
-// XMLHttpRequest fallback for HTTP2 issues
-function xhrRequest(url, options = {}) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    
-    if (AUTH_TOKEN) {
-      xhr.setRequestHeader('Authorization', `Bearer ${AUTH_TOKEN}`);
-    }
-    
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            resolve(data);
-          } catch (e) {
-            reject(new Error('Invalid JSON response'));
-          }
-        } else {
-          reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+// Navbar template loader
+async function loadNavbarTemplate() {
+  try {
+    const isPages = location.pathname.includes('/pages/');
+    const base = isPages ? '../templates/' : 'templates/';
+
+    const resp = await fetch(`${base}navbar.html`);
+    if (!resp.ok) return;
+    const html = await resp.text();
+
+    // Remove existing nav/topbar/sidebar to avoid duplicates
+    document.querySelectorAll('.topbar, nav.mainnav, nav.navbar, #sideMenu').forEach(el => el.remove());
+
+    // Insert template at top of body
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+
+    // Adjust links if on root (not in /pages/)
+    if (!isPages) {
+      wrapper.querySelectorAll('a[href]').forEach(a => {
+        const href = a.getAttribute('href') || '';
+        if (href.startsWith('http') || href.startsWith('#')) return;
+        if (a.classList.contains('navbar-brand')) {
+          a.setAttribute('href', 'index.html');
+          return;
         }
-      }
-    };
-    
-    xhr.onerror = function() {
-      reject(new Error('Network error'));
-    };
-    
-    xhr.send();
-  });
+        if (!href.startsWith('pages/')) {
+          a.setAttribute('href', `pages/${href}`);
+        }
+      });
+    } else {
+      // Ensure brand points to ../index.html on subpages
+      const brand = wrapper.querySelector('a.navbar-brand');
+      if (brand) brand.setAttribute('href', '../index.html');
+    }
+
+    document.body.insertBefore(wrapper, document.body.firstChild);
+  } catch (e) {
+    console.warn('Navbar template load failed', e);
+  }
+}
+
+// Footer template loader
+async function loadFooterTemplate() {
+  try {
+    const isPages = location.pathname.includes('/pages/');
+    const base = isPages ? '../templates/' : 'templates/';
+    const resp = await fetch(`${base}footer.html`);
+    if (!resp.ok) return;
+    const html = await resp.text();
+
+    // Remove existing footer(s)
+    document.querySelectorAll('footer').forEach(el => el.remove());
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+
+    if (!isPages) {
+      wrapper.querySelectorAll('a[href]').forEach(a => {
+        const href = a.getAttribute('href') || '';
+        if (href.startsWith('http') || href.startsWith('#')) return;
+        if (!href.startsWith('pages/')) {
+          a.setAttribute('href', `pages/${href}`);
+        }
+      });
+    }
+
+    document.body.appendChild(wrapper);
+
+    // Set year if element exists
+    const yearEl = document.getElementById('year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+  } catch (e) {
+    console.warn('Footer template load failed', e);
+  }
+}
+
+// Modals template loader
+async function loadModalsTemplate() {
+  try {
+    const isPages = location.pathname.includes('/pages/');
+    const base = isPages ? '../templates/' : 'templates/';
+    const resp = await fetch(`${base}modals.html`);
+    if (!resp.ok) return;
+    const html = await resp.text();
+
+    // Remove existing modals to avoid duplicates
+    ['loginModal','registerModal','createPostModal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    });
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    document.body.appendChild(container);
+  } catch (e) {
+    console.warn('Modals template load failed', e);
+  }
 }
 
 // Post functions
@@ -293,7 +261,7 @@ async function loadLatestPostsPaginated(reset = false) {
     // Update load more button
     const loadMoreBtn = document.getElementById('loadMoreLatest');
     if (loadMoreBtn) {
-      loadMoreBtn.style.display = data.posts && data.posts.length === 6 ? 'block' : 'none';
+      loadMoreBtn.style.display = data.hasMore ? 'block' : 'none';
     }
     
   } catch (error) {
@@ -362,10 +330,10 @@ function createPostCard(post) {
       <article class="card h-100 post-card">
         <div class="card-body">
           <div class="d-flex align-items-start mb-3">
-            <img src="${post.author?.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(post.author?.username || 'User')}" 
-                 alt="${post.author?.username || 'User'}" class="rounded-circle me-3" style="width: 40px; height: 40px;">
+            <img src="${post.authorAvatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(post.authorName || 'User')}" 
+                 alt="${post.authorName || 'User'}" class="rounded-circle me-3" style="width: 40px; height: 40px;">
             <div class="flex-grow-1">
-              <h6 class="mb-0">@${post.author?.username || 'user'}</h6>
+              <h6 class="mb-0">@${post.authorName || 'user'}</h6>
               <small class="text-muted">${timeAgo}</small>
             </div>
             <span class="badge bg-primary">${categoryName}</span>
@@ -485,10 +453,54 @@ function setupEventHandlers() {
     }
   });
   
+  // Extra click handlers for comment/share
+  document.addEventListener('click', async (e) => {
+    // Comment button => go to post page
+    if (e.target.closest('.comment-btn')) {
+      const btn = e.target.closest('.comment-btn');
+      const postId = btn.dataset.postId;
+      const isPages = location.pathname.includes('/pages/');
+      const href = isPages ? `post.html?id=${postId}` : `pages/post.html?id=${postId}`;
+      window.location.href = href;
+      return;
+    }
+
+    // Share button => Web Share API or copy link
+    if (e.target.closest('.share-btn')) {
+      const btn = e.target.closest('.share-btn');
+      const postId = btn.dataset.postId;
+      const isPages = location.pathname.includes('/pages/');
+      const url = isPages ? `${location.origin}${location.pathname.replace(/\/[^/]*$/, '/') }post.html?id=${postId}` : `${location.origin}/pages/post.html?id=${postId}`;
+      try{
+        if (navigator.share) {
+          await navigator.share({ title: 'Nara Müzik', text: 'Bu gönderiye göz at!', url });
+        } else {
+          await navigator.clipboard.writeText(url);
+          showAlert('Link panoya kopyalandı', 'success');
+        }
+      }catch(_){ }
+      return;
+    }
+  });
+  
   // Load more button
   const loadMoreBtn = document.getElementById('loadMoreLatest');
   if (loadMoreBtn) {
     loadMoreBtn.addEventListener('click', () => loadLatestPostsPaginated(false));
+  }
+
+  // Global search (navbar)
+  const globalSearch = document.getElementById('globalSearch');
+  if (globalSearch) {
+    globalSearch.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const q = encodeURIComponent(globalSearch.value.trim());
+        if (q) {
+          const base = location.pathname.includes('/pages/') ? '' : 'pages/';
+          window.location.href = `${base}search.html?q=${q}`;
+        }
+      }
+    });
   }
 }
 
@@ -502,6 +514,13 @@ function setupFormHandlers() {
       
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData);
+      if (typeof data.tags === 'string') {
+        data.tags = data.tags
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+          .slice(0, 10);
+      }
       
       try {
         const response = await apiRequest('/api/auth/login', {
@@ -634,13 +653,38 @@ async function loadFeaturedPost() {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-  updateAuthUI();
+  Promise.all([
+    loadNavbarTemplate(),
+    loadModalsTemplate(),
+    loadFooterTemplate()
+  ]).then(() => {
+    updateAuthUI();
+    setupFormHandlers();
+  }).catch(() => {
+    updateAuthUI();
+    setupFormHandlers();
+  });
   setupEventHandlers();
-  setupFormHandlers();
   
   // Load content based on page
   if (document.getElementById('latestPostsList')) {
-    loadLatestPostsPaginated(true);
+    // Respect sort radio if present
+    const sort = document.getElementById('sortPopular')?.checked ? 'popular' : 'latest';
+    currentPage = 1;
+    const container = document.getElementById('latestPostsList');
+    if (container) container.innerHTML = '';
+    (async ()=>{
+      try{
+        const data = await apiRequest(`/api/posts?page=${currentPage}&limit=6&sort=${sort}`);
+        if (data.posts && data.posts.length){
+          const postsHtml = data.posts.map(createPostCard).join('');
+          container.innerHTML += postsHtml;
+          currentPage++;
+        }
+        const loadMoreBtn = document.getElementById('loadMoreLatest');
+        if (loadMoreBtn) loadMoreBtn.style.display = data.hasMore ? 'block' : 'none';
+      }catch(err){ console.error(err); }
+    })();
   }
   
   if (document.getElementById('popularPosts')) {
@@ -659,6 +703,17 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Load featured post
   loadFeaturedPost();
+
+  // If navigated from navbar search, hydrate advanced search with query
+  const params = new URLSearchParams(location.search);
+  const q = params.get('q');
+  if (q && document.getElementById('advancedSearchInput')){
+    document.getElementById('advancedSearchInput').value = q;
+    if (window.advancedSearch){
+      window.advancedSearch.updateFilters();
+      window.advancedSearch.performSearch();
+    }
+  }
 });
 
 // Export for use in other scripts
