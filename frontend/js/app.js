@@ -1,8 +1,6 @@
 // Backend base URL (lokal veya prod)
 const isLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
-const BACKEND_BASE = isLocalHost
-  ? "http://localhost:4000"
-  : "https://naramusic.onrender.com";
+let BACKEND_BASE = null; // will be detected at runtime
 
 // Global state
 let CURRENT_LANG = localStorage.getItem("lang") || "tr";
@@ -107,29 +105,74 @@ function updateAuthUI() {
 
 // API functions
 async function apiRequest(endpoint, options = {}) {
+  if (!BACKEND_BASE) {
+    await detectBackendBase();
+  }
   const url = `${BACKEND_BASE}${endpoint}`;
+  const controller = new AbortController();
+  const timeoutMs = options.timeoutMs || 8000;
   const config = {
     headers: {
       'Content-Type': 'application/json',
       ...(AUTH_TOKEN && { 'Authorization': `Bearer ${AUTH_TOKEN}` })
     },
+    signal: controller.signal,
     ...options
   };
-  
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const maxRetries = options.retries ?? 1;
+  let attempt = 0;
   try {
-    const response = await fetch(url, config);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const msg = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
-      throw new Error(msg);
+    while (true) {
+      try {
+        const response = await fetch(url, config);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const msg = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+          throw new Error(msg);
+        }
+        const json = await response.json();
+        clearTimeout(timer);
+        return json;
+      } catch (err) {
+        attempt++;
+        if (attempt > maxRetries) throw err;
+        await new Promise(r => setTimeout(r, 300 * attempt));
+      }
     }
-    
-    return await response.json();
   } catch (error) {
     console.error('API Error:', error);
     throw error;
   }
+}
+
+// Backend base detection with health probes
+async function detectBackendBase() {
+  const cached = localStorage.getItem('BACKEND_BASE');
+  if (cached) { BACKEND_BASE = cached; return; }
+
+  const candidates = [];
+  if (isLocalHost) candidates.push('http://localhost:4000');
+  // Same-origin API (if reverse-proxied)
+  candidates.push(`${window.location.origin}`.replace(/\/$/, ''));
+  // Render
+  candidates.push('https://naramusic.onrender.com');
+
+  for (const base of candidates) {
+    try {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(`${base}/api/stats`, { signal: controller.signal });
+      clearTimeout(t);
+      if (res.ok) {
+        BACKEND_BASE = base;
+        localStorage.setItem('BACKEND_BASE', BACKEND_BASE);
+        return;
+      }
+    } catch (_) { /* try next */ }
+  }
+  // Fallback to Render even if probe failed (may be cold start)
+  BACKEND_BASE = 'https://naramusic.onrender.com';
 }
 
 // Navbar template loader
@@ -171,6 +214,33 @@ async function loadNavbarTemplate() {
     document.body.insertBefore(wrapper, document.body.firstChild);
   } catch (e) {
     console.warn('Navbar template load failed', e);
+  }
+}
+
+// Theme helpers
+function applyTheme(theme) {
+  const root = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  if (theme === 'light') {
+    root.setAttribute('data-theme', 'light');
+    if (toggle) toggle.innerHTML = '<i class="fas fa-sun"></i>';
+  } else {
+    root.removeAttribute('data-theme');
+    if (toggle) toggle.innerHTML = '<i class="fas fa-moon"></i>';
+  }
+}
+
+function initThemeToggle() {
+  const saved = localStorage.getItem('theme') || 'dark';
+  applyTheme(saved);
+  const btn = document.getElementById('themeToggle');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      const next = current === 'light' ? 'dark' : 'light';
+      localStorage.setItem('theme', next);
+      applyTheme(next);
+    });
   }
 }
 
@@ -297,6 +367,7 @@ async function loadPopularPosts() {
 }
 
 async function loadCategoryPosts(category) {
+  if (!category || category === 'null' || category === 'undefined') return;
   const container = document.getElementById('categoryPosts');
   if (!container) return;
   
@@ -658,6 +729,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadModalsTemplate(),
     loadFooterTemplate()
   ]).then(() => {
+    initThemeToggle();
     updateAuthUI();
     setupFormHandlers();
   }).catch(() => {
