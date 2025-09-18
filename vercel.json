@@ -4,26 +4,21 @@
     {
       "src": "frontend/**/*",
       "use": "@vercel/static"
-    },
-    {
-      "src": "backend/server.js",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/backend/server.js"
+      "dest": "https://naramusic.onrender.com/api/$1",
+      "headers": {
+        "cache-control": "no-store"
+      }
     },
     {
       "src": "/(.*)",
       "dest": "/frontend/$1"
     }
   ],
-  "functions": {
-    "backend/server.js": {
-      "maxDuration": 30
-    }
-  }
+  "functions": {}
 }
 
